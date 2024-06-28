@@ -23,6 +23,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"sort"
 
 	"github.com/onflow/cadence"
 	jsoncdc "github.com/onflow/cadence/encoding/json"
@@ -119,11 +120,21 @@ func eventString(writer io.Writer, event flow.Event) {
 	_, _ = fmt.Fprintf(writer, "    Tx ID\t%s\n", event.TransactionID)
 	_, _ = fmt.Fprintf(writer, "    Values\n")
 
-	fields := cadence.FieldsMappedByName(event.Value)
+	evt := event.Value
 
-	for _, field := range event.Value.EventType.Fields {
-		value := fields[field.Identifier]
-		printField(writer, field, value)
+	values := evt.FieldsMappedByName()
+	fields := evt.EventType.FieldsMappedByName()
+
+	names := make([]string, 0, len(fields))
+	for name := range fields {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+
+	for _, name := range names {
+		ty := fields[name]
+		value := values[name]
+		printField(writer, name, ty, value)
 	}
 }
 
@@ -131,25 +142,25 @@ func printValues(writer io.Writer, fieldIdentifier, typedId, valueString string)
 	_, _ = fmt.Fprintf(writer, "\t\t- %s (%s): %s \n", fieldIdentifier, typedId, valueString)
 }
 
-func printField(writer io.Writer, field cadence.Field, value cadence.Value) {
+func printField(writer io.Writer, name string, ty cadence.Type, value cadence.Value) {
 	v := value.String()
 	var typeId string
 
 	defer func() {
 		if err := recover(); err != nil {
-			printValues(writer, field.Identifier, "?", v)
+			printValues(writer, name, "?", v)
 		}
 	}()
 
-	if field.Type != nil {
+	if ty != nil {
 		//TODO: onflow/cadence issue #1672
 		//currently getting ID for cadence array will cause panic
-		typeId = field.Type.ID()
+		typeId = ty.ID()
 	}
 
 	if typeId == "" { // exception for not known typeId workaround for cadence arrays
 		v = fmt.Sprintf("%s\n\t\thex: %x", v, v)
 		typeId = "?"
 	}
-	printValues(writer, field.Identifier, typeId, v)
+	printValues(writer, name, typeId, v)
 }
