@@ -57,12 +57,18 @@ var createCommand = &command.Command{
 
 func create(
 	_ []string,
-	_ command.GlobalFlags,
-	_ output.Logger,
+	globalFlags command.GlobalFlags,
+	logger output.Logger,
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 	if len(createFlags.Keys) == 0 { // if user doesn't provide any flags go into interactive mode
+
+		// if user has flags, but doesn't provide any keys, notify them before switching into interactive mode
+		if len(createFlags.SigAlgo) > 0 || globalFlags.Network != "" {
+			logger.Info("Warning: You provided flags as arguments but no key. Switching to interactive mode.")
+		}
+
 		return createInteractive(state)
 	} else {
 		return createManual(state, flow)
