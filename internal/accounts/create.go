@@ -64,12 +64,12 @@ func create(
 ) (command.Result, error) {
 	if len(createFlags.Keys) == 0 { // if user doesn't provide any flags go into interactive mode
 
-		// if user has flags, but doesn't provide any keys, notify them before switching into interactive mode
 		if len(createFlags.SigAlgo) > 0 || globalFlags.Network != "" {
-			logger.Info("Warning: You provided flags as arguments but no key. Switching to interactive mode.")
+			return nil, fmt.Errorf("You provided flags, but no key. A key is required to create an account in manual mode. Remove flags if you'd like to use interactive mode.")
+		} else {
+			return createInteractive(state)
 		}
 
-		return createInteractive(state)
 	} else {
 		return createManual(state, flow)
 	}
