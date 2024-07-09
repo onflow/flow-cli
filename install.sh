@@ -5,12 +5,12 @@ set -e
 
 REPO="onflow/flow-cli"
 ASSETS_URL="https://github.com/$REPO/releases/download/"
-# The version to download, set by get_version (defaults to args[1])
+# The version to install (defaults to args[1])
 VERSION="$1"
+# The Cadence 1.0 version to install (defaults to args[2])
+C1VERSION="$2"
 # The architecture string, set by get_architecture
 ARCH=""
-# The tag search term to use if no version is specified (first match is used)
-SEARCH_TERM="cadence-v1.0.0"
 
 # Optional environment variable for Github API token
 # If GITHUB_TOKEN is set, use it in the curl requests to avoid rate limiting
@@ -61,80 +61,117 @@ get_architecture() {
     TARGET_PATH="${_targetpath}"
 }
 
-# Get the latest version from remote if none specified in args.
-page=1
 get_version() {
-  if [ -z "$VERSION" ]
-  then
-    VERSION=""
-    if [ -n "$github_token_header" ]
-    then
-      response=$(curl -H "$github_token_header" -s "https://api.github.com/repos/$REPO/releases?per_page=100&page=$page" -w "%{http_code}")
-    else
-      response=$(curl -s "https://api.github.com/repos/$REPO/releases?per_page=100&page=$page" -w "%{http_code}")
-    fi
+    local search_term="$1"
+    local page="$2"
+
+    local version=""
+
+    response=$(curl -H "$github_token_header" -s "https://api.github.com/repos/$REPO/releases?per_page=10&page=$page" -w "%{http_code}")
 
     status=$(echo "$response" | tail -n 1)
     if [ "$status" -eq "403" ] && [ -n "$github_token_header" ]
     then
-      echo "Failed to get latest version from Github API, is your GITHUB_TOKEN valid?  Trying without authentication..."
+      echo "Failed to get releases from Github API, is your GITHUB_TOKEN valid? Re-trying without authentication ..."
       github_token_header=""
-      get_version
+      get_version "$search_term" "$page"
     fi
 
     if [ "$status" -ne "200" ]
     then
-      echo "Failed to get latest version from Github API, please manually specify a version to install as an argument to this script."
+      echo "Failed to get releases from Github API, please manually specify a version to install as an argument to this script."
       return 1
     fi
 
-    VERSION=$(echo "$response" | grep -E 'tag_name' | grep -E "$SEARCH_TERM" | head -n 1 | cut -d '"' -f 4)
+    version=$(echo "$response" | grep -E 'tag_name' | grep -E "$search_term" | head -n 1 | cut -d '"' -f 4)
 
-    if [ -z "$VERSION" ]
+    if [ -z "$version" ]
     then
-      page=$((page+1))
-      get_version
+      get_version "$search_term" "$((page+1))"
     fi
-  fi
+
+    echo "$version"
 }
 
-# Determine the system architecure, download the appropriate binary, and
-# install it in `/usr/local/bin` on macOS and `~/.local/bin` on Linux
-# with executable permission.
-main() {
+get_latest() {
+    local version=""
 
-  get_architecture || exit 1
-  get_version || exit 1
+    response=$(curl -H "$github_token_header" -s "https://api.github.com/repos/$REPO/releases/latest" -w "%{http_code}")
 
-  echo "Downloading version $VERSION ..."
+    status=$(echo "$response" | tail -n 1)
+    if [ "$status" -eq "403" ] && [ -n "$github_token_header" ]
+    then
+      echo "Failed to get latest release from Github API, is your GITHUB_TOKEN valid? Re-trying without authentication ..."
+      github_token_header=""
+      get_latest
+    fi
+
+    if [ "$status" -ne "200" ]
+    then
+      echo "Failed to get latest release from Github API, please manually specify a version to install as an argument to this script."
+      return 1
+    fi
+
+    echo "$response" | grep -E 'tag_name' | grep -E "$search_term" | head -n 1 | cut -d '"' -f 4
+}
+
+# Function to download and install a specified version
+install_version() {
+  local version="$1"
+  local target_name="$2"
+
+  echo "Installing version $version ..."
 
   tmpfile=$(mktemp 2>/dev/null || mktemp -t flow)
-  url="$ASSETS_URL$VERSION/flow-cli-$VERSION-$ARCH.tar.gz"
-  if [ -n "$github_token_header" ]
-  then
-    curl -H "$github_token_header" -L --progress-bar "$url" -o $tmpfile
-  else
-    curl -L --progress-bar "$url" -o $tmpfile
-  fi
+  url="$ASSETS_URL$version/flow-cli-$version-$ARCH.tar.gz"
+  curl -H "$github_token_header" -L --progress-bar "$url" -o "$tmpfile"
 
   # Ensure we don't receive a not found error as response.
-  if grep -q "Not Found" $tmpfile
+  if grep -q "Not Found" "$tmpfile"
   then
-    echo "Version $VERSION could not be found"
+    echo "Version $version could not be found"
     exit 1
   fi
 
-  [ -d $TARGET_PATH ] || mkdir -p $TARGET_PATH
+  [ -d "$TARGET_PATH" ] || mkdir -p "$TARGET_PATH"
 
-  tar -xf $tmpfile -C $TARGET_PATH
-  mv $TARGET_PATH/flow-cli $TARGET_PATH/flow-c1
-  chmod +x $TARGET_PATH/flow-c1
+  tar -xf "$tmpfile" -C "$TARGET_PATH"
+  mv "$TARGET_PATH/flow-cli" "$TARGET_PATH/$target_name"
+  chmod +x "$TARGET_PATH/$target_name"
+}
+
+# Determine the system architecture, download the appropriate binaries, and
+# install them in `/usr/local/bin` on macOS and `~/.local/bin` on Linux
+# with executable permissions.
+main() {
+  get_architecture || exit 1
+
+  if [ -z "$VERSION" ]
+  then
+    echo "Getting version of latest stable release ..."
+
+    VERSION=$(get_latest || exit 1)
+  fi
+
+  install_version "$VERSION" "flow"
+
+  if [ -z "$C1VERSION" ]
+  then
+    echo "Getting version of latest Cadence 1.0 preview release ..."
+
+    C1VERSION=$(get_version "cadence-v1.0.0" 1 || exit 1)
+  fi
+
+  install_version "$C1VERSION" "flow-c1"
 
   echo ""
-  echo "Successfully installed Flow CLI $VERSION to $TARGET_PATH."
+  echo "Successfully installed Flow CLI $VERSION as 'flow' in $TARGET_PATH."
+  echo "Use the 'flow' command to interact with the Flow CLI compatible with versions of Cadence before 1.0 (only)."
+  echo ""
+  echo "Successfully installed Flow CLI $C1VERSION as 'flow-c1' in $TARGET_PATH."
+  echo "Use the 'flow-c1' command to interact with the Flow CLI preview compatible with Cadence 1.0 (only)."
+  echo ""
   echo "Make sure $TARGET_PATH is in your \$PATH environment variable."
-  echo ""
-  echo "PRE-RELEASE: Use the 'flow-c1' command to interact with this Cadence 1.0 CLI pre-release."
   echo ""
 }
 
