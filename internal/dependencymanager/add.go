@@ -20,12 +20,12 @@ package dependencymanager
 
 import (
 	"fmt"
-
 	"github.com/onflow/flow-cli/internal/util"
 
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/deps"
 	"github.com/onflow/flowkit/v2/output"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -52,9 +52,9 @@ var addCommand = &command.Command{
 }
 
 func init() {
-	// Add common flags.
+	// Add common Flags.
 	addFlags.Flags.AddToCommand(addCommand.Cmd)
-	// Add command-specific flags.
+	// Add command-specific Flags.
 	addCommand.Cmd.Flags().StringVar(&addFlags.name, "name", "", "Name of the dependency")
 }
 
@@ -69,7 +69,21 @@ func add(
 
 	dep := args[0]
 
-	installer, err := NewDependencyInstaller(logger, state, true, "", *addFlags.Flags)
+	options := []deps.Option{
+		deps.WithSaveState(),
+		deps.WithLogger(logger),
+	}
+
+	if addFlags.skipDeployments {
+		options = append(options, deps.WithSkippedDeployments())
+	}
+
+	if addFlags.skipAlias {
+		options = append(options, deps.WithSkippedAlias())
+	}
+
+	installer, err := NewCliDependencyInstaller(state, options...)
+
 	if err != nil {
 		logger.Error(fmt.Sprintf("Error: %v", err))
 		return nil, err

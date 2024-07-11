@@ -298,3 +298,6 @@ require (
 	nhooyr.io/websocket v1.8.7 // indirect
 	rsc.io/tmplfunc v0.0.3 // indirect
 )
+
+//replace github.com/onflow/flowkit/v2 => github.com/onflowser/flowkit/v2 v2.0.0-20240623105755-c0604188301b
+replace github.com/onflow/flowkit/v2 => ../flowkit

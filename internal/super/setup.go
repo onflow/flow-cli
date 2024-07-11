@@ -21,6 +21,8 @@ package super
 import (
 	"bytes"
 	"fmt"
+	"github.com/onflow/flow-cli/internal/dependencymanager"
+	"github.com/onflow/flowkit/v2/deps"
 	"io"
 	"os"
 	"path/filepath"
@@ -31,7 +33,6 @@ import (
 	flowkitConfig "github.com/onflow/flowkit/v2/config"
 	"golang.org/x/exp/slices"
 
-	"github.com/onflow/flow-cli/internal/dependencymanager"
 	"github.com/onflow/flow-cli/internal/util"
 
 	"github.com/spf13/afero"
@@ -305,8 +306,13 @@ func installCoreContracts(logger output.Logger, state *flowkit.State, tempDir st
 	logger.Info("")
 	logger.Info(util.MessageWithEmojiPrefix("🔄", "Installing selected core contracts and dependencies..."))
 
+	options := []deps.Option{
+		deps.WithTargetDir(tempDir),
+		deps.WithLogger(logger),
+	}
+
 	// Add the selected core contracts as dependencies
-	installer, err := dependencymanager.NewDependencyInstaller(logger, state, false, tempDir, dependencymanager.Flags{})
+	installer, err := dependencymanager.NewCliDependencyInstaller(state, options...)
 	if err != nil {
 		return err
 	}
