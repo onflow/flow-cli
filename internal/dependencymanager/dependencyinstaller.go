@@ -502,24 +502,29 @@ func (di *DependencyInstaller) updateDependencyDeployment(contractName string) e
 }
 
 func (di *DependencyInstaller) updateDependencyAlias(contractName, aliasNetwork string) error {
-	var missingNetwork string
+	var missingNetworks []string
 
-	if aliasNetwork == config.TestnetNetwork.Name {
-		missingNetwork = config.MainnetNetwork.Name
-	} else {
-		missingNetwork = config.TestnetNetwork.Name
+	switch aliasNetwork {
+	case config.MainnetNetwork.Name:
+		missingNetworks = []string{config.TestnetNetwork.Name, config.PreviewnetNetwork.Name}
+	case config.TestnetNetwork.Name:
+		missingNetworks = []string{config.MainnetNetwork.Name, config.PreviewnetNetwork.Name}
+	case config.PreviewnetNetwork.Name:
+		missingNetworks = []string{config.MainnetNetwork.Name, config.TestnetNetwork.Name}
 	}
 
-	label := fmt.Sprintf("Enter an alias address for %s on %s if you have one, otherwise leave blank", contractName, missingNetwork)
-	raw := prompt.AddressPromptOrEmpty(label, "Invalid alias address")
+	for _, missingNetwork := range missingNetworks {
+		label := fmt.Sprintf("Enter an alias address for %s on %s if you have one, otherwise leave blank", contractName, missingNetwork)
+		raw := prompt.AddressPromptOrEmpty(label, "Invalid alias address")
 
-	if raw != "" {
-		contract, err := di.State.Contracts().ByName(contractName)
-		if err != nil {
-			return err
+		if raw != "" {
+			contract, err := di.State.Contracts().ByName(contractName)
+			if err != nil {
+				return err
+			}
+
+			contract.Aliases.Add(missingNetwork, flowsdk.HexToAddress(raw))
 		}
-
-		contract.Aliases.Add(missingNetwork, flowsdk.HexToAddress(raw))
 	}
 
 	return nil
