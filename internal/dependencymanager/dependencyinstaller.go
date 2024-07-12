@@ -285,6 +285,12 @@ func (di *DependencyInstaller) processDependency(dependency config.Dependency) e
 }
 
 func (di *DependencyInstaller) fetchDependencies(networkName string, address flowsdk.Address, assignedName, contractName string) error {
+	sourceString := fmt.Sprintf("%s://%s.%s", networkName, address.String(), contractName)
+
+	if _, exists := di.dependencies[sourceString]; exists {
+		return nil // Skip already processed dependencies
+	}
+
 	err := di.addDependency(config.Dependency{
 		Name: assignedName,
 		Source: config.Source{
