@@ -30,7 +30,6 @@ import (
 
 func init() {
 	getStagedCodeCommand.AddToParent(Cmd)
-	IsStagedCommand.AddToParent(Cmd)
 	listStagedContractsCommand.AddToParent(Cmd)
 	stageCommand.AddToParent(Cmd)
 	unstageContractCommand.AddToParent(Cmd)
