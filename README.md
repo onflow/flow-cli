@@ -24,6 +24,8 @@
 
 To install the Flow CLI, follow the [installation instructions](https://developers.flow.com/tools/flow-cli/install) on the Flow documentation website.
 
+If you need to install the Cadence 1.0 pre-release of the Flow CLI, you can find the installation instructions [here](https://cadence-lang.org/docs/cadence-migration-guide#install-cadence-10-cli).
+
 ## Documentation
 
 You can find the CLI documentation on the [CLI documentation website](https://developers.flow.com/tools/flow-cli).
