@@ -2164,8 +2164,8 @@ github.com/onflow/atree v0.6.1-0.20230711151834-86040b30171f/go.mod h1:xvP61FoOs
 github.com/onflow/atree v0.7.0-rc.2 h1:mZmVrl/zPlfI44EjV3FdR2QwIqT8nz1sCONUBFcML/U=
 github.com/onflow/atree v0.7.0-rc.2/go.mod h1:xvP61FoOs95K7IYdIYRnNcYQGf4nbF/uuJ0tHf4DRuM=
 github.com/onflow/cadence v1.0.0-M3/go.mod h1:odXGZZ/wGNA5mwT8bC9v8u8EXACHllB2ABSZK65TGL8=
-github.com/onflow/cadence v1.0.0-preview.36 h1:mbxqoYSYiVX2Uo+Plrkmu29ezrShohlN+4Ltw0cfJxU=
-github.com/onflow/cadence v1.0.0-preview.36/go.mod h1:jOwvPSSLTr9TvaKMs7KKiBYMmpdpNNAFxBsjMlrqVD0=
+github.com/onflow/cadence v1.0.0-preview.38 h1:Ag3V1YCErma9ZF+eaNq602Vv2lBI3ScaMUcUOFj81GQ=
+github.com/onflow/cadence v1.0.0-preview.38/go.mod h1:jOwvPSSLTr9TvaKMs7KKiBYMmpdpNNAFxBsjMlrqVD0=
 github.com/onflow/cadence-tools/languageserver v1.0.0-preview.33 h1:eepGWEYAh0V/xklsh8XFpENrnWJ3x/Hu3XhUGtwiu6Y=
 github.com/onflow/cadence-tools/languageserver v1.0.0-preview.33/go.mod h1:3gRwz39hOVR9++tdUbV07eEYb1p0eXtPylLOqYmequw=
 github.com/onflow/cadence-tools/lint v1.0.0-preview.33 h1:nTdKGCIBW/nWDLLBjkVgvMQxgaj+9F5+8o2NMXGs1Ac=
@@ -2196,8 +2196,8 @@ github.com/onflow/flow-ft/lib/go/templates v1.0.0/go.mod h1:uQ8XFqmMK2jxyBSVrmyu
 github.com/onflow/flow-go v0.36.0 h1:lWZkG9m9UhHr27CWBgUX56VcOI5yGMxy5I+waozqs1o=
 github.com/onflow/flow-go v0.36.0/go.mod h1:O25T9vx2IaAAz8X7asQy1DAOUZyJYegnv6TFS0g05OA=
 github.com/onflow/flow-go-sdk v1.0.0-M1/go.mod h1:TDW0MNuCs4SvqYRUzkbRnRmHQL1h4X8wURsCw9P9beo=
-github.com/onflow/flow-go-sdk v1.0.0-preview.38 h1:vzTXhNkklnuxFaqhFeLPry+sud6LzhRMFFQveYJuXt4=
-github.com/onflow/flow-go-sdk v1.0.0-preview.38/go.mod h1:SuSH+SB9jONwjhXrb402JM7HfDLAcXRABN1wF+iYAfw=
+github.com/onflow/flow-go-sdk v1.0.0-preview.41 h1:pOUAIQdlWuc90tQzYixCXkqmnoorDgsFxTu2J1wlhHA=
+github.com/onflow/flow-go-sdk v1.0.0-preview.41/go.mod h1:FyJiLluqK+sNo+ky9VU6HSwVkvhv5/fKH1sIKI1yrrI=
 github.com/onflow/flow-nft/lib/go/contracts v1.2.1 h1:woAAS5z651sDpi7ihAHll8NvRS9uFXIXkL6xR+bKFZY=
 github.com/onflow/flow-nft/lib/go/contracts v1.2.1/go.mod h1:2gpbza+uzs1k7x31hkpBPlggIRkI53Suo0n2AyA2HcE=
 github.com/onflow/flow-nft/lib/go/templates v1.2.0 h1:JSQyh9rg0RC+D1930BiRXN8lrtMs+ubVMK6aQPon6Yc=
