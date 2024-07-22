@@ -23,7 +23,7 @@ require (
 	github.com/onflow/flixkit-go v1.2.1-cadence-v1-preview.19
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.3.0
 	github.com/onflow/flow-emulator v1.0.0-preview.33
-	github.com/onflow/flow-evm-gateway v0.22.3
+	github.com/onflow/flow-evm-gateway v0.24.0
 	github.com/onflow/flow-go v0.36.0
 	github.com/onflow/flow-go-sdk v1.0.0-preview.38
 	github.com/onflow/flowkit/v2 v2.0.0-stable-cadence-alpha.25
