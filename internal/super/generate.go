@@ -334,8 +334,6 @@ func (g *Generator) generate(templateType, templateName, name, account string, d
 		return fmt.Errorf("invalid template type: %s", templateType)
 	}
 
-	fmt.Println("account: ", account)
-
 	directoryWithBasePath := filepath.Join(rootDir, basePath, account)
 	filenameWithBasePath := filepath.Join(rootDir, basePath, account, filename)
 	relativeFilenameWithBasePath := filepath.Join(basePath, account, filename)
@@ -383,9 +381,6 @@ func (g *Generator) generate(templateType, templateName, name, account string, d
 	}
 
 	if templateType == ContractType {
-		fmt.Println("directoryWithBasePath: ", directoryWithBasePath)
-		fmt.Println("filenameWithBasePath: ", filenameWithBasePath)
-		fmt.Println("relativeFilenameWithBasePath: ", relativeFilenameWithBasePath)
 		err := g.updateContractsState(name, relativeFilenameWithBasePath)
 		if err != nil {
 			return err
