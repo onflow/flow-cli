@@ -52,7 +52,7 @@ func Test_Build(t *testing.T) {
 			assert.Equal(t, serviceAccountAddress, roles.Payer.String())
 			assert.Equal(t, serviceAccountAddress, roles.Proposer.String())
 			assert.Equal(t, serviceAccountAddress, roles.Authorizers[0].String())
-			assert.Equal(t, 0, args.Get(2).(int))
+			assert.Equal(t, uint32(0), args.Get(2).(uint32))
 			script := args.Get(3).(flowkit.Script)
 			assert.Equal(t, tests.TransactionSimple.Filename, script.Location)
 		}).Return(transactions.New(), nil)
