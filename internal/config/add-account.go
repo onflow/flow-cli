@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/onflow/go-ethereum/common/math"
+
 	"github.com/onflow/flow-cli/internal/prompt"
 
 	"github.com/onflow/flowkit/v2/accounts"
@@ -129,7 +131,7 @@ func parseKey(key string, sigAlgo string) (crypto.PrivateKey, error) {
 	return privateKey, nil
 }
 
-func parseKeyIndex(value string) (int, error) {
+func parseKeyIndex(value string) (uint32, error) {
 	v, err := strconv.Atoi(value)
 	if err != nil {
 		return 0, fmt.Errorf("invalid index, must be a number")
@@ -137,8 +139,11 @@ func parseKeyIndex(value string) (int, error) {
 	if v < 0 {
 		return 0, fmt.Errorf("invalid index, must be positive")
 	}
+	if v > math.MaxUint32 {
+		return 0, fmt.Errorf("invalid index, must be less than %d", math.MaxUint32)
+	}
 
-	return v, nil
+	return uint32(v), nil
 }
 
 func flagsToAccountData(flags flagsAddAccount) (*prompt.AccountData, bool, error) {

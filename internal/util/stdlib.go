@@ -88,7 +88,7 @@ func (StandardLibrary) GetStorageCapacity(_ common.Address) (uint64, error) {
 	panic(errors.NewUnreachableError())
 }
 
-func (StandardLibrary) GetAccountKey(_ common.Address, _ int) (*stdlib.AccountKey, error) {
+func (StandardLibrary) GetAccountKey(_ common.Address, _ uint32) (*stdlib.AccountKey, error) {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
@@ -108,9 +108,9 @@ func (StandardLibrary) GetAccountContractCode(_ common.AddressLocation) ([]byte,
 
 func (StandardLibrary) EmitEvent(
 	_ *interpreter.Interpreter,
+	_ interpreter.LocationRange,
 	_ *sema.CompositeType,
 	_ []interpreter.Value,
-	_ interpreter.LocationRange,
 ) {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
@@ -143,7 +143,7 @@ func (StandardLibrary) AddAccountKey(
 	panic(errors.NewUnreachableError())
 }
 
-func (StandardLibrary) RevokeAccountKey(_ common.Address, _ int) (*stdlib.AccountKey, error) {
+func (StandardLibrary) RevokeAccountKey(_ common.Address, _ uint32) (*stdlib.AccountKey, error) {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
@@ -239,7 +239,7 @@ func (StandardLibrary) Hash(_ []byte, _ string, _ sema.HashAlgorithm) ([]byte, e
 	panic(errors.NewUnreachableError())
 }
 
-func (StandardLibrary) AccountKeysCount(_ common.Address) (uint64, error) {
+func (StandardLibrary) AccountKeysCount(_ common.Address) (uint32, error) {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())

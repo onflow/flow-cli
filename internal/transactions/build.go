@@ -39,7 +39,7 @@ import (
 type flagsBuild struct {
 	ArgsJSON         string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
 	Proposer         string   `default:"emulator-account" flag:"proposer" info:"transaction proposer"`
-	ProposerKeyIndex int      `default:"0" flag:"proposer-key-index" info:"proposer key index"`
+	ProposerKeyIndex uint32   `default:"0" flag:"proposer-key-index" info:"proposer key index"`
 	Payer            string   `default:"emulator-account" flag:"payer" info:"transaction payer"`
 	Authorizer       []string `default:"emulator-account" flag:"authorizer" info:"transaction authorizer"`
 	GasLimit         uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`

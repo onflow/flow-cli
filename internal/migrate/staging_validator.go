@@ -648,7 +648,7 @@ func (v *stagingValidatorImpl) loadSystemContracts() {
 			ChainID: chainId,
 		},
 		Burner: migrations.BurnerContractChangeUpdate,
-		EVM:    migrations.EVMContractChangeUpdate,
+		EVM:    migrations.EVMContractChangeDeployMinimalAndUpdateFull,
 	})
 	for _, stagedSystemContract := range stagedSystemContracts {
 		location := common.AddressLocation{
