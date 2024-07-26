@@ -61,7 +61,7 @@ var SetupCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "init <project name>",
 		Short:   "Start a new Flow project",
-		Example: "flow setup my-project",
+		Example: "flow init my-project",
 		Args:    cobra.MaximumNArgs(1),
 		GroupID: "super",
 	},
