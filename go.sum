@@ -2163,8 +2163,8 @@ github.com/onflow/cadence v1.0.0-preview.39 h1:BDx+hO4THUW6cDN11tqVtBx8hFSUErjQk
 github.com/onflow/cadence v1.0.0-preview.39/go.mod h1:jOwvPSSLTr9TvaKMs7KKiBYMmpdpNNAFxBsjMlrqVD0=
 github.com/onflow/cadence-tools/languageserver v1.0.0-preview.35 h1:Hzt3fIgzhO1i8BLxMaaZDMRNn5AMfJiVjUDbmjVyccM=
 github.com/onflow/cadence-tools/languageserver v1.0.0-preview.35/go.mod h1:dDOPMobGLyvunUjHuhWNDMFJoeNpj3nTeiPD7OA/7sw=
-github.com/onflow/cadence-tools/lint v1.0.0-preview.35 h1:/4kF5BOMVNvS1DZZMhBGRGfE29/U2OxIrB0W9T+L2KU=
-github.com/onflow/cadence-tools/lint v1.0.0-preview.35/go.mod h1:3Run+dzVcnqQ23SJYA3K8cMWRF4JGvF8ZbWRYs9etXA=
+github.com/onflow/cadence-tools/lint v1.0.0-preview.36 h1:deokHbtkdLMUKVf7d2Xv9IrS2TG4prkS1NyjZomHguY=
+github.com/onflow/cadence-tools/lint v1.0.0-preview.36/go.mod h1:L5fXYzlWOhoToSO9TNjioV9khW/jkAZNOi18NDSQz90=
 github.com/onflow/cadence-tools/test v1.0.0-preview.35 h1:GOjd6/ipV1gPpkYXnTi2uBf2JpfLDTUgMEzJeO2X2oI=
 github.com/onflow/cadence-tools/test v1.0.0-preview.35/go.mod h1:txbdChoJFOSdgOE1IBAIr6KcpEaBO4Bh/Bc2Rcvq2k0=
 github.com/onflow/contract-updater/lib/go/templates v1.0.1 h1:xPj898Y8OgLLbXH8+JeKVBV6J+nqPZjiLgGM3Abucto=
