@@ -16,7 +16,7 @@ require (
 	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v1.0.0-preview.39
 	github.com/onflow/cadence-tools/languageserver v1.0.0-preview.35
-	github.com/onflow/cadence-tools/lint v1.0.0-preview.35
+	github.com/onflow/cadence-tools/lint v1.0.0-preview.36
 	github.com/onflow/cadence-tools/test v1.0.0-preview.35
 	github.com/onflow/contract-updater/lib/go/templates v1.0.1
 	github.com/onflow/fcl-dev-wallet v0.8.0-stable-cadence.1
