@@ -68,6 +68,9 @@ type stagingValidatorImpl struct {
 
 	// Cache for contract checkers which are reused during program checking & used for the update checker
 	checkingCache map[common.Location]*cachedCheckingResult
+
+	// Environment for the stdlib
+	env *util.CheckerEnvironment
 }
 
 type node map[common.Location]node
@@ -174,6 +177,14 @@ func newStagingValidator(flow flowkit.Services) *stagingValidatorImpl {
 }
 
 func (v *stagingValidatorImpl) Validate(stagedContracts []stagedContractUpdate) error {
+	// Setup the environment for the stdlib
+	chainId, ok := chainIdMap[v.flow.Network().Name]
+	if !ok {
+		return fmt.Errorf("unsupported network: %s", v.flow.Network().Name)
+	}
+	v.env = util.NewCheckerEnvironment()
+	v.env.SetupFVM(chainId)
+
 	v.stagedContracts = make(map[common.AddressLocation]stagedContractUpdate)
 	for _, stagedContract := range stagedContracts {
 		v.stagedContracts[stagedContract.DeployLocation] = stagedContract
@@ -408,9 +419,13 @@ func (v *stagingValidatorImpl) checkContract(
 		&sema.Config{
 			AccessCheckMode:    sema.AccessCheckModeStrict,
 			AttachmentsEnabled: true,
-			BaseValueActivationHandler: func(_ common.Location) *sema.VariableActivation {
+			BaseValueActivationHandler: func(location common.Location) *sema.VariableActivation {
 				// Only checking contracts, so no need to consider script standard library
-				return util.NewStandardLibrary().BaseValueActivation
+				return v.env.GetBaseValueActivation(location)
+			},
+			BaseTypeActivationHandler: func(location common.Location) *sema.VariableActivation {
+				// Only checking contracts, so no need to consider script standard library
+				return v.env.GetBaseTypeActivation(location)
 			},
 			LocationHandler:            v.resolveLocation,
 			ImportHandler:              v.resolveImport,

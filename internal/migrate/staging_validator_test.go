@@ -762,4 +762,65 @@ func Test_StagingValidator(t *testing.T) {
 
 		require.Nil(t, err)
 	})
+
+	t.Run("import InternalEVM fails with wrong location", func(t *testing.T) {
+		// setup mocks
+		srv := setupValidatorMocks(t, []mockNetworkAccount{
+			{
+				address: flow.HexToAddress("01"),
+				contracts: map[string][]byte{"Foo": []byte(`
+				pub contract Foo {
+					init() {}
+				}`)},
+			},
+		})
+
+		validator := newStagingValidator(srv)
+		err := validator.Validate([]stagedContractUpdate{
+			{
+				DeployLocation: simpleAddressLocation("0x01.Foo"),
+				SourceLocation: common.StringLocation("./Foo.cdc"),
+				Code: []byte(`
+				import Crypto
+				access(all) contract Foo {
+					init() {
+						log(InternalEVM)
+					}
+				}`),
+			},
+		})
+
+		var validatorErr *stagingValidatorError
+		require.ErrorAs(t, err, &validatorErr)
+
+		var checkerErr *sema.CheckerError
+		require.ErrorAs(t, validatorErr.errors[simpleAddressLocation("0x01.Foo")], &checkerErr)
+		require.ErrorContains(t, checkerErr, "cannot find variable in this scope: `InternalEVM`")
+	})
+
+	t.Run("EVM import works", func(t *testing.T) {
+		location := simpleAddressLocation("0x01.Test")
+		sourceCodeLocation := common.StringLocation("./Test.cdc")
+		oldContract := `
+		pub contract Test {
+			pub fun test() {}
+		}`
+		newContract := `
+		import EVM from 0x8c5303eaa26202d6
+		access(all) contract Test {
+			access(all) fun test() {}
+		}`
+
+		// setup mocks
+		srv := setupValidatorMocks(t, []mockNetworkAccount{
+			{
+				address:   flow.HexToAddress("01"),
+				contracts: map[string][]byte{"Test": []byte(oldContract)},
+			},
+		})
+
+		validator := newStagingValidator(srv)
+		err := validator.Validate([]stagedContractUpdate{{location, sourceCodeLocation, []byte(newContract)}})
+		require.NoError(t, err)
+	})
 }
