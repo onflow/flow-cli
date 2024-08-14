@@ -53,7 +53,7 @@ func NewCheckerEnvironment() *CheckerEnvironment {
 
 func NewScriptCheckerEnvironment() *CheckerEnvironment {
 	env := newCheckerEnvironment()
-	for _, valueDeclaration := range stdlib.DefaultStandardLibraryValues(env) {
+	for _, valueDeclaration := range stdlib.DefaultScriptStandardLibraryValues(env) {
 		env.DeclareValue(valueDeclaration, nil)
 	}
 	return env
