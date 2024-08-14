@@ -80,8 +80,7 @@ func (e CheckerEnvironment) GetBaseValueActivation(location common.Location) (ba
 
 	baseValueActivation = e.baseValueActivationsByLocation[location]
 	if baseValueActivation == nil {
-		temp := *e.defaultBaseValueActivation
-		baseValueActivation = &temp
+		baseValueActivation = sema.NewVariableActivation(e.defaultBaseValueActivation)
 		e.baseValueActivationsByLocation[location] = baseValueActivation
 	}
 	return
@@ -94,8 +93,7 @@ func (e CheckerEnvironment) GetBaseTypeActivation(location common.Location) (bas
 
 	baseTypeActivation = e.baseTypeActivationsByLocation[location]
 	if baseTypeActivation == nil {
-		temp := *e.defaultBaseTypeActivation
-		baseTypeActivation = &temp
+		baseTypeActivation = sema.NewVariableActivation(e.defaultBaseTypeActivation)
 		e.baseTypeActivationsByLocation[location] = baseTypeActivation
 	}
 	return

@@ -781,7 +781,6 @@ func Test_StagingValidator(t *testing.T) {
 				DeployLocation: simpleAddressLocation("0x01.Foo"),
 				SourceLocation: common.StringLocation("./Foo.cdc"),
 				Code: []byte(`
-				import Crypto
 				access(all) contract Foo {
 					init() {
 						log(InternalEVM)
