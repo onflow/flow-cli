@@ -96,7 +96,8 @@ func migrateState(
 	err = emulatorMigrate.MigrateCadence1(
 		store,
 		stateFlags.SaveReport,
-		migrations.EVMContractChangeNone,
+		// Should match https://github.com/onflow/flow-go/blob/2a1e71eb64e200c7d82e8e31602c397f1939c893/cmd/util/cmd/execution-state-extract/cmd.go#L380-L381
+		migrations.EVMContractChangeDeployMinimalAndUpdateFull,
 		migrations.BurnerContractChangeDeploy,
 		contracts,
 		rwf,
