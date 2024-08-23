@@ -147,7 +147,7 @@ func (e *stagingValidatorError) MissingDependencies() []common.AddressLocation {
 	return missingDependencies
 }
 
-// ContractsMissingDependencies returns the contracts attempted to be validated that are missing dependencies
+// MissingDependencyErrors returns the contracts attempted to be validated that are missing dependencies
 func (e *stagingValidatorError) MissingDependencyErrors() map[common.AddressLocation]*missingDependenciesError {
 	missingDependencyErrors := make(map[common.AddressLocation]*missingDependenciesError)
 	for location := range e.errors {
@@ -284,11 +284,23 @@ func (v *stagingValidatorImpl) checkAllStaged() map[common.StringLocation]error 
 		// Create a set of all dependencies
 		missingDependencies := make([]common.AddressLocation, 0)
 		v.forEachDependency(contract, func(dependency common.Location) {
-			if code := v.contracts[dependency]; code == nil {
-				if dependency, ok := dependency.(common.AddressLocation); ok {
-					missingDependencies = append(missingDependencies, dependency)
-				}
+			code := v.contracts[dependency]
+			if code != nil {
+				return
 			}
+
+			addressDependency, ok := dependency.(common.AddressLocation)
+			if !ok {
+				return
+			}
+
+			code, err := v.getStagedContractCode(addressDependency)
+			if err != nil {
+				errors[contract.SourceLocation] = err
+				return
+			}
+
+			missingDependencies = append(missingDependencies, addressDependency)
 		})
 
 		if len(missingDependencies) > 0 {
