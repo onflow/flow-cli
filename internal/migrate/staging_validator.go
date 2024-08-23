@@ -348,7 +348,13 @@ func (v *stagingValidatorImpl) validateContractUpdate(contract stagedContractUpd
 	if !ok {
 		return fmt.Errorf("unsupported network: %s", v.flow.Network().Name)
 	}
-	validator.WithUserDefinedTypeChangeChecker(migrations.NewUserDefinedTypeChangeCheckerFunc(chainId))
+
+	// TODO: extract type requirements from the old contracts
+	typeRequirements := &migrations.LegacyTypeRequirements{}
+
+	validator.WithUserDefinedTypeChangeChecker(
+		migrations.NewUserDefinedTypeChangeCheckerFunc(chainId, typeRequirements),
+	)
 
 	err = validator.Validate()
 	if err != nil {
