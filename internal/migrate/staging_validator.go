@@ -597,17 +597,9 @@ func (v *stagingValidatorImpl) resolveLocation(
 	for i := range resolvedLocations {
 		identifier := identifiers[i]
 
-		var resolvedLocation common.Location
-		resovledAddrLocation := common.AddressLocation{
+		resolvedLocation := common.AddressLocation{
 			Address: addressLocation.Address,
 			Name:    identifier.Identifier,
-		}
-
-		// If the contract one of our staged contract updates, use the source location
-		if stagedUpdate, ok := v.stagedContracts[resovledAddrLocation]; ok {
-			resolvedLocation = stagedUpdate.DeployLocation
-		} else {
-			resolvedLocation = resovledAddrLocation
 		}
 
 		resolvedLocations[i] = runtime.ResolvedLocation{
