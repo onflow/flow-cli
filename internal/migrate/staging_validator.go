@@ -62,8 +62,12 @@ type stagingValidatorImpl struct {
 
 	// Cache for account contract names so we don't have to fetch them multiple times
 	accountContractNames map[common.Address][]string
+
 	// All resolved contract code
 	contracts map[common.Location][]byte
+
+	// Contract codes that are not updated/staged
+	oldCodes map[common.Location][]byte
 
 	// Dependency graph for staged contracts
 	// This root level map holds all nodes
@@ -176,6 +180,7 @@ func newStagingValidator(flow flowkit.Services) *stagingValidatorImpl {
 		checkingCache:        make(map[common.Location]*cachedCheckingResult),
 		accountContractNames: make(map[common.Address][]string),
 		graph:                make(map[common.Location]node),
+		oldCodes:             make(map[common.Location][]byte),
 	}
 }
 
@@ -228,6 +233,7 @@ func (v *stagingValidatorImpl) Validate(stagedContracts []stagedContractUpdate) 
 		if !ok {
 			return fmt.Errorf("old contract code not found for contract: %s", contractName)
 		}
+		v.oldCodes[location] = oldCode
 
 		migrations.ExtractTypeRequirements(
 			migrations.AddressContract{
@@ -355,16 +361,11 @@ func (v *stagingValidatorImpl) validateContractUpdate(
 		}
 	}()
 
-	// Get the account for the contract
-	address := flowsdk.Address(contract.DeployLocation.Address)
-	account, err := v.flow.GetAccount(context.Background(), address)
-	if err != nil {
-		return fmt.Errorf("failed to get account: %w", err)
-	}
+	location := contract.DeployLocation
+	contractName := location.Name
 
 	// Get the target contract old code
-	contractName := contract.DeployLocation.Name
-	contractCode, ok := account.Contracts[contractName]
+	contractCode, ok := v.oldCodes[location]
 	if !ok {
 		return fmt.Errorf("old contract code not found for contract: %s", contractName)
 	}
@@ -380,7 +381,7 @@ func (v *stagingValidatorImpl) validateContractUpdate(
 
 	// Check if contract code is valid according to Cadence V1 Update Checker
 	validator := stdlib.NewCadenceV042ToV1ContractUpdateValidator(
-		contract.DeployLocation,
+		location,
 		contractName,
 		&accountContractNamesProviderImpl{
 			resolverFunc: v.resolveAddressContractNames,
