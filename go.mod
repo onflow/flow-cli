@@ -14,19 +14,19 @@ require (
 	github.com/gosuri/uilive v0.0.4
 	github.com/logrusorgru/aurora/v4 v4.0.0
 	github.com/manifoldco/promptui v0.9.0
-	github.com/onflow/cadence v1.0.0-preview.48
-	github.com/onflow/cadence-tools/languageserver v1.0.0-preview.36
-	github.com/onflow/cadence-tools/lint v1.0.0-preview.36
-	github.com/onflow/cadence-tools/test v1.0.0-preview.36
+	github.com/onflow/cadence v1.0.0-preview.49
+	github.com/onflow/cadence-tools/languageserver v1.0.0-preview.37
+	github.com/onflow/cadence-tools/lint v1.0.0-preview.37
+	github.com/onflow/cadence-tools/test v1.0.0-preview.37
 	github.com/onflow/contract-updater/lib/go/templates v1.0.1
 	github.com/onflow/fcl-dev-wallet v0.8.0-stable-cadence.1
-	github.com/onflow/flixkit-go v1.2.1-cadence-v1-preview.22
+	github.com/onflow/flixkit-go v1.2.1-cadence-v1-preview.23
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.3.1
-	github.com/onflow/flow-emulator v1.0.0-preview.39
-	github.com/onflow/flow-evm-gateway v0.29.2
-	github.com/onflow/flow-go v0.37.1
-	github.com/onflow/flow-go-sdk v1.0.0-preview.50
-	github.com/onflow/flowkit/v2 v2.0.0-stable-cadence-alpha.30
+	github.com/onflow/flow-emulator v1.0.0-preview.40
+	github.com/onflow/flow-evm-gateway v0.29.4
+	github.com/onflow/flow-go v0.37.7-0.20240822174309-8b4fff2114d4
+	github.com/onflow/flow-go-sdk v1.0.0-preview.51
+	github.com/onflow/flowkit/v2 v2.0.0-stable-cadence-alpha.31
 	github.com/onflow/go-ethereum v1.14.7
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
@@ -62,7 +62,7 @@ require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bits-and-blooms/bitset v1.10.0 // indirect
-	github.com/btcsuite/btcd/btcec/v2 v2.2.1 // indirect
+	github.com/btcsuite/btcd/btcec/v2 v2.3.4 // indirect
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.3 // indirect
 	github.com/c-bata/go-prompt v0.2.6 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
@@ -205,8 +205,8 @@ require (
 	github.com/multiformats/go-multistream v0.5.0 // indirect
 	github.com/multiformats/go-varint v0.0.7 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
-	github.com/onflow/atree v0.8.0-rc.5 // indirect
-	github.com/onflow/crypto v0.25.1 // indirect
+	github.com/onflow/atree v0.8.0-rc.6 // indirect
+	github.com/onflow/crypto v0.25.2 // indirect
 	github.com/onflow/flow-core-contracts/lib/go/contracts v1.3.1 // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v1.0.0 // indirect
 	github.com/onflow/flow-ft/lib/go/templates v1.0.0 // indirect
@@ -276,13 +276,13 @@ require (
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
-	golang.org/x/crypto v0.23.0 // indirect
+	golang.org/x/crypto v0.26.0 // indirect
 	golang.org/x/net v0.25.0 // indirect
 	golang.org/x/oauth2 v0.20.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/sys v0.24.0 // indirect
-	golang.org/x/term v0.20.0 // indirect
-	golang.org/x/text v0.15.0 // indirect
+	golang.org/x/term v0.23.0 // indirect
+	golang.org/x/text v0.17.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	gonum.org/v1/gonum v0.14.0 // indirect
