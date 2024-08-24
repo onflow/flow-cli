@@ -21,6 +21,7 @@ package migrate
 import (
 	"fmt"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit/v2"
@@ -87,4 +88,14 @@ func replaceImportsIfExists(state *flowkit.State, flow flowkit.Services, locatio
 	}
 
 	return program.Code(), nil
+}
+
+func withRetry(operation func() error) error {
+	return backoff.Retry(
+		operation,
+		backoff.WithMaxRetries(
+			backoff.NewExponentialBackOff(),
+			10,
+		),
+	)
 }

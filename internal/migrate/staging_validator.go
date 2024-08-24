@@ -322,7 +322,12 @@ func (v *stagingValidatorImpl) validateContractUpdate(contract stagedContractUpd
 
 	// Get the account for the contract
 	address := flowsdk.Address(contract.DeployLocation.Address)
-	account, err := v.flow.GetAccount(context.Background(), address)
+
+	var account *flowsdk.Account
+	err = withRetry(func() error {
+		account, err = v.flow.GetAccount(context.Background(), address)
+		return err
+	})
 	if err != nil {
 		return fmt.Errorf("failed to get account: %w", err)
 	}
@@ -473,7 +478,14 @@ func (v *stagingValidatorImpl) getStagedContractCode(
 		return code, nil
 	}
 
-	code, err := getStagedContractCode(context.Background(), v.flow, location)
+	var (
+		code []byte
+		err  error
+	)
+	err = withRetry(func() error {
+		code, err = getStagedContractCode(context.Background(), v.flow, location)
+		return err
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -635,15 +647,24 @@ func (v *stagingValidatorImpl) resolveAddressContractNames(address common.Addres
 	}
 
 	cAddr := cadence.BytesToAddress(address.Bytes())
-	value, err := v.flow.ExecuteScript(
-		context.Background(),
-		flowkit.Script{
-			Code: templates.GenerateGetStagedContractNamesForAddressScript(MigrationContractStagingAddress(v.flow.Network().Name)),
-			Args: []cadence.Value{cAddr},
-		},
-		flowkit.LatestScriptQuery,
-	)
 
+	var (
+		value cadence.Value
+		err   error
+	)
+	err = withRetry(func() error {
+		value, err = v.flow.ExecuteScript(
+			context.Background(),
+			flowkit.Script{
+				Code: templates.GenerateGetStagedContractNamesForAddressScript(
+					MigrationContractStagingAddress(v.flow.Network().Name),
+				),
+				Args: []cadence.Value{cAddr},
+			},
+			flowkit.LatestScriptQuery,
+		)
+		return err
+	})
 	if err != nil {
 		return nil, err
 	}
