@@ -21,6 +21,7 @@ package migrate
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/onflow/cadence"
 	"github.com/onflow/cadence/runtime/common"
@@ -68,15 +69,35 @@ func migrateState(
 
 	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).With().Timestamp().Logger()
 
-	if len(stateFlags.Contracts) == 0 {
-		logger.Warn().Msg("no contract names provided, no contracts will be migrated! Use --contracts flag to specify contracts to migrate")
+	contractNames := stateFlags.Contracts
+	if len(contractNames) == 0 {
+
+		network := config.EmulatorNetwork
+
+		contracts, err := state.DeploymentContractsByNetwork(network)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, contract := range contracts {
+			contractNames = append(contractNames, contract.Name)
+		}
+
+		if len(contractNames) == 0 {
+			logger.Warn().Msg("no contracts found to migrate")
+		} else {
+			logger.Info().Msgf(
+				"no contract names provided, migrating all contracts: %s",
+				strings.Join(contractNames, ","),
+			)
+		}
 	}
 
 	if globalFlags.Network != config.EmulatorNetwork.Name {
 		return nil, fmt.Errorf("state migration is only supported for the emulator network")
 	}
 
-	contracts, err := resolveStagedContracts(state, stateFlags.Contracts)
+	contracts, err := resolveStagedContracts(state, contractNames)
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve staged contracts: %w", err)
 	}
