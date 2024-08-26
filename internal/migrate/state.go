@@ -59,12 +59,19 @@ var stateCommand = &command.Command{
 }
 
 func migrateState(
-	args []string,
+	_ []string,
 	globalFlags command.GlobalFlags,
 	_ output.Logger,
-	flow flowkit.Services,
+	_ flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
+
+	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).With().Timestamp().Logger()
+
+	if len(stateFlags.Contracts) == 0 {
+		logger.Warn().Msg("no contract names provided, no contracts will be migrated! Use --contracts flag to specify contracts to migrate")
+	}
+
 	if globalFlags.Network != config.EmulatorNetwork.Name {
 		return nil, fmt.Errorf("state migration is only supported for the emulator network")
 	}
@@ -78,8 +85,6 @@ func migrateState(
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
-
-	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).With().Timestamp().Logger()
 
 	// Create a report writer factory if a report path is provided
 	var rwf reporters.ReportWriterFactory
