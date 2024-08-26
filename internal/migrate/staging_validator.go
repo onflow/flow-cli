@@ -25,8 +25,6 @@ import (
 	"fmt"
 	"strings"
 
-	"golang.org/x/exp/slices"
-
 	"github.com/onflow/cadence"
 	"github.com/onflow/cadence/runtime"
 	"github.com/onflow/cadence/runtime/ast"
@@ -42,6 +40,7 @@ import (
 	"github.com/onflow/flow-go/cmd/util/ledger/migrations"
 	"github.com/onflow/flow-go/model/flow"
 	"github.com/onflow/flowkit/v2"
+	"golang.org/x/exp/slices"
 
 	"github.com/onflow/flow-cli/internal/util"
 )
@@ -147,7 +146,7 @@ func (e *stagingValidatorError) MissingDependencies() []common.AddressLocation {
 	return missingDependencies
 }
 
-// ContractsMissingDependencies returns the contracts attempted to be validated that are missing dependencies
+// MissingDependencyErrors returns the contracts attempted to be validated that are missing dependencies
 func (e *stagingValidatorError) MissingDependencyErrors() map[common.AddressLocation]*missingDependenciesError {
 	missingDependencyErrors := make(map[common.AddressLocation]*missingDependenciesError)
 	for location := range e.errors {
@@ -268,11 +267,11 @@ func (v *stagingValidatorImpl) Validate(stagedContracts []stagedContractUpdate) 
 }
 
 func (v *stagingValidatorImpl) checkAllStaged() map[common.StringLocation]error {
-	errors := make(map[common.StringLocation]error)
+	errs := make(map[common.StringLocation]error)
 	for _, contract := range v.stagedContracts {
 		_, err := v.checkContract(contract.SourceLocation)
 		if err != nil {
-			errors[contract.SourceLocation] = err
+			errs[contract.SourceLocation] = err
 		}
 	}
 
@@ -286,18 +285,29 @@ func (v *stagingValidatorImpl) checkAllStaged() map[common.StringLocation]error 
 		v.forEachDependency(contract, func(dependency common.Location) {
 			if code := v.contracts[dependency]; code == nil {
 				if dependency, ok := dependency.(common.AddressLocation); ok {
+
 					missingDependencies = append(missingDependencies, dependency)
 				}
 			}
 		})
 
 		if len(missingDependencies) > 0 {
-			errors[contract.SourceLocation] = &missingDependenciesError{
+			// If an error exists, only overwrite if it is a checking error
+			existingErr, ok := errs[contract.SourceLocation]
+			if ok {
+				var existingCheckingErr *sema.CheckerError
+				if !errors.As(existingErr, &existingCheckingErr) {
+					continue
+				}
+			}
+
+			errs[contract.SourceLocation] = &missingDependenciesError{
 				MissingContracts: missingDependencies,
 			}
 		}
 	}
-	return errors
+
+	return errs
 }
 
 func (v *stagingValidatorImpl) validateContractUpdate(contract stagedContractUpdate, checker *sema.Checker) (err error) {
@@ -310,7 +320,12 @@ func (v *stagingValidatorImpl) validateContractUpdate(contract stagedContractUpd
 
 	// Get the account for the contract
 	address := flowsdk.Address(contract.DeployLocation.Address)
-	account, err := v.flow.GetAccount(context.Background(), address)
+
+	var account *flowsdk.Account
+	err = withRetry(func() error {
+		account, err = v.flow.GetAccount(context.Background(), address)
+		return err
+	})
 	if err != nil {
 		return fmt.Errorf("failed to get account: %w", err)
 	}
@@ -336,7 +351,14 @@ func (v *stagingValidatorImpl) validateContractUpdate(contract stagedContractUpd
 		contract.SourceLocation,
 		contractName,
 		&accountContractNamesProviderImpl{
-			resolverFunc: v.resolveAddressContractNames,
+			resolverFunc: func(address common.Address) ([]string, error) {
+				names, err := v.resolveAddressContractNames(address)
+				if err != nil {
+					// NOTE: resolution errors are external errors, not user errors! so we MUST panic
+					panic(err)
+				}
+				return names, nil
+			},
 		},
 		oldProgram,
 		interpreterProgram,
@@ -373,13 +395,6 @@ func (v *stagingValidatorImpl) checkContract(
 		return cacheItem.checker, cacheItem.err
 	}
 
-	// Gracefully recover from panics
-	defer func() {
-		if r := recover(); r != nil {
-			err = fmt.Errorf("panic during contract checking: %v", r)
-		}
-	}()
-
 	// Cache the checking result
 	defer func() {
 		var cacheItem *cachedCheckingResult
@@ -400,7 +415,8 @@ func (v *stagingValidatorImpl) checkContract(
 	if addressLocation, ok := importedLocation.(common.AddressLocation); ok {
 		code, err = v.getStagedContractCode(addressLocation)
 		if err != nil {
-			return nil, err
+			// NOTE: fetching errors are external errors, not user errors! so we MUST panic
+			panic(err)
 		}
 	} else {
 		// Otherwise, the code is already known
@@ -409,6 +425,14 @@ func (v *stagingValidatorImpl) checkContract(
 			return nil, fmt.Errorf("contract code not found for location: %s", importedLocation)
 		}
 	}
+
+	// Gracefully recover from parsing/checking panics.
+	// NOTE: this must be done AFTER fetching the staged contract code
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("contract checking failed: %v", r)
+		}
+	}()
 
 	// Parse the contract code
 	var program *ast.Program
@@ -461,7 +485,14 @@ func (v *stagingValidatorImpl) getStagedContractCode(
 		return code, nil
 	}
 
-	code, err := getStagedContractCode(context.Background(), v.flow, location)
+	var (
+		code []byte
+		err  error
+	)
+	err = withRetry(func() error {
+		code, err = getStagedContractCode(context.Background(), v.flow, location)
+		return err
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -623,15 +654,24 @@ func (v *stagingValidatorImpl) resolveAddressContractNames(address common.Addres
 	}
 
 	cAddr := cadence.BytesToAddress(address.Bytes())
-	value, err := v.flow.ExecuteScript(
-		context.Background(),
-		flowkit.Script{
-			Code: templates.GenerateGetStagedContractNamesForAddressScript(MigrationContractStagingAddress(v.flow.Network().Name)),
-			Args: []cadence.Value{cAddr},
-		},
-		flowkit.LatestScriptQuery,
-	)
 
+	var (
+		value cadence.Value
+		err   error
+	)
+	err = withRetry(func() error {
+		value, err = v.flow.ExecuteScript(
+			context.Background(),
+			flowkit.Script{
+				Code: templates.GenerateGetStagedContractNamesForAddressScript(
+					MigrationContractStagingAddress(v.flow.Network().Name),
+				),
+				Args: []cadence.Value{cAddr},
+			},
+			flowkit.LatestScriptQuery,
+		)
+		return err
+	})
 	if err != nil {
 		return nil, err
 	}
