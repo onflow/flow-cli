@@ -876,4 +876,61 @@ func Test_StagingValidator(t *testing.T) {
 
 		require.NoError(t, err)
 	})
+
+	t.Run("contract update with entitlements", func(t *testing.T) {
+		// setup mocks
+		srv := setupValidatorMocks(t, []mockNetworkAccount{
+			{
+				address: flow.HexToAddress("01"),
+				contracts: map[string][]byte{"Foo": []byte(`
+				pub contract Foo {
+					pub resource Bar {}
+				}`)},
+			},
+			{
+				address: flow.HexToAddress("02"),
+				contracts: map[string][]byte{"Test": []byte(`
+				import Foo from 0x01
+				pub contract Test {
+					pub resource R {
+						pub var bar: auth &Foo.Bar?
+						init() {
+							self.bar = nil
+						}
+					}
+				}`)},
+			},
+		})
+
+		validator := newStagingValidator(srv)
+		err := validator.Validate([]stagedContractUpdate{
+			{
+				DeployLocation: simpleAddressLocation("0x01.Foo"),
+				SourceLocation: common.StringLocation("./Foo.cdc"),
+				Code: []byte(`
+				access(all) contract Foo {
+					access(all) resource Bar {
+						access(E) fun foo(){}
+					}
+					access(all) entitlement E
+				}`),
+			},
+			{
+				DeployLocation: simpleAddressLocation("0x02.Test"),
+				SourceLocation: common.StringLocation("./Test.cdc"),
+				Code: []byte(`
+				import Foo from 0x01
+				access(all) contract Test {
+					access(all) resource R {
+						access(all) var bar: auth(Foo.E) &Foo.Bar?
+						init() {
+							self.bar = nil
+						}
+					}
+				}`),
+			},
+		})
+
+		require.NoError(t, err)
+	})
 }
