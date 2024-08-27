@@ -5,8 +5,9 @@ go 1.22
 toolchain go1.22.3
 
 require (
-	github.com/charmbracelet/bubbles v0.18.0
-	github.com/charmbracelet/bubbletea v0.27.0
+	github.com/cenkalti/backoff/v4 v4.2.1
+	github.com/charmbracelet/bubbles v0.19.0
+	github.com/charmbracelet/bubbletea v0.27.1
 	github.com/dukex/mixpanel v1.0.1
 	github.com/getsentry/sentry-go v0.28.1
 	github.com/go-git/go-git/v5 v5.11.0
@@ -14,19 +15,19 @@ require (
 	github.com/gosuri/uilive v0.0.4
 	github.com/logrusorgru/aurora/v4 v4.0.0
 	github.com/manifoldco/promptui v0.9.0
-	github.com/onflow/cadence v1.0.0-preview.49
-	github.com/onflow/cadence-tools/languageserver v1.0.0-preview.37
-	github.com/onflow/cadence-tools/lint v1.0.0-preview.37
-	github.com/onflow/cadence-tools/test v1.0.0-preview.37
+	github.com/onflow/cadence v1.0.0-preview.50
+	github.com/onflow/cadence-tools/languageserver v1.0.0-preview.38
+	github.com/onflow/cadence-tools/lint v1.0.0-preview.38
+	github.com/onflow/cadence-tools/test v1.0.0-preview.38
 	github.com/onflow/contract-updater/lib/go/templates v1.0.1
 	github.com/onflow/fcl-dev-wallet v0.8.0-stable-cadence.1
-	github.com/onflow/flixkit-go v1.2.1-cadence-v1-preview.23
+	github.com/onflow/flixkit-go v1.2.1-cadence-v1-preview.24
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.3.1
-	github.com/onflow/flow-emulator v1.0.0-preview.40
-	github.com/onflow/flow-evm-gateway v0.29.4
-	github.com/onflow/flow-go v0.37.7-0.20240822174309-8b4fff2114d4
-	github.com/onflow/flow-go-sdk v1.0.0-preview.51
-	github.com/onflow/flowkit/v2 v2.0.0-stable-cadence-alpha.31
+	github.com/onflow/flow-emulator v1.0.0-preview.41
+	github.com/onflow/flow-evm-gateway v0.30.3
+	github.com/onflow/flow-go v0.37.7-0.20240826193109-e211841b59f5
+	github.com/onflow/flow-go-sdk v1.0.0-preview.53
+	github.com/onflow/flowkit/v2 v2.0.0-stable-cadence-alpha.32
 	github.com/onflow/go-ethereum v1.14.7
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
@@ -65,10 +66,9 @@ require (
 	github.com/btcsuite/btcd/btcec/v2 v2.3.4 // indirect
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.3 // indirect
 	github.com/c-bata/go-prompt v0.2.6 // indirect
-	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/charmbracelet/lipgloss v0.9.1 // indirect
+	github.com/charmbracelet/lipgloss v0.13.0 // indirect
 	github.com/charmbracelet/x/ansi v0.1.4 // indirect
 	github.com/charmbracelet/x/input v0.1.0 // indirect
 	github.com/charmbracelet/x/term v0.1.1 // indirect
@@ -184,7 +184,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
-	github.com/mattn/go-runewidth v0.0.15 // indirect
+	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/mattn/go-tty v0.0.4 // indirect
 	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
 	github.com/minio/sha256-simd v1.0.1 // indirect
@@ -194,7 +194,6 @@ require (
 	github.com/mr-tron/base58 v1.2.0 // indirect
 	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
-	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/multiformats/go-base32 v0.1.0 // indirect
 	github.com/multiformats/go-base36 v0.2.0 // indirect

@@ -1,7 +1,7 @@
 /*
  * Flow CLI
  *
- * Copyright 2019 Dapper Labs, Inc.
+ * Copyright Flow Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ package migrate
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/onflow/cadence"
 	"github.com/onflow/cadence/runtime/common"
@@ -59,17 +60,44 @@ var stateCommand = &command.Command{
 }
 
 func migrateState(
-	args []string,
+	_ []string,
 	globalFlags command.GlobalFlags,
 	_ output.Logger,
-	flow flowkit.Services,
+	_ flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
+
+	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).With().Timestamp().Logger()
+
+	contractNames := stateFlags.Contracts
+	if len(contractNames) == 0 {
+
+		network := config.EmulatorNetwork
+
+		contracts, err := state.DeploymentContractsByNetwork(network)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, contract := range contracts {
+			contractNames = append(contractNames, contract.Name)
+		}
+
+		if len(contractNames) == 0 {
+			logger.Warn().Msg("no contracts found to migrate")
+		} else {
+			logger.Info().Msgf(
+				"no contract names provided, migrating all contracts: %s",
+				strings.Join(contractNames, ","),
+			)
+		}
+	}
+
 	if globalFlags.Network != config.EmulatorNetwork.Name {
 		return nil, fmt.Errorf("state migration is only supported for the emulator network")
 	}
 
-	contracts, err := resolveStagedContracts(state, stateFlags.Contracts)
+	contracts, err := resolveStagedContracts(state, contractNames)
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve staged contracts: %w", err)
 	}
@@ -78,8 +106,6 @@ func migrateState(
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
-
-	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).With().Timestamp().Logger()
 
 	// Create a report writer factory if a report path is provided
 	var rwf reporters.ReportWriterFactory

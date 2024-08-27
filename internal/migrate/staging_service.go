@@ -1,7 +1,7 @@
 /*
  * Flow CLI
  *
- * Copyright 2019 Dapper Labs, Inc.
+ * Copyright Flow Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -211,15 +211,19 @@ func (s *stagingServiceImpl) stageContract(ctx context.Context, contract stagedC
 		return flow.Identifier{}, fmt.Errorf("failed to get account for contract %s: %w", contract.DeployLocation.Name, err)
 	}
 
-	_, res, err := s.flow.SendTransaction(
-		context.Background(),
-		transactions.SingleAccountRole(*account),
-		flowkit.Script{
-			Code: templates.GenerateStageContractScript(MigrationContractStagingAddress(s.flow.Network().Name)),
-			Args: []cadence.Value{cName, cCode},
-		},
-		flow.DefaultTransactionGasLimit,
-	)
+	var res *flow.TransactionResult
+	err = withRetry(func() error {
+		_, res, err = s.flow.SendTransaction(
+			ctx,
+			transactions.SingleAccountRole(*account),
+			flowkit.Script{
+				Code: templates.GenerateStageContractScript(MigrationContractStagingAddress(s.flow.Network().Name)),
+				Args: []cadence.Value{cName, cCode},
+			},
+			flow.DefaultTransactionGasLimit,
+		)
+		return err
+	})
 	if err != nil {
 		return flow.Identifier{}, err
 	}
@@ -233,7 +237,15 @@ func (s *stagingServiceImpl) stageContract(ctx context.Context, contract stagedC
 
 func (s *stagingServiceImpl) hasStagedContractChanged(contract stagedContractUpdate) bool {
 	// Get the staged contract code
-	stagedCode, err := getStagedContractCode(context.Background(), s.flow, contract.DeployLocation)
+
+	var (
+		stagedCode []byte
+		err        error
+	)
+	err = withRetry(func() error {
+		stagedCode, err = getStagedContractCode(context.Background(), s.flow, contract.DeployLocation)
+		return err
+	})
 	if err != nil {
 		// swallow error, if we can't get the staged contract code, we should stage
 		return true
