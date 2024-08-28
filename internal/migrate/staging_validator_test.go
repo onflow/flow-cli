@@ -496,7 +496,7 @@ func Test_StagingValidator(t *testing.T) {
 		// check that error exists & ensure that the local contract names are used (not the deploy locations)
 		fooErr := validatorErr.errors[simpleAddressLocation("0x01.Foo")]
 		require.ErrorContains(t, fooErr, "mismatched types")
-		require.ErrorContains(t, fooErr, "Foo.cdc")
+		require.ErrorContains(t, fooErr, "0000000000000001.Foo")
 
 		// Bar should have an error related to
 		var upstreamErr *upstreamValidationError
@@ -820,6 +820,117 @@ func Test_StagingValidator(t *testing.T) {
 
 		validator := newStagingValidator(srv)
 		err := validator.Validate([]stagedContractUpdate{{location, sourceCodeLocation, []byte(newContract)}})
+		require.NoError(t, err)
+	})
+
+	t.Run("with type requirements", func(t *testing.T) {
+		// setup mocks
+		srv := setupValidatorMocks(t, []mockNetworkAccount{
+			{
+				address: flow.HexToAddress("01"),
+				contracts: map[string][]byte{"Foo": []byte(`
+				pub contract interface Foo {
+					pub let bar: @Bar?
+					pub resource Bar {}
+				}`)},
+			},
+			{
+				address: flow.HexToAddress("02"),
+				contracts: map[string][]byte{"Bar": []byte(`
+				import Foo from 0x01
+				pub contract FooImpl: Foo {
+					pub let bar: @Foo.Bar?
+					pub resource BarImpl {}
+					init() {
+						self.bar <- nil
+					}
+				}`)},
+			},
+		})
+
+		validator := newStagingValidator(srv)
+		err := validator.Validate([]stagedContractUpdate{
+			{
+				DeployLocation: simpleAddressLocation("0x01.Foo"),
+				SourceLocation: common.StringLocation("./Foo.cdc"),
+				Code: []byte(`
+				access(all) contract interface Foo {
+					access(all) let bar: @{Bar}?
+					access(all) resource interface Bar {}
+				}`),
+			},
+			{
+				DeployLocation: simpleAddressLocation("0x02.Bar"),
+				SourceLocation: common.StringLocation("./Bar.cdc"),
+				Code: []byte(`
+				import Foo from 0x01
+				access(all) contract FooImpl: Foo {
+					access(all) let bar: @{Foo.Bar}?
+					access(all) resource BarImpl: Foo.Bar {}
+					init() {
+						self.bar <- nil
+					}
+				}`),
+			},
+		})
+
+		require.NoError(t, err)
+	})
+
+	t.Run("contract update with entitlements", func(t *testing.T) {
+		// setup mocks
+		srv := setupValidatorMocks(t, []mockNetworkAccount{
+			{
+				address: flow.HexToAddress("01"),
+				contracts: map[string][]byte{"Foo": []byte(`
+				pub contract Foo {
+					pub resource Bar {}
+				}`)},
+			},
+			{
+				address: flow.HexToAddress("02"),
+				contracts: map[string][]byte{"Test": []byte(`
+				import Foo from 0x01
+				pub contract Test {
+					pub resource R {
+						pub var bar: auth &Foo.Bar?
+						init() {
+							self.bar = nil
+						}
+					}
+				}`)},
+			},
+		})
+
+		validator := newStagingValidator(srv)
+		err := validator.Validate([]stagedContractUpdate{
+			{
+				DeployLocation: simpleAddressLocation("0x01.Foo"),
+				SourceLocation: common.StringLocation("./Foo.cdc"),
+				Code: []byte(`
+				access(all) contract Foo {
+					access(all) resource Bar {
+						access(E) fun foo(){}
+					}
+					access(all) entitlement E
+				}`),
+			},
+			{
+				DeployLocation: simpleAddressLocation("0x02.Test"),
+				SourceLocation: common.StringLocation("./Test.cdc"),
+				Code: []byte(`
+				import Foo from 0x01
+				access(all) contract Test {
+					access(all) resource R {
+						access(all) var bar: auth(Foo.E) &Foo.Bar?
+						init() {
+							self.bar = nil
+						}
+					}
+				}`),
+			},
+		})
+
 		require.NoError(t, err)
 	})
 }
