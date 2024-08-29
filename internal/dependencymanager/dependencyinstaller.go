@@ -316,42 +316,38 @@ func (di *DependencyInstaller) fetchDependencies(networkName string, address flo
 		return fmt.Errorf("contracts are nil for account: %s", address)
 	}
 
-	found := false
-
-	for _, contract := range account.Contracts {
-		program, err := project.NewProgram(contract, nil, "")
-		if err != nil {
-			return fmt.Errorf("failed to parse program: %w", err)
-		}
-
-		parsedContractName, err := program.Name()
-		if err != nil {
-			return fmt.Errorf("failed to parse contract name: %w", err)
-		}
-
-		if parsedContractName == contractName {
-			found = true
-
-			if err := di.handleFoundContract(networkName, address.String(), assignedName, parsedContractName, program); err != nil {
-				return fmt.Errorf("failed to handle found contract: %w", err)
-			}
-
-			if program.HasAddressImports() {
-				imports := program.AddressImportDeclarations()
-				for _, imp := range imports {
-					contractName := imp.Identifiers[0].String()
-					err := di.fetchDependencies(networkName, flowsdk.HexToAddress(imp.Location.String()), contractName, contractName)
-					if err != nil {
-						return err
-					}
-				}
-			}
-		}
+	contract, ok := account.Contracts[contractName]
+	if !ok {
+		return fmt.Errorf("contract %s not found at address %s", contractName, address.String())
 	}
 
-	if !found {
-		errMsg := fmt.Sprintf("contract %s not found for account %s on network %s", contractName, address, networkName)
-		di.Logger.Error(errMsg)
+	program, err := project.NewProgram(contract, nil, "")
+	if err != nil {
+		return fmt.Errorf("failed to parse program: %w", err)
+	}
+
+	parsedContractName, err := program.Name()
+	if err != nil {
+		return fmt.Errorf("failed to parse contract name: %w", err)
+	}
+
+	if parsedContractName != contractName {
+		return fmt.Errorf("contract name mismatch: expected %s, got %s", contractName, parsedContractName)
+	}
+
+	if err := di.handleFoundContract(networkName, address.String(), assignedName, contractName, program); err != nil {
+		return fmt.Errorf("failed to handle found contract: %w", err)
+	}
+
+	if program.HasAddressImports() {
+		imports := program.AddressImportDeclarations()
+		for _, imp := range imports {
+			contractName := imp.Identifiers[0].String()
+			err := di.fetchDependencies(networkName, flowsdk.HexToAddress(imp.Location.String()), contractName, contractName)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil
