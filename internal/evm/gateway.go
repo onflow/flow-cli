@@ -131,10 +131,15 @@ var gatewayCommand = &command.Command{
 
 		ctx, cancel := context.WithCancel(context.Background())
 
-		err = bootstrap.Start(ctx, cfg)
-		if err != nil {
-			panic(err)
-		}
+		ready := make(chan struct{})
+		go func() {
+			err = bootstrap.Run(ctx, cfg, ready)
+			if err != nil {
+				panic(err)
+			}
+		}()
+
+		<-ready
 
 		osSig := make(chan os.Signal, 1)
 		signal.Notify(osSig, syscall.SIGINT, syscall.SIGTERM)
