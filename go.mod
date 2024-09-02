@@ -5,7 +5,7 @@ go 1.22
 toolchain go1.22.3
 
 require (
-	github.com/cenkalti/backoff/v4 v4.2.1
+	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/charmbracelet/bubbles v0.19.0
 	github.com/charmbracelet/bubbletea v0.27.1
 	github.com/dukex/mixpanel v1.0.1
