@@ -5,13 +5,11 @@ go 1.22
 toolchain go1.22.3
 
 require (
-	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/charmbracelet/bubbles v0.19.0
 	github.com/charmbracelet/bubbletea v0.27.1
 	github.com/dukex/mixpanel v1.0.1
 	github.com/getsentry/sentry-go v0.28.1
 	github.com/go-git/go-git/v5 v5.11.0
-	github.com/google/go-github v17.0.0+incompatible
 	github.com/gosuri/uilive v0.0.4
 	github.com/logrusorgru/aurora/v4 v4.0.0
 	github.com/manifoldco/promptui v0.9.0
@@ -19,7 +17,6 @@ require (
 	github.com/onflow/cadence-tools/languageserver v1.0.0-preview.39
 	github.com/onflow/cadence-tools/lint v1.0.0-preview.39
 	github.com/onflow/cadence-tools/test v1.0.0-preview.39
-	github.com/onflow/contract-updater/lib/go/templates v1.0.1
 	github.com/onflow/fcl-dev-wallet v0.8.0-stable-cadence.1
 	github.com/onflow/flixkit-go v1.2.1-cadence-v1-preview.25
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.3.1
@@ -66,6 +63,7 @@ require (
 	github.com/btcsuite/btcd/btcec/v2 v2.3.4 // indirect
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.3 // indirect
 	github.com/c-bata/go-prompt v0.2.6 // indirect
+	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/charmbracelet/lipgloss v0.13.0 // indirect
@@ -128,6 +126,7 @@ require (
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/golang/snappy v0.0.5-0.20220116011046-fa5810519dcb // indirect
 	github.com/google/go-dap v0.11.0 // indirect
+	github.com/google/go-github v17.0.0+incompatible // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
 	github.com/google/uuid v1.6.0 // indirect
@@ -212,7 +211,6 @@ require (
 	github.com/onflow/flow-nft/lib/go/contracts v1.2.1 // indirect
 	github.com/onflow/flow-nft/lib/go/templates v1.2.0 // indirect
 	github.com/onflow/flow/protobuf/go/flow v0.4.6 // indirect
-	github.com/onflow/nft-storefront/lib/go/contracts v1.0.0 // indirect
 	github.com/onflow/sdks v0.6.0-preview.1 // indirect
 	github.com/onflow/wal v1.0.2 // indirect
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58 // indirect
