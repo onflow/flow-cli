@@ -7,8 +7,6 @@ REPO="onflow/flow-cli"
 ASSETS_URL="https://github.com/$REPO/releases/download/"
 # The version to install (defaults to args[1])
 VERSION="$1"
-# The Cadence 1.0 version to install (defaults to args[2])
-C1VERSION="$2"
 # The architecture string, set by get_architecture
 ARCH=""
 
@@ -59,38 +57,6 @@ get_architecture() {
     _arch="${_ostype}-${_cputype}"
     ARCH="${_arch}"
     TARGET_PATH="${_targetpath}"
-}
-
-get_version() {
-    local search_term="$1"
-    local page="$2"
-
-    local version=""
-
-    response=$(curl -H "$github_token_header" -s "https://api.github.com/repos/$REPO/releases?per_page=10&page=$page" -w "%{http_code}")
-
-    status=$(echo "$response" | tail -n 1)
-    if [ "$status" -eq "403" ] && [ -n "$github_token_header" ]
-    then
-      echo "Failed to get releases from Github API, is your GITHUB_TOKEN valid? Re-trying without authentication ..."
-      github_token_header=""
-      get_version "$search_term" "$page"
-    fi
-
-    if [ "$status" -ne "200" ]
-    then
-      echo "Failed to get releases from Github API, please manually specify a version to install as an argument to this script."
-      return 1
-    fi
-
-    version=$(echo "$response" | grep -E 'tag_name' | grep -E "$search_term" | head -n 1 | cut -d '"' -f 4)
-
-    if [ -z "$version" ]
-    then
-      get_version "$search_term" "$((page+1))"
-    fi
-
-    echo "$version"
 }
 
 get_latest() {
@@ -155,24 +121,8 @@ main() {
 
   install_version "$VERSION" "flow"
 
-  if [ -z "$C1VERSION" ]
-  then
-    echo "Getting version of latest Cadence 1.0 preview release ..."
-
-    C1VERSION=$(get_version "cadence-v1.0.0" 1 || exit 1)
-  fi
-
-  install_version "$C1VERSION" "flow-c1"
-
-  echo ""
   echo "Successfully installed Flow CLI $VERSION as 'flow' in $TARGET_PATH."
-  echo "Use the 'flow' command to interact with the Flow CLI compatible with versions of Cadence before 1.0 (only)."
-  echo ""
-  echo "Successfully installed Flow CLI $C1VERSION as 'flow-c1' in $TARGET_PATH."
-  echo "Use the 'flow-c1' command to interact with the Flow CLI preview compatible with Cadence 1.0 (only)."
-  echo ""
   echo "Make sure $TARGET_PATH is in your \$PATH environment variable."
-  echo ""
 }
 
 main

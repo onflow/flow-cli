@@ -8,8 +8,6 @@
     The destination path to install to.
 .Parameter Version
     The version to install.
-.Parameter C1Version
-    The Cadence 1 version to install.
 .Parameter AddToPath
     Add the absolute destination path to the 'User' scope environment variable 'Path'.
 .Parameter GitHubToken
@@ -25,7 +23,6 @@
 #>
 param (
     [string] $version="",
-    [string] $c1Version="",
     [string] $directory = "$env:APPDATA\Flow",
     [bool] $addToPath = $true,
     [string] $githubToken = ""
@@ -121,14 +118,6 @@ if (-not $version) {
 
 Install-FlowCLI -version $version -destinationFileName "flow.exe"
 
-if (-not $c1version) {
-    Write-Output "Getting version of latest Cadence 1.0 preview release ..."
-
-    $c1version = Get-Version -searchTerm "cadence-v1.0.0" -prerelease $true
-}
-
-Install-FlowCLI -version $c1Version -destinationFileName "flow-c1.exe"
-
 # Check if the directory is already in the PATH
 $existingPaths = [Environment]::GetEnvironmentVariable("PATH", [System.EnvironmentVariableTarget]::User).Split(';')
 
@@ -140,12 +129,7 @@ if ($addToPath -and $existingPaths -notcontains $directory) {
     [System.Environment]::SetEnvironmentVariable("PATH", $userPath, [System.EnvironmentVariableTarget]::User)
 }
 
-Write-Output ""
-Write-Output "Successfully installed Flow CLI $version as 'flow'."
-Write-Output "Use the 'flow' command to interact with the Flow CLI compatible with versions of Cadence before 1.0 (only)."
-Write-Output ""
-Write-Output "Successfully installed Flow CLI $c1Version as 'flow-c1'."
-Write-Output "Use the 'flow-c1' command to interact with the Flow CLI preview compatible with Cadence 1.0 (only)."
-Write-Output ""
+Write-Output "Successfully installed Flow CLI $version"
+Write-Output "Use the 'flow' command to interact with the Flow CLI"
 
 Start-Sleep -Seconds 1
