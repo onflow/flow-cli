@@ -376,15 +376,14 @@ func UsageMetrics(command *cobra.Command, wg *sync.WaitGroup) {
 
 // GlobalFlags contains all global flags definitions.
 type GlobalFlags struct {
-	Filter                     string
-	Format                     string
-	Save                       string
-	Host                       string
-	HostNetworkKey             string
-	Log                        string
-	Network                    string
-	Yes                        bool
-	ConfigPaths                []string
-	SkipVersionCheck           bool
-	SkipContractMigrationCheck bool
+	Filter           string
+	Format           string
+	Save             string
+	Host             string
+	HostNetworkKey   string
+	Log              string
+	Network          string
+	Yes              bool
+	ConfigPaths      []string
+	SkipVersionCheck bool
 }

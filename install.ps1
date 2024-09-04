@@ -129,7 +129,7 @@ if ($addToPath -and $existingPaths -notcontains $directory) {
     [System.Environment]::SetEnvironmentVariable("PATH", $userPath, [System.EnvironmentVariableTarget]::User)
 }
 
-Write-Output "Successfully installed Flow CLI $version as 'flow'."
-Write-Output "Use the 'flow' command to interact with the Flow CLI compatible with versions of Cadence before 1.0 (only)."
+Write-Output "Successfully installed Flow CLI $version"
+Write-Output "Use the 'flow' command to interact with the Flow CLI"
 
 Start-Sleep -Seconds 1
