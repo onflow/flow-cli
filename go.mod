@@ -15,7 +15,7 @@ require (
 	github.com/gosuri/uilive v0.0.4
 	github.com/logrusorgru/aurora/v4 v4.0.0
 	github.com/manifoldco/promptui v0.9.0
-	github.com/onflow/cadence v1.0.0-preview.51
+	github.com/onflow/cadence v1.0.0-preview.52
 	github.com/onflow/cadence-tools/languageserver v1.0.0-preview.39
 	github.com/onflow/cadence-tools/lint v1.0.0-preview.39
 	github.com/onflow/cadence-tools/test v1.0.0-preview.39
@@ -23,9 +23,9 @@ require (
 	github.com/onflow/fcl-dev-wallet v0.8.0-stable-cadence.1
 	github.com/onflow/flixkit-go v1.2.1-cadence-v1-preview.25
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.3.1
-	github.com/onflow/flow-emulator v1.0.0-preview.42
-	github.com/onflow/flow-evm-gateway v0.32.0
-	github.com/onflow/flow-go v0.37.7-0.20240830182756-9ac9e1889c34
+	github.com/onflow/flow-emulator v1.0.0
+	github.com/onflow/flow-evm-gateway v0.34.0
+	github.com/onflow/flow-go v0.37.10
 	github.com/onflow/flow-go-sdk v1.0.0-preview.54
 	github.com/onflow/flowkit/v2 v2.0.0-stable-cadence-alpha.33
 	github.com/onflow/go-ethereum v1.14.7
