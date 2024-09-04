@@ -33,7 +33,6 @@ import (
 	"github.com/onflow/flow-cli/internal/events"
 	evm "github.com/onflow/flow-cli/internal/evm"
 	"github.com/onflow/flow-cli/internal/keys"
-	"github.com/onflow/flow-cli/internal/migrate"
 	"github.com/onflow/flow-cli/internal/project"
 	"github.com/onflow/flow-cli/internal/quick"
 	"github.com/onflow/flow-cli/internal/scripts"
@@ -88,7 +87,6 @@ func main() {
 	cmd.AddCommand(super.FlixCmd)
 	cmd.AddCommand(super.GenerateCommand)
 	cmd.AddCommand(dependencymanager.Cmd)
-	cmd.AddCommand(migrate.Cmd)
 	cmd.AddCommand(evm.Cmd)
 
 	command.InitFlags(cmd)
@@ -119,10 +117,6 @@ func main() {
 	cmd.AddGroup(&cobra.Group{
 		ID:    "manager",
 		Title: "🔗 Dependency Manager",
-	})
-	cmd.AddGroup(&cobra.Group{
-		ID:    "migrate",
-		Title: "📦 Migration to 1.0",
 	})
 
 	cmd.SetUsageTemplate(command.UsageTemplate)
