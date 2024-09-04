@@ -121,11 +121,8 @@ main() {
 
   install_version "$VERSION" "flow"
 
-  echo ""
   echo "Successfully installed Flow CLI $VERSION as 'flow' in $TARGET_PATH."
-  echo ""
   echo "Make sure $TARGET_PATH is in your \$PATH environment variable."
-  echo ""
 }
 
 main
