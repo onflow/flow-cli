@@ -132,5 +132,9 @@ func main() {
 		util.Exit(1, err.Error())
 	}
 
+	// We are using a syscall because there is some dependency related to
+	// connecting to the network that is not being closed properly.  This
+	// issue appeared with Go 1.23.1, but was not present in Go 1.22.
+	// It looks like this may be GRPC related from the stack trace.
 	syscall.Exit(command.StatusCode)
 }
