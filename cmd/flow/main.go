@@ -20,6 +20,8 @@
 package main
 
 import (
+	"syscall"
+
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/accounts"
@@ -129,4 +131,6 @@ func main() {
 	if err := cmd.Execute(); err != nil {
 		util.Exit(1, err.Error())
 	}
+
+	syscall.Exit(command.StatusCode)
 }
