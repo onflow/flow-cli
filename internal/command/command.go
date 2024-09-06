@@ -89,6 +89,8 @@ const (
 	logLevelNone  = "none"
 )
 
+var StatusCode = 0
+
 // AddToParent add new command to main parent cmd
 // and initializes all necessary things as well as take care of errors and output
 // here we can do all boilerplate code that is else copied in each command and make sure
@@ -171,7 +173,8 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		if res, ok := result.(ResultWithExitCode); ok {
 			exitCode = res.ExitCode()
 		}
-		os.Exit(exitCode)
+
+		StatusCode = exitCode
 	}
 
 	bindFlags(c)
