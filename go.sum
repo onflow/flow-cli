@@ -2161,8 +2161,8 @@ github.com/onflow/cadence v1.0.0-preview.52 h1:hZ92e6lL2+PQa3C1i5jJh0zZYFdW89+X1
 github.com/onflow/cadence v1.0.0-preview.52/go.mod h1:7wvvecnAZtYOspLOS3Lh+FuAmMeSrXhAWiycC3kQ1UU=
 github.com/onflow/cadence-tools/languageserver v1.0.0-preview.39 h1:rVuWZ8iwMJSWOhOTzLV1Tgpor2I/gNKT9s7pbvB5too=
 github.com/onflow/cadence-tools/languageserver v1.0.0-preview.39/go.mod h1:Hlee1Rgl+hbFsljfcLJByUmEFVpJSgt70uRQe+j+OIs=
-github.com/onflow/cadence-tools/lint v1.0.0-preview.39 h1:gGRZQrsrXM1PMgmC/ztIdiJR4pRsnF8epCOcKm1UmQY=
-github.com/onflow/cadence-tools/lint v1.0.0-preview.39/go.mod h1:FSqfHNBqoImXs08q1HZbdF3viWaetJcI+i/5Gta4T7g=
+github.com/onflow/cadence-tools/lint v1.0.0-preview.42 h1:dVigvKe5Wmn5tNJMD52ILfAFdXQAeda0fZAzSJTvWNs=
+github.com/onflow/cadence-tools/lint v1.0.0-preview.42/go.mod h1:W7meYo/pOyDX7KirNCpE0hCrapq/yBMfay9SxLlJUko=
 github.com/onflow/cadence-tools/test v1.0.0-preview.39 h1:P1IWj1qk4Jf4Qfa4aHjzFwizUDwjsNIqCrkL/AkZxjg=
 github.com/onflow/cadence-tools/test v1.0.0-preview.39/go.mod h1:80FKugYHr/xo98e1y/6fKGyPOJI0RbyIblupQysz0v8=
 github.com/onflow/crypto v0.25.0/go.mod h1:C8FbaX0x8y+FxWjbkHy0Q4EASCDR9bSPWZqlpCLYyVI=

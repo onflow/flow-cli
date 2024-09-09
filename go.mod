@@ -15,7 +15,7 @@ require (
 	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v1.0.0-preview.52
 	github.com/onflow/cadence-tools/languageserver v1.0.0-preview.39
-	github.com/onflow/cadence-tools/lint v1.0.0-preview.39
+	github.com/onflow/cadence-tools/lint v1.0.0-preview.42
 	github.com/onflow/cadence-tools/test v1.0.0-preview.39
 	github.com/onflow/fcl-dev-wallet v0.8.0-stable-cadence.1
 	github.com/onflow/flixkit-go v1.2.1-cadence-v1-preview.25
