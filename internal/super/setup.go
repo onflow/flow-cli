@@ -272,7 +272,7 @@ func startInteractiveSetup(
 
 func installCoreContracts(logger output.Logger, state *flowkit.State, tempDir string) error {
 	// Prompt to ask which core contracts should be installed
-	sc := systemcontracts.SystemContractsForChain(flowGo.Previewnet)
+	sc := systemcontracts.SystemContractsForChain(flowGo.Mainnet)
 	promptMessage := "Select any core contracts you would like to install or skip to continue."
 
 	contractNames := make([]string, 0)
@@ -294,7 +294,7 @@ func installCoreContracts(logger output.Logger, state *flowkit.State, tempDir st
 			dependencies = append(dependencies, flowkitConfig.Dependency{
 				Name: contract.Name,
 				Source: flowkitConfig.Source{
-					NetworkName:  flowkitConfig.PreviewnetNetwork.Name,
+					NetworkName:  flowkitConfig.MainnetNetwork.Name,
 					Address:      flowsdk.HexToAddress(contract.Address.String()),
 					ContractName: contract.Name,
 				},
