@@ -132,16 +132,10 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State, saveStat
 		return nil, fmt.Errorf("error creating mainnet gateway: %v", err)
 	}
 
-	previewnetGateway, err := gateway.NewGrpcGateway(config.PreviewnetNetwork)
-	if err != nil {
-		return nil, fmt.Errorf("error creating previewnet gateway: %v", err)
-	}
-
 	gateways := map[string]gateway.Gateway{
-		config.EmulatorNetwork.Name:   emulatorGateway,
-		config.TestnetNetwork.Name:    testnetGateway,
-		config.MainnetNetwork.Name:    mainnetGateway,
-		config.PreviewnetNetwork.Name: previewnetGateway,
+		config.EmulatorNetwork.Name: emulatorGateway,
+		config.TestnetNetwork.Name:  testnetGateway,
+		config.MainnetNetwork.Name:  mainnetGateway,
 	}
 
 	return &DependencyInstaller{
@@ -508,11 +502,9 @@ func (di *DependencyInstaller) updateDependencyAlias(contractName, aliasNetwork 
 
 	switch aliasNetwork {
 	case config.MainnetNetwork.Name:
-		missingNetworks = []string{config.TestnetNetwork.Name, config.PreviewnetNetwork.Name}
+		missingNetworks = []string{config.TestnetNetwork.Name}
 	case config.TestnetNetwork.Name:
-		missingNetworks = []string{config.MainnetNetwork.Name, config.PreviewnetNetwork.Name}
-	case config.PreviewnetNetwork.Name:
-		missingNetworks = []string{config.MainnetNetwork.Name, config.TestnetNetwork.Name}
+		missingNetworks = []string{config.MainnetNetwork.Name}
 	}
 
 	for _, missingNetwork := range missingNetworks {
