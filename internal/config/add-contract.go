@@ -96,13 +96,6 @@ func addContract(
 		)
 	}
 
-	if raw.Previewnet != "" {
-		contract.Aliases.Add(
-			config.PreviewnetNetwork.Name,
-			flow.HexToAddress(raw.Mainnet),
-		)
-	}
-
 	state.Contracts().AddOrUpdate(contract)
 
 	err = state.SaveEdited(globalFlags.ConfigPaths)

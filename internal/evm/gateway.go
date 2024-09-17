@@ -56,8 +56,8 @@ type gatewayFlag struct {
 	RPCPort           int    `flag:"rpc-port" default:"3000" info:"port for the RPC API server"`
 	AccessNodeHost    string `flag:"access-node-host" default:"localhost:3569" info:"host to the flow access node gRPC API"`
 	InitCadenceHeight uint64 `flag:"init-cadence-height" default:"0" info:"init cadence block height from where the event ingestion will start. WARNING: you should only provide this if there are no existing values in the database, otherwise an error will be thrown"`
-	EVMNetworkID      string `flag:"evm-network-id" default:"testnet" info:"EVM network ID (testnet, mainnet, previewnet)"`
-	FlowNetworkID     string `flag:"flow-network-id" default:"emulator" info:"EVM network ID (emulator, previewnet, testnet, mainnet)"`
+	EVMNetworkID      string `flag:"evm-network-id" default:"testnet" info:"EVM network ID (testnet, mainnet)"`
+	FlowNetworkID     string `flag:"flow-network-id" default:"emulator" info:"EVM network ID (emulator, testnet, mainnet)"`
 	Coinbase          string `flag:"coinbase" default:"" info:"coinbase address to use for fee collection"`
 	GasPrice          string `flag:"gas-price" default:"1" info:"static gas price used for EVM transactions"`
 	COAAddress        string `flag:"coa-address" default:"" info:"Flow address that holds COA account used for submitting transactions"`
@@ -114,12 +114,10 @@ var gatewayCommand = &command.Command{
 			cfg.FlowNetworkID = flowGo.Mainnet
 		case "testnet":
 			cfg.FlowNetworkID = flowGo.Testnet
-		case "previewnet":
-			cfg.FlowNetworkID = flowGo.Previewnet
 		case "emulator":
 			cfg.FlowNetworkID = flowGo.Emulator
 		default:
-			return nil, fmt.Errorf("flow network ID not supported, only possible to specify emulator, testnet, previewnet, mainnet")
+			return nil, fmt.Errorf("flow network ID not supported, only possible to specify emulator, testnet, mainnet")
 		}
 
 		switch flagGateway.EVMNetworkID {
@@ -127,8 +125,6 @@ var gatewayCommand = &command.Command{
 			cfg.EVMNetworkID = types.FlowEVMTestNetChainID
 		case "mainnet":
 			cfg.EVMNetworkID = types.FlowEVMMainNetChainID
-		case "previewnet":
-			cfg.EVMNetworkID = types.FlowEVMPreviewNetChainID
 		default:
 			return nil, fmt.Errorf("EVM network ID not supported")
 		}
