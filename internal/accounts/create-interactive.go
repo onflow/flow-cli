@@ -248,10 +248,6 @@ func (l *lilicoAccount) create(network string) (flowsdk.Identifier, error) {
 		apiNetwork = "/testnet"
 	}
 
-	if network == config.PreviewnetNetwork.Name {
-		apiNetwork = "/previewnet"
-	}
-
 	request, err := http.NewRequest(
 		http.MethodPost,
 		fmt.Sprintf("https://openapi.lilico.org/v1/address%s", apiNetwork),
