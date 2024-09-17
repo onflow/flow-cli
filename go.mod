@@ -7,6 +7,7 @@ toolchain go1.22.3
 require (
 	github.com/charmbracelet/bubbles v0.19.0
 	github.com/charmbracelet/bubbletea v0.27.1
+	github.com/coreos/go-semver v0.3.0
 	github.com/dukex/mixpanel v1.0.1
 	github.com/getsentry/sentry-go v0.29.0
 	github.com/go-git/go-git/v5 v5.11.0
@@ -81,7 +82,6 @@ require (
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/consensys/bavard v0.1.13 // indirect
 	github.com/consensys/gnark-crypto v0.12.1 // indirect
-	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/crate-crypto/go-ipa v0.0.0-20240223125850-b1e8a79f509c // indirect
 	github.com/crate-crypto/go-kzg-4844 v1.0.0 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect

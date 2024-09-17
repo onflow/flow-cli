@@ -34,6 +34,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/coreos/go-semver/semver"
 	"github.com/onflow/flow-cli/internal/prompt"
 
 	"github.com/dukex/mixpanel"
@@ -302,7 +303,11 @@ func checkVersion(logger output.Logger) {
 
 	latestVersion := fmt.Sprintf("v%s", strings.TrimPrefix(latestVersionRaw, "v"))
 
-	if currentVersion != latestVersion {
+	// compare semver versions
+	currentSemver := semver.New(currentVersion)
+	latestSemver := semver.New(latestVersion)
+
+	if currentSemver != nil && latestSemver != nil && currentSemver.LessThan(*latestSemver) {
 		logger.Info(fmt.Sprintf(
 			"\n%s  Version warning: a new version of Flow CLI is available (%s).\n"+
 				"   Read the installation guide for upgrade instructions: https://docs.onflow.org/flow-cli/install\n",
