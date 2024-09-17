@@ -24,7 +24,7 @@ require (
 	github.com/onflow/flow-emulator v1.0.0
 	github.com/onflow/flow-evm-gateway v0.35.0
 	github.com/onflow/flow-go v0.37.10
-	github.com/onflow/flow-go-sdk v1.0.0-preview.54
+	github.com/onflow/flow-go-sdk v1.0.0-preview.56
 	github.com/onflow/flowkit/v2 v2.0.0-stable-cadence-alpha.33
 	github.com/onflow/go-ethereum v1.14.7
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
