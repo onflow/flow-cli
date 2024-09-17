@@ -304,10 +304,17 @@ func checkVersion(logger output.Logger) {
 	latestVersion := fmt.Sprintf("v%s", strings.TrimPrefix(latestVersionRaw, "v"))
 
 	// compare semver versions
-	currentSemver := semver.New(currentVersion)
-	latestSemver := semver.New(latestVersion)
+	currentSemver, err := semver.NewVersion(strings.TrimPrefix(currentVersion, "v"))
+	if err != nil {
+		return
+	}
 
-	if currentSemver != nil && latestSemver != nil && currentSemver.LessThan(*latestSemver) {
+	latestSemver, err := semver.NewVersion(strings.TrimPrefix(latestVersion, "v"))
+	if err != nil {
+		return
+	}
+
+	if currentSemver.LessThan(*latestSemver) {
 		logger.Info(fmt.Sprintf(
 			"\n%s  Version warning: a new version of Flow CLI is available (%s).\n"+
 				"   Read the installation guide for upgrade instructions: https://docs.onflow.org/flow-cli/install\n",
