@@ -34,9 +34,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/coreos/go-semver/semver"
 	"github.com/onflow/flow-cli/internal/prompt"
 
+	"github.com/coreos/go-semver/semver"
 	"github.com/dukex/mixpanel"
 	"github.com/getsentry/sentry-go"
 	"github.com/spf13/afero"
