@@ -99,7 +99,7 @@ func (r *transactionResult) JSON() any {
 func (r *transactionResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
-	const feeEventsCountAppended = 3
+	const feeEventsCountAppended = 5
 	const feeDeductedEvent = "FeesDeducted"
 
 	if r.result != nil {

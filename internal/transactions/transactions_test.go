@@ -325,20 +325,32 @@ func Test_Result(t *testing.T) {
 	)
 	event.Payload = []byte("mock_payload")
 
-	withdrawEvent := tests.NewEvent(
+	withdrawFlowEvent := tests.NewEvent(
 		1,
 		"A.1654653399040a61.FlowToken.TokensWithdrawn",
 		[]cadence.Field{{Type: cadence.StringType, Identifier: "bar"}},
 		[]cadence.Value{cadence.NewInt(1)},
 	)
-	depositEvent := tests.NewEvent(
+	withdrawFungiEvent := tests.NewEvent(
 		2,
+		"A.9a0766d93b6608b7.FungibleToken.TokensWithdrawn",
+		[]cadence.Field{{Type: cadence.StringType, Identifier: "bar"}},
+		[]cadence.Value{cadence.NewInt(1)},
+	)
+	depositFlowEvent := tests.NewEvent(
+		3,
 		"A.1654653399040a61.FlowToken.TokensDeposited",
 		[]cadence.Field{{Type: cadence.StringType, Identifier: "bar"}},
 		[]cadence.Value{cadence.NewInt(1)},
 	)
+	depositFungiEvent := tests.NewEvent(
+		4,
+		"A.9a0766d93b6608b7.FungibleToken.TokensDeposited",
+		[]cadence.Field{{Type: cadence.StringType, Identifier: "bar"}},
+		[]cadence.Value{cadence.NewInt(1)},
+	)
 	feeEvent := tests.NewEvent(
-		3,
+		5,
 		"A.f919ee77447b7497.FlowFees.FeesDeducted",
 		[]cadence.Field{{Type: cadence.StringType, Identifier: "bar"}},
 		[]cadence.Value{cadence.NewInt(1)},
@@ -354,7 +366,7 @@ func Test_Result(t *testing.T) {
 	txResultFeeEvents := &flow.TransactionResult{
 		Status:      flow.TransactionStatusSealed,
 		Error:       nil,
-		Events:      []flow.Event{*event, *withdrawEvent, *depositEvent, *feeEvent},
+		Events:      []flow.Event{*event, *withdrawFlowEvent, *withdrawFungiEvent, *depositFlowEvent, *depositFungiEvent, *feeEvent},
 		BlockID:     flow.HexToID("7aa74143741c1c3b837d389fcffa7a5e251b67b4ffef6d6887b40cd9c803f537"),
 		BlockHeight: 1,
 	}
@@ -513,12 +525,24 @@ Events:
 		- bar (String): 1 
 
     Index	2
-    Type	A.1654653399040a61.FlowToken.TokensDeposited
+    Type	A.9a0766d93b6608b7.FungibleToken.TokensWithdrawn
     Tx ID	0000000000000000000000000000000000000000000000000000000000000000
     Values
 		- bar (String): 1 
 
     Index	3
+    Type	A.1654653399040a61.FlowToken.TokensDeposited
+    Tx ID	0000000000000000000000000000000000000000000000000000000000000000
+    Values
+		- bar (String): 1 
+
+    Index	4
+    Type	A.9a0766d93b6608b7.FungibleToken.TokensDeposited
+    Tx ID	0000000000000000000000000000000000000000000000000000000000000000
+    Values
+		- bar (String): 1 
+
+    Index	5
     Type	A.f919ee77447b7497.FlowFees.FeesDeducted
     Tx ID	0000000000000000000000000000000000000000000000000000000000000000
     Values
