@@ -2168,8 +2168,8 @@ github.com/onflow/cadence-tools/test v1.0.0-preview.39/go.mod h1:80FKugYHr/xo98e
 github.com/onflow/crypto v0.25.0/go.mod h1:C8FbaX0x8y+FxWjbkHy0Q4EASCDR9bSPWZqlpCLYyVI=
 github.com/onflow/crypto v0.25.2 h1:GjHunqVt+vPcdqhxxhAXiMIF3YiLX7gTuTR5O+VG2ns=
 github.com/onflow/crypto v0.25.2/go.mod h1:fY7eLqUdMKV8EGOw301unP8h7PvLVy8/6gVR++/g0BY=
-github.com/onflow/fcl-dev-wallet v0.8.0-stable-cadence.1 h1:IqdUzdqFCSW0klWmA3J9c17ZyQTab9SWcWSLouX6o0Q=
-github.com/onflow/fcl-dev-wallet v0.8.0-stable-cadence.1/go.mod h1:kc42jkiuoPJmxMRFjfbRO9XvnR/3XLheaOerxVMDTiw=
+github.com/onflow/fcl-dev-wallet v0.8.0 h1:8TWHhJBWrzS6RCZI3eVjRT+SaUBqO6eygUNDaJV/B7s=
+github.com/onflow/fcl-dev-wallet v0.8.0/go.mod h1:kc42jkiuoPJmxMRFjfbRO9XvnR/3XLheaOerxVMDTiw=
 github.com/onflow/flixkit-go v1.2.1-cadence-v1-preview.25 h1:ytrhcEl67/+Vr+hlKggbZO+Ti9zDOXgTN67C2MhVzTA=
 github.com/onflow/flixkit-go v1.2.1-cadence-v1-preview.25/go.mod h1:jXsXs6uNgGsp8J9DvxXFAYhLe4I13OhlKCfL6sczwEY=
 github.com/onflow/flow-core-contracts/lib/go/contracts v1.3.1 h1:q9tXLIALwQ76bO4bmSrhtTkyc2cZF4/gH11ix9E3F5k=
