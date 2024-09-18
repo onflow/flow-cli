@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/onflow/flixkit-go/flixkit"
+	"github.com/onflow/flixkit-go/v2/flixkit"
 
 	"github.com/spf13/cobra"
 
