@@ -183,9 +183,25 @@ func (di *DependencyInstaller) Install() error {
 
 // AddBySourceString processes a single dependency and installs it and any dependencies it has, as well as adding it to the state
 func (di *DependencyInstaller) AddBySourceString(depSource, customName string) error {
-	depNetwork, depAddress, depContractName, err := config.ParseSourceString(depSource)
-	if err != nil {
-		return fmt.Errorf("error parsing source: %w", err)
+	// First, check if the source string is a core contract name
+	var depNetwork, depAddress, depContractName string
+	sc := systemcontracts.SystemContractsForChain(flowGo.Mainnet)
+	for _, coreContract := range sc.All() {
+		if coreContract.Name == depSource {
+			depAddress = coreContract.Address.String()
+			depNetwork = config.MainnetNetwork.Name
+			depContractName = depSource
+			break
+		}
+	}
+
+	// If it's not a core contract, parse the source string
+	if depAddress == "" {
+		var err error
+		depNetwork, depAddress, depContractName, err = config.ParseSourceString(depSource)
+		if err != nil {
+			return fmt.Errorf("error parsing source: %w", err)
+		}
 	}
 
 	name := depContractName
