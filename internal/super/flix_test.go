@@ -26,7 +26,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/onflow/flixkit-go/flixkit"
+	"github.com/onflow/flixkit-go/v2/flixkit"
 
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"
