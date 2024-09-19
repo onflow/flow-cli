@@ -38,13 +38,14 @@ var installCommand = &command.Command{
 		Use:     "install",
 		Short:   "Install contract and dependencies.",
 		Example: "flow dependencies install",
+		Args:    cobra.ArbitraryArgs,
 	},
 	Flags: &installFlags,
 	RunS:  install,
 }
 
 func install(
-	_ []string,
+	args []string,
 	_ command.GlobalFlags,
 	logger output.Logger,
 	flow flowkit.Services,
@@ -58,8 +59,19 @@ func install(
 		return nil, err
 	}
 
+	// Add any dependencies passed as arguments
+	if args != nil && len(args) > 0 {
+		for _, arg := range args {
+			if err := installer.AddBySourceString(arg, ""); err != nil {
+				logger.Error(fmt.Sprintf("Error adding dependency: %v", err))
+				return nil, err
+			}
+		}
+	}
+
+	// Install dependencies
 	if err := installer.Install(); err != nil {
-		logger.Error(fmt.Sprintf("Error: %v", err))
+		logger.Error(fmt.Sprintf("Error installing dependencies: %v", err))
 		return nil, err
 	}
 

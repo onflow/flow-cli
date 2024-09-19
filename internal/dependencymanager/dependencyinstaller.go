@@ -33,9 +33,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flow-go/fvm/systemcontracts"
-	flowGo "github.com/onflow/flow-go/model/flow"
-
 	"github.com/onflow/flowkit/v2/gateway"
 
 	"github.com/onflow/flowkit/v2/project"
@@ -383,17 +380,6 @@ func (di *DependencyInstaller) handleFileSystem(contractAddr, contractName, cont
 	}
 
 	return nil
-}
-
-func isCoreContract(contractName string) bool {
-	sc := systemcontracts.SystemContractsForChain(flowGo.Emulator)
-
-	for _, coreContract := range sc.All() {
-		if coreContract.Name == contractName {
-			return true
-		}
-	}
-	return false
 }
 
 func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, assignedName, contractName string, program *project.Program) error {
