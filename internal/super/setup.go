@@ -32,6 +32,7 @@ import (
 	"golang.org/x/exp/slices"
 
 	"github.com/onflow/flow-cli/internal/dependencymanager"
+	"github.com/onflow/flow-cli/internal/super/generator"
 	"github.com/onflow/flow-cli/internal/util"
 
 	"github.com/spf13/afero"
@@ -207,38 +208,33 @@ func startInteractiveSetup(
 		return "", fmt.Errorf("failed to initialize configuration: %w", err)
 	}
 
-	// Generate standard cadence files
+	// Generate standard cadence files & README.md
 	// cadence/contracts/DefaultContract.cdc
 	// cadence/scripts/DefaultScript.cdc
 	// cadence/transactions/DefaultTransaction.cdc
 	// cadence/tests/DefaultContract_test.cdc
+	// README.md
 
-	templates := TemplateMap{
-		"contract": []TemplateItem{
-			Contract{
-				Name:     "Counter",
-				Template: "contract_counter",
-				Account:  "",
-			},
+	templates := []generator.TemplateItem{
+		generator.ContractTemplate{
+			Name:         "Counter",
+			TemplatePath: "contract_counter.cdc.tmpl",
+			Account:      "",
 		},
-		"script": []TemplateItem{
-			ScriptTemplate{
-				Name:     "GetCounter",
-				Template: "script_counter",
-				Data:     map[string]interface{}{"ContractName": "Counter"},
-			},
+		generator.ScriptTemplate{
+			Name:         "GetCounter",
+			TemplatePath: "script_counter.cdc.tmpl",
+			Data:         map[string]interface{}{"ContractName": "Counter"},
 		},
-		"transaction": []TemplateItem{
-			TransactionTemplate{
-				Name:     "IncrementCounter",
-				Template: "transaction_counter",
-				Data:     map[string]interface{}{"ContractName": "Counter"},
-			},
+		generator.TransactionTemplate{
+			Name:         "IncrementCounter",
+			TemplatePath: "transaction_counter.cdc.tmpl",
+			Data:         map[string]interface{}{"ContractName": "Counter"},
 		},
 	}
 
-	generator := NewGenerator(tempDir, state, logger, true, false)
-	err = generator.Create(templates)
+	g := generator.NewGenerator(getTemplateFs(), tempDir, state, logger, true, false)
+	err = g.Create(templates...)
 	if err != nil {
 		return "", err
 	}
