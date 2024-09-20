@@ -223,3 +223,30 @@ func TestGenerateTestTemplate(t *testing.T) {
 	expectedContent := `test template`
 	assert.Equal(t, expectedContent, util.NormalizeLineEndings(string(content)))
 }
+
+func TestGenerateFileTemplate(t *testing.T) {
+	logger := output.NewStdoutLogger(output.NoneLog)
+	_, state, _ := util.TestMocks(t)
+
+	// Create a mock template file
+	tmplFs := afero.Afero{Fs: afero.NewMemMapFs()}
+	err := tmplFs.WriteFile("file.tmpl", []byte("{{.content}}"), 0644)
+	assert.NoError(t, err, "Failed to create template file")
+
+	g := NewGenerator(&tmplFs, "", state, logger, false, true)
+	err = g.Create(FileTemplate{
+		TargetPath:   "TestFile",
+		TemplatePath: "file.tmpl",
+		Data: map[string]interface{}{
+			"content": "test template",
+		}},
+	)
+	assert.NoError(t, err, "Failed to generate file")
+
+	content, err := state.ReaderWriter().ReadFile(filepath.FromSlash("TestFile"))
+	assert.NoError(t, err, "Failed to read generated file")
+	assert.NotNil(t, content)
+
+	expectedContent := `test template`
+	assert.Equal(t, expectedContent, util.NormalizeLineEndings(string(content)))
+}
