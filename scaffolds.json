@@ -10,12 +10,12 @@
     "name": "Simple Cadence Project",
     "repo": "https://github.com/sideninja/flow-basic-scaffold.git",
     "description": "Scaffold contains required folder structure as well as some example Cadence code.",
-    "commit": "todo define commit"
+    "commit": "8065287e55bc298d776665bef98a577ceb4a226c"
   },
   {
     "name": "Cadence NFT Project",
     "repo": "https://github.com/nvdtf/flow-nft-scaffold.git",
     "description": "Scaffold contains the ExampleNFT sample NFT contract.",
-    "commit": "todo define commit"
+    "commit": "ef9437c05549e3f581cf619dec9d59d8c7f6e3ec"
   }
 ]
