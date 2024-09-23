@@ -25,12 +25,6 @@ import (
 	"os"
 	"path/filepath"
 
-	flowsdk "github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flow-go/fvm/systemcontracts"
-	flowGo "github.com/onflow/flow-go/model/flow"
-	flowkitConfig "github.com/onflow/flowkit/v2/config"
-	"golang.org/x/exp/slices"
-
 	"github.com/onflow/flow-cli/internal/dependencymanager"
 	"github.com/onflow/flow-cli/internal/util"
 
@@ -245,7 +239,7 @@ func startInteractiveSetup(
 
 	msg := "Would you like to install any core contracts and their dependencies?"
 	if prompt.GenericBoolPrompt(msg) {
-		err := installCoreContracts(logger, state, tempDir)
+		err := dependencymanager.PromptInstallCoreContracts(logger, state, tempDir, nil)
 		if err != nil {
 			return "", err
 		}
@@ -268,54 +262,6 @@ func startInteractiveSetup(
 	}
 
 	return targetDir, nil
-}
-
-func installCoreContracts(logger output.Logger, state *flowkit.State, tempDir string) error {
-	// Prompt to ask which core contracts should be installed
-	sc := systemcontracts.SystemContractsForChain(flowGo.Mainnet)
-	promptMessage := "Select any core contracts you would like to install or skip to continue."
-
-	contractNames := make([]string, 0)
-
-	for _, contract := range sc.All() {
-		contractNames = append(contractNames, contract.Name)
-	}
-
-	selectedContractNames, err := prompt.RunSelectOptions(contractNames, promptMessage)
-	if err != nil {
-		return fmt.Errorf("error running dependency selection: %v\n", err)
-	}
-
-	var dependencies []flowkitConfig.Dependency
-
-	// Loop standard contracts and add them to the dependencies if selected
-	for _, contract := range sc.All() {
-		if slices.Contains(selectedContractNames, contract.Name) {
-			dependencies = append(dependencies, flowkitConfig.Dependency{
-				Name: contract.Name,
-				Source: flowkitConfig.Source{
-					NetworkName:  flowkitConfig.MainnetNetwork.Name,
-					Address:      flowsdk.HexToAddress(contract.Address.String()),
-					ContractName: contract.Name,
-				},
-			})
-		}
-	}
-
-	logger.Info("")
-	logger.Info(util.MessageWithEmojiPrefix("🔄", "Installing selected core contracts and dependencies..."))
-
-	// Add the selected core contracts as dependencies
-	installer, err := dependencymanager.NewDependencyInstaller(logger, state, false, tempDir, dependencymanager.Flags{})
-	if err != nil {
-		return err
-	}
-
-	if err := installer.AddMany(dependencies); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // getTargetDirectory checks if the specified directory path is suitable for use.
