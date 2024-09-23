@@ -30,11 +30,12 @@ import (
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/output"
 
+	flowGo "github.com/onflow/flow-go/model/flow"
+	flowkitConfig "github.com/onflow/flowkit/v2/config"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/prompt"
 	"github.com/onflow/flow-cli/internal/util"
-	flowGo "github.com/onflow/flow-go/model/flow"
-	flowkitConfig "github.com/onflow/flowkit/v2/config"
 )
 
 type DiscoverResult struct {
