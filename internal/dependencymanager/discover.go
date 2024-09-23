@@ -74,13 +74,7 @@ func discover(
 		return nil, err
 	}
 
-	if len(globalFlags.ConfigPaths) == 0 {
-		err = state.SaveDefault()
-	} else if len(globalFlags.ConfigPaths) == 1 {
-		err = state.Save(globalFlags.ConfigPaths[0])
-	} else {
-		err = fmt.Errorf("cannot save state to multiple files")
-	}
+	err = state.SaveDefault()
 	return nil, err
 }
 
