@@ -185,6 +185,45 @@ func TestDependencyInstallerAdd(t *testing.T) {
 		assert.NoError(t, err, "Failed to read generated file")
 		assert.NotNil(t, fileContent)
 	})
+
+	t.Run("Add by core contract name", func(t *testing.T) {
+		gw := mocks.DefaultMockGateway()
+
+		gw.GetAccount.Run(func(args mock.Arguments) {
+			addr := args.Get(1).(flow.Address)
+			assert.Equal(t, addr.String(), "1654653399040a61")
+			acc := tests.NewAccountWithAddress(addr.String())
+			acc.Contracts = map[string][]byte{
+				"FlowToken": []byte("access(all) contract FlowToken {}"),
+			}
+
+			gw.GetAccount.Return(acc, nil)
+		})
+
+		di := &DependencyInstaller{
+			Gateways: map[string]gateway.Gateway{
+				config.EmulatorNetwork.Name: gw.Mock,
+				config.TestnetNetwork.Name:  gw.Mock,
+				config.MainnetNetwork.Name:  gw.Mock,
+			},
+			Logger:          logger,
+			State:           state,
+			SaveState:       true,
+			TargetDir:       "",
+			SkipDeployments: true,
+			SkipAlias:       true,
+			dependencies:    make(map[string]config.Dependency),
+		}
+
+		err := di.AddByCoreContractName("FlowToken", "")
+		assert.NoError(t, err, "Failed to install dependencies")
+
+		filePath := fmt.Sprintf("imports/%s/%s.cdc", "1654653399040a61", "FlowToken")
+		fileContent, err := state.ReaderWriter().ReadFile(filePath)
+		assert.NoError(t, err, "Failed to read generated file")
+		assert.NotNil(t, fileContent)
+		assert.Contains(t, string(fileContent), "contract FlowToken")
+	})
 }
 
 func TestDependencyInstallerAddMany(t *testing.T) {

@@ -183,25 +183,9 @@ func (di *DependencyInstaller) Install() error {
 
 // AddBySourceString processes a single dependency and installs it and any dependencies it has, as well as adding it to the state
 func (di *DependencyInstaller) AddBySourceString(depSource, customName string) error {
-	// First, check if the source string is a core contract name
-	var depNetwork, depAddress, depContractName string
-	sc := systemcontracts.SystemContractsForChain(flowGo.Mainnet)
-	for _, coreContract := range sc.All() {
-		if coreContract.Name == depSource {
-			depAddress = coreContract.Address.String()
-			depNetwork = config.MainnetNetwork.Name
-			depContractName = depSource
-			break
-		}
-	}
-
-	// If it's not a core contract, parse the source string
-	if depAddress == "" {
-		var err error
-		depNetwork, depAddress, depContractName, err = config.ParseSourceString(depSource)
-		if err != nil {
-			return fmt.Errorf("error parsing source: %w", err)
-		}
+	depNetwork, depAddress, depContractName, err := config.ParseSourceString(depSource)
+	if err != nil {
+		return fmt.Errorf("error parsing source: %w", err)
 	}
 
 	name := depContractName
@@ -219,19 +203,40 @@ func (di *DependencyInstaller) AddBySourceString(depSource, customName string) e
 		},
 	}
 
-	if err := di.processDependency(dep); err != nil {
-		return fmt.Errorf("error processing dependency: %w", err)
+	return di.Add(dep)
+}
+
+func (di *DependencyInstaller) AddByCoreContractName(coreContractName, customName string) error {
+	var depNetwork, depAddress, depContractName string
+	sc := systemcontracts.SystemContractsForChain(flowGo.Mainnet)
+	for _, coreContract := range sc.All() {
+		if coreContract.Name == coreContractName {
+			depAddress = coreContract.Address.String()
+			depNetwork = config.MainnetNetwork.Name
+			depContractName = coreContractName
+			break
+		}
 	}
 
-	di.checkForConflictingContracts()
-
-	if err := di.saveState(); err != nil {
-		return err
+	if depAddress == "" {
+		return fmt.Errorf("contract %s not found in core contracts", coreContractName)
 	}
 
-	di.logs.LogAll(di.Logger)
+	name := depContractName
+	if customName != "" {
+		name = customName
+	}
 
-	return nil
+	dep := config.Dependency{
+		Name: name,
+		Source: config.Source{
+			NetworkName:  depNetwork,
+			Address:      flowsdk.HexToAddress(depAddress),
+			ContractName: depContractName,
+		},
+	}
+
+	return di.Add(dep)
 }
 
 // Add processes a single dependency and installs it and any dependencies it has, as well as adding it to the state
@@ -239,6 +244,8 @@ func (di *DependencyInstaller) Add(dep config.Dependency) error {
 	if err := di.processDependency(dep); err != nil {
 		return fmt.Errorf("error processing dependency: %w", err)
 	}
+
+	di.checkForConflictingContracts()
 
 	if err := di.saveState(); err != nil {
 		return err
