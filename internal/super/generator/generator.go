@@ -20,12 +20,12 @@ package generator
 
 import (
 	"bytes"
+	"embed"
 	"fmt"
 	"path/filepath"
 	"text/template"
 
 	"github.com/onflow/flowkit/v2"
-	"github.com/spf13/afero"
 
 	"github.com/onflow/flowkit/v2/output"
 )
@@ -33,6 +33,9 @@ import (
 const (
 	DefaultCadenceDirectory = "cadence"
 )
+
+//go:embed templates/*.tmpl
+var templatesFS embed.FS
 
 // TemplateItem is an interface for different template types
 type TemplateItem interface {
@@ -49,7 +52,6 @@ type Generator interface {
 }
 
 type GeneratorImpl struct {
-	templateFs  *afero.Afero
 	directory   string
 	state       *flowkit.State
 	logger      output.Logger
@@ -58,7 +60,6 @@ type GeneratorImpl struct {
 }
 
 func NewGenerator(
-	templateFs *afero.Afero,
 	directory string,
 	state *flowkit.State,
 	logger output.Logger,
@@ -66,7 +67,6 @@ func NewGenerator(
 	saveState bool,
 ) *GeneratorImpl {
 	return &GeneratorImpl{
-		templateFs:  templateFs,
 		directory:   directory,
 		state:       state,
 		logger:      logger,
@@ -140,7 +140,7 @@ func (g *GeneratorImpl) generate(item TemplateItem) error {
 // processTemplate reads a template file from the embedded filesystem and processes it with the provided data
 // If you don't need to provide data, pass nil
 func (g *GeneratorImpl) processTemplate(templatePath string, data map[string]interface{}) (string, error) {
-	templateData, err := g.templateFs.ReadFile(templatePath)
+	templateData, err := templatesFS.ReadFile(templatePath)
 	if err != nil {
 		return "", fmt.Errorf("failed to read template file: %w", err)
 	}

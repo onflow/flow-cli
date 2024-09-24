@@ -19,8 +19,6 @@
 package super
 
 import (
-	"embed"
-
 	"github.com/onflow/flow-cli/internal/super/generator"
 	"github.com/onflow/flow-cli/internal/util"
 
@@ -30,12 +28,8 @@ import (
 
 	"github.com/onflow/flow-cli/internal/command"
 
-	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 )
-
-//go:embed templates/*.tmpl
-var templatesFS embed.FS
 
 type generateFlagsDef struct {
 	Directory string `default:"" flag:"dir" info:"Directory to generate files in"`
@@ -104,7 +98,7 @@ func generateContract(
 	_ flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	g := generator.NewGenerator(getTemplateFs(), "", state, logger, false, true)
+	g := generator.NewGenerator("", state, logger, false, true)
 	name := util.StripCDCExtension(args[0])
 	err = g.Create(generator.ContractTemplate{Name: name})
 	return nil, err
@@ -117,7 +111,7 @@ func generateTransaction(
 	_ flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	g := generator.NewGenerator(getTemplateFs(), "", state, logger, false, true)
+	g := generator.NewGenerator("", state, logger, false, true)
 	name := util.StripCDCExtension(args[0])
 	err = g.Create(generator.TransactionTemplate{Name: name})
 	return nil, err
@@ -130,13 +124,8 @@ func generateScript(
 	_ flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	g := generator.NewGenerator(getTemplateFs(), "", state, logger, false, true)
+	g := generator.NewGenerator("", state, logger, false, true)
 	name := util.StripCDCExtension(args[0])
 	err = g.Create(generator.ScriptTemplate{Name: name})
 	return nil, err
-}
-
-func getTemplateFs() *afero.Afero {
-	fs := afero.Afero{Fs: afero.FromIOFS{FS: templatesFS}}
-	return &afero.Afero{Fs: afero.NewBasePathFs(fs, "templates")}
 }

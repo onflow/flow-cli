@@ -19,7 +19,6 @@
 package generator
 
 import (
-	"embed"
 	"fmt"
 	"path/filepath"
 	"testing"
@@ -32,18 +31,11 @@ import (
 	"github.com/onflow/flowkit/v2/output"
 )
 
-// go:embed ../templates/*.tmpl
-var templateFs embed.FS
-
-func getTemplateFS() *afero.Afero {
-	return &afero.Afero{Fs: afero.FromIOFS{FS: templateFs}}
-}
-
 func TestGenerateNewContract(t *testing.T) {
 	logger := output.NewStdoutLogger(output.NoneLog)
 	_, state, _ := util.TestMocks(t)
 
-	g := NewGenerator(getTemplateFS(), "", state, logger, false, true)
+	g := NewGenerator("", state, logger, false, true)
 
 	// Test contract generation
 	err := g.Create(ContractTemplate{Name: "TestContract"})
@@ -62,7 +54,7 @@ contract TestContract {
 	assert.Equal(t, expectedContent, util.NormalizeLineEndings(string(fileContent)))
 
 	// Test file already exists scenario
-	generatorTwo := NewGenerator(getTemplateFS(), "", state, logger, false, true)
+	generatorTwo := NewGenerator("", state, logger, false, true)
 	err = generatorTwo.Create(ContractTemplate{Name: "TestContract"})
 	assert.Error(t, err)
 	expectedError := fmt.Sprintf("file already exists: %s", filepath.FromSlash("cadence/contracts/TestContract.cdc"))
@@ -73,7 +65,7 @@ func TestGenerateContractWithAccount(t *testing.T) {
 	logger := output.NewStdoutLogger(output.NoneLog)
 	_, state, _ := util.TestMocks(t)
 
-	g := NewGenerator(getTemplateFS(), "", state, logger, false, true)
+	g := NewGenerator("", state, logger, false, true)
 
 	// Test contract generation
 	err := g.Create(ContractTemplate{Name: "TestContract", Account: "example-account"})
@@ -88,7 +80,7 @@ func TestGenerateNewContractSkipTests(t *testing.T) {
 	logger := output.NewStdoutLogger(output.NoneLog)
 	_, state, _ := util.TestMocks(t)
 
-	g := NewGenerator(getTemplateFS(), "", state, logger, false, true)
+	g := NewGenerator("", state, logger, false, true)
 
 	// Test contract generation
 	err := g.Create(ContractTemplate{Name: "TestContract", Account: "", skipTests: true})
@@ -108,7 +100,7 @@ func TestGenerateNewContractFileAlreadyExists(t *testing.T) {
 	_, state, _ := util.TestMocks(t)
 
 	// Test contract generation
-	g := NewGenerator(getTemplateFS(), "", state, logger, false, true)
+	g := NewGenerator("", state, logger, false, true)
 	err := g.Create(ContractTemplate{Name: "TestContract", Account: ""})
 	assert.NoError(t, err, "Failed to generate contract")
 
@@ -118,7 +110,7 @@ func TestGenerateNewContractFileAlreadyExists(t *testing.T) {
 	assert.NotNil(t, content)
 
 	// Test file already exists scenario
-	generatorTwo := NewGenerator(getTemplateFS(), "", state, logger, false, true)
+	generatorTwo := NewGenerator("", state, logger, false, true)
 	err = generatorTwo.Create(ContractTemplate{Name: "TestContract", Account: ""})
 	assert.Error(t, err)
 	expectedError := fmt.Sprintf("file already exists: %s", filepath.FromSlash("cadence/contracts/TestContract.cdc"))
@@ -129,7 +121,7 @@ func TestGenerateNewContractWithFileExtension(t *testing.T) {
 	logger := output.NewStdoutLogger(output.NoneLog)
 	_, state, _ := util.TestMocks(t)
 
-	g := NewGenerator(getTemplateFS(), "", state, logger, false, true)
+	g := NewGenerator("", state, logger, false, true)
 	err := g.Create(ContractTemplate{Name: "TestContract.cdc", Account: ""})
 	assert.NoError(t, err, "Failed to generate contract")
 
@@ -143,7 +135,7 @@ func TestGenerateNewScript(t *testing.T) {
 	logger := output.NewStdoutLogger(output.NoneLog)
 	_, state, _ := util.TestMocks(t)
 
-	g := NewGenerator(getTemplateFS(), "", state, logger, false, true)
+	g := NewGenerator("", state, logger, false, true)
 	err := g.Create(ScriptTemplate{Name: "TestScript"})
 	assert.NoError(t, err, "Failed to generate contract")
 
@@ -162,7 +154,7 @@ func TestGenerateNewTransaction(t *testing.T) {
 	logger := output.NewStdoutLogger(output.NoneLog)
 	_, state, _ := util.TestMocks(t)
 
-	g := NewGenerator(getTemplateFS(), "", state, logger, false, true)
+	g := NewGenerator("", state, logger, false, true)
 	err := g.Create(TransactionTemplate{Name: "TestTransaction"})
 	assert.NoError(t, err, "Failed to generate contract")
 
@@ -182,7 +174,7 @@ func TestGenerateNewWithDirFlag(t *testing.T) {
 	logger := output.NewStdoutLogger(output.NoneLog)
 	_, state, _ := util.TestMocks(t)
 
-	g := NewGenerator(getTemplateFS(), "customDir", state, logger, false, true)
+	g := NewGenerator("customDir", state, logger, false, true)
 	err := g.Create(ContractTemplate{Name: "TestContract", Account: ""})
 	assert.NoError(t, err, "Failed to generate contract")
 
@@ -206,7 +198,7 @@ func TestGenerateTestTemplate(t *testing.T) {
 	err := tmplFs.WriteFile("file.tmpl", []byte("{{.content}}"), 0644)
 	assert.NoError(t, err, "Failed to create template file")
 
-	g := NewGenerator(&tmplFs, "", state, logger, false, true)
+	g := NewGenerator("", state, logger, false, true)
 	err = g.Create(TestTemplate{
 		Name:         "FooBar_test",
 		TemplatePath: "file.tmpl",
@@ -233,7 +225,7 @@ func TestGenerateFileTemplate(t *testing.T) {
 	err := tmplFs.WriteFile("file.tmpl", []byte("{{.content}}"), 0644)
 	assert.NoError(t, err, "Failed to create template file")
 
-	g := NewGenerator(&tmplFs, "", state, logger, false, true)
+	g := NewGenerator("", state, logger, false, true)
 	err = g.Create(FileTemplate{
 		TargetPath:   "TestFile",
 		TemplatePath: "file.tmpl",

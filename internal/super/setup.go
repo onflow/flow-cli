@@ -240,7 +240,7 @@ func startInteractiveSetup(
 		},
 	}
 
-	g := generator.NewGenerator(getTemplateFs(), tempDir, state, logger, true, false)
+	g := generator.NewGenerator(tempDir, state, logger, true, false)
 	err = g.Create(templates...)
 	if err != nil {
 		return "", err
