@@ -1,9 +1,9 @@
-import "{{ .ContractName }}"
+import "Counter"
 
 transaction {
     prepare(signer: auth(BorrowValue) &Account) {
-        // Borrow a reference to the {{ .ContractName }} contract's public capability
-        let counterRef = signer.borrow<&{{ .ContractName }}>(from: /storage/counter)
+        // Borrow a reference to the <no value> contract's public capability
+        let counterRef = signer.storage.borrow<&Counter>(from: /storage/counter)
             ?? panic("Could not borrow reference to the counter")
 
         // Call the increment function on the Counter contract
