@@ -234,13 +234,6 @@ func startInteractiveSetup(
 			Name: "Counter_test",
 			Data: map[string]interface{}{"ContractName": "Counter"},
 		},
-		/*generator.FileTemplate{
-			TemplatePath: "README.md.tmpl",
-			TargetPath:   "README.md",
-			Data: map[string]interface{}{
-				"ProjectName": filepath.Base(targetDir),
-			},
-		},*/
 	}
 
 	g := generator.NewGenerator(tempDir, state, logger, true, false)

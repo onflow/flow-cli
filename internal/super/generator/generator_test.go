@@ -83,7 +83,7 @@ func TestGenerateNewContractSkipTests(t *testing.T) {
 	g := NewGenerator("", state, logger, false, true)
 
 	// Test contract generation
-	err := g.Create(ContractTemplate{Name: "TestContract", Account: "", skipTests: true})
+	err := g.Create(ContractTemplate{Name: "TestContract", Account: "", SkipTests: true})
 	assert.NoError(t, err, "Failed to generate contract")
 
 	fileContent, err := state.ReaderWriter().ReadFile(filepath.FromSlash("cadence/contracts/TestContract.cdc"))
@@ -209,33 +209,6 @@ func TestGenerateTestTemplate(t *testing.T) {
 	assert.NoError(t, err, "Failed to generate file")
 
 	content, err := state.ReaderWriter().ReadFile(filepath.FromSlash("cadence/tests/FooBar_test.cdc"))
-	assert.NoError(t, err, "Failed to read generated file")
-	assert.NotNil(t, content)
-
-	expectedContent := `test template`
-	assert.Equal(t, expectedContent, util.NormalizeLineEndings(string(content)))
-}
-
-func TestGenerateFileTemplate(t *testing.T) {
-	logger := output.NewStdoutLogger(output.NoneLog)
-	_, state, _ := util.TestMocks(t)
-
-	// Create a mock template file
-	tmplFs := afero.Afero{Fs: afero.NewMemMapFs()}
-	err := tmplFs.WriteFile("file.tmpl", []byte("{{.content}}"), 0644)
-	assert.NoError(t, err, "Failed to create template file")
-
-	g := NewGenerator("", state, logger, false, true)
-	err = g.Create(FileTemplate{
-		TargetPath:   "TestFile",
-		TemplatePath: "file.tmpl",
-		Data: map[string]interface{}{
-			"content": "test template",
-		}},
-	)
-	assert.NoError(t, err, "Failed to generate file")
-
-	content, err := state.ReaderWriter().ReadFile(filepath.FromSlash("TestFile"))
 	assert.NoError(t, err, "Failed to read generated file")
 	assert.NotNil(t, content)
 
