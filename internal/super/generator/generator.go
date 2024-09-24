@@ -45,13 +45,7 @@ type TemplateItem interface {
 	UpdateState(state *flowkit.State) error
 }
 
-//go:generate mockery --name Generator --case underscore
-type Generator interface {
-	// Create generates files from the provided template items
-	Create(items ...TemplateItem) error
-}
-
-type GeneratorImpl struct {
+type Generator struct {
 	directory   string
 	state       *flowkit.State
 	logger      output.Logger
@@ -65,8 +59,8 @@ func NewGenerator(
 	logger output.Logger,
 	disableLogs,
 	saveState bool,
-) *GeneratorImpl {
-	return &GeneratorImpl{
+) *Generator {
+	return &Generator{
 		directory:   directory,
 		state:       state,
 		logger:      logger,
@@ -75,7 +69,7 @@ func NewGenerator(
 	}
 }
 
-func (g *GeneratorImpl) Create(items ...TemplateItem) error {
+func (g *Generator) Create(items ...TemplateItem) error {
 	for _, item := range items {
 		err := g.generate(item)
 		if err != nil {
@@ -86,7 +80,7 @@ func (g *GeneratorImpl) Create(items ...TemplateItem) error {
 	return nil
 }
 
-func (g *GeneratorImpl) generate(item TemplateItem) error {
+func (g *Generator) generate(item TemplateItem) error {
 	rootDir := g.directory
 
 	targetRelativeToRoot := item.GetTargetPath()
@@ -139,7 +133,7 @@ func (g *GeneratorImpl) generate(item TemplateItem) error {
 
 // processTemplate reads a template file from the embedded filesystem and processes it with the provided data
 // If you don't need to provide data, pass nil
-func (g *GeneratorImpl) processTemplate(templatePath string, data map[string]interface{}) (string, error) {
+func (g *Generator) processTemplate(templatePath string, data map[string]interface{}) (string, error) {
 	templateData, err := templatesFS.ReadFile(filepath.Join("templates", templatePath))
 	if err != nil {
 		return "", fmt.Errorf("failed to read template file: %w", err)
