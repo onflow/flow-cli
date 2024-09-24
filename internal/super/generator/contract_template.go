@@ -16,8 +16,8 @@ type ContractTemplate struct {
 	Account      string
 	TemplatePath string
 	Data         map[string]interface{}
-	skipTests    bool
-	saveState    bool
+	SkipTests    bool
+	SaveState    bool
 }
 
 var _ TemplateItem = ContractTemplate{}
@@ -50,7 +50,7 @@ func (c ContractTemplate) GetTargetPath() string {
 func (c ContractTemplate) UpdateState(state *flowkit.State) error {
 	var aliases config.Aliases
 
-	if c.skipTests != true {
+	if c.SkipTests != true {
 		aliases = config.Aliases{{
 			Network: config.TestingNetwork.Name,
 			Address: flowsdk.HexToAddress("0x0000000000000007"),
@@ -65,7 +65,7 @@ func (c ContractTemplate) UpdateState(state *flowkit.State) error {
 
 	state.Contracts().AddOrUpdate(contract)
 
-	if c.saveState {
+	if c.SaveState {
 		err := state.SaveDefault() // TODO: Support adding a target project directory
 		if err != nil {
 			return fmt.Errorf("error saving to flow.json: %w", err)

@@ -100,10 +100,15 @@ func generateContract(
 ) (result command.Result, err error) {
 	g := generator.NewGenerator("", state, logger, false, true)
 	name := util.StripCDCExtension(args[0])
-	err = g.Create(
-		generator.ContractTemplate{Name: name},
-		generator.TestTemplate{Name: name + "_test", Data: map[string]interface{}{"ContractName": "Counter"}},
-	)
+
+	templates := []generator.TemplateItem{
+		generator.ContractTemplate{Name: name, SkipTests: generateFlags.SkipTests, SaveState: true},
+	}
+	if !generateFlags.SkipTests {
+		templates = append(templates, generator.TestTemplate{Name: name + "_test", Data: map[string]interface{}{"ContractName": "Counter"}})
+	}
+
+	err = g.Create()
 	return nil, err
 }
 
