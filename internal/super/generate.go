@@ -123,7 +123,7 @@ func generateTransaction(
 	state *flowkit.State,
 ) (result command.Result, err error) {
 	generator := NewGenerator("", state, logger, false, true)
-	transaction := ScriptTemplate{Name: args[0]}
+	transaction := TransactionTemplate{Name: args[0]}
 	err = generator.Create(TemplateMap{TransactionType: []TemplateItem{transaction}})
 	return nil, err
 }
