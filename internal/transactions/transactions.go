@@ -29,6 +29,7 @@ import (
 
 	"github.com/onflow/flowkit/v2/output"
 
+	jsoncdc "github.com/onflow/cadence/encoding/json"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/events"
 	"github.com/onflow/flow-cli/internal/util"
@@ -82,7 +83,7 @@ func (r *transactionResult) JSON() any {
 				"index": event.EventIndex,
 				"type":  event.Type,
 				"values": json.RawMessage(
-					event.Payload,
+					jsoncdc.MustEncode(event.Value),
 				),
 			})
 		}
