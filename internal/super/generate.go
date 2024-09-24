@@ -100,7 +100,10 @@ func generateContract(
 ) (result command.Result, err error) {
 	g := generator.NewGenerator("", state, logger, false, true)
 	name := util.StripCDCExtension(args[0])
-	err = g.Create(generator.ContractTemplate{Name: name})
+	err = g.Create(
+		generator.ContractTemplate{Name: name},
+		generator.TestTemplate{Name: name},
+	)
 	return nil, err
 }
 

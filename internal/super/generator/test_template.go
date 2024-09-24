@@ -23,7 +23,7 @@ func (o TestTemplate) GetName() string {
 // GetTemplate returns an empty string for scripts and transactions
 func (o TestTemplate) GetTemplatePath() string {
 	if o.TemplatePath == "" {
-		return "test_init"
+		return "contract_init_test.cdc.tmpl"
 	}
 
 	return o.TemplatePath

@@ -1,3 +1,0 @@
-access(all) fun main() {
-    
-}

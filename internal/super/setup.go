@@ -219,7 +219,6 @@ func startInteractiveSetup(
 		generator.ContractTemplate{
 			Name:         "Counter",
 			TemplatePath: "contract_counter.cdc.tmpl",
-			Account:      "",
 		},
 		generator.ScriptTemplate{
 			Name:         "GetCounter",
@@ -231,13 +230,17 @@ func startInteractiveSetup(
 			TemplatePath: "transaction_counter.cdc.tmpl",
 			Data:         map[string]interface{}{"ContractName": "Counter"},
 		},
-		generator.FileTemplate{
+		generator.TestTemplate{
+			Name: "Counter_test",
+			Data: map[string]interface{}{"ContractName": "Counter"},
+		},
+		/*generator.FileTemplate{
 			TemplatePath: "README.md.tmpl",
 			TargetPath:   "README.md",
 			Data: map[string]interface{}{
 				"ProjectName": filepath.Base(targetDir),
 			},
-		},
+		},*/
 	}
 
 	g := generator.NewGenerator(tempDir, state, logger, true, false)

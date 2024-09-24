@@ -4,8 +4,8 @@ access(all) let account = Test.createAccount()
 
 access(all) fun testContract() {
     let err = Test.deployContract(
-        name: "{{ .Name }}",
-        path: "../contracts/{{ .Name }}.cdc",
+        name: "{{ .ContractName }}",
+        path: "../contracts/{{ .ContractName }}.cdc",
         arguments: [],
     )
 
