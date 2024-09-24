@@ -29,10 +29,11 @@ import (
 
 	"github.com/onflow/flowkit/v2/output"
 
-	jsoncdc "github.com/onflow/cadence/encoding/json"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/events"
 	"github.com/onflow/flow-cli/internal/util"
+
+	jsoncdc "github.com/onflow/cadence/encoding/json"
 )
 
 var Cmd = &cobra.Command{
