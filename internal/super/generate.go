@@ -102,7 +102,7 @@ func generateContract(
 	name := util.StripCDCExtension(args[0])
 	err = g.Create(
 		generator.ContractTemplate{Name: name},
-		generator.TestTemplate{Name: name},
+		generator.TestTemplate{Name: name + "_test", Data: map[string]interface{}{"ContractName": "Counter"}},
 	)
 	return nil, err
 }
