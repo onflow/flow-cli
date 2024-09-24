@@ -21,14 +21,17 @@ package dependencymanager
 import (
 	"fmt"
 
-	"github.com/onflow/flow-cli/internal/util"
+	"github.com/onflow/flow-go/fvm/systemcontracts"
 
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/output"
 
+	flowGo "github.com/onflow/flow-go/model/flow"
+
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 type addFlagsCollection struct {
@@ -77,8 +80,9 @@ func add(
 	}
 
 	// First check if the dependency is a core contract.
-	if isCoreContract(dep) {
-		if err := installer.AddByCoreContractName(dep, addFlags.name); err != nil {
+	coreContractName := findCoreContractCaseInsensitive(dep)
+	if coreContractName != "" {
+		if err := installer.AddByCoreContractName(coreContractName, addFlags.name); err != nil {
 			logger.Error(fmt.Sprintf("Error: %v", err))
 			return nil, err
 		}
@@ -92,4 +96,13 @@ func add(
 	}
 
 	return nil, nil
+}
+
+func findCoreContractCaseInsensitive(name string) string {
+	for _, contract := range systemcontracts.SystemContractsForChain(flowGo.Mainnet).All() {
+		if name == contract.Name {
+			return contract.Name
+		}
+	}
+	return ""
 }
