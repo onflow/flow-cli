@@ -208,12 +208,11 @@ func startInteractiveSetup(
 		return "", fmt.Errorf("failed to initialize configuration: %w", err)
 	}
 
-	// Generate standard cadence files & README.md
-	// cadence/contracts/DefaultContract.cdc
-	// cadence/scripts/DefaultScript.cdc
-	// cadence/transactions/DefaultTransaction.cdc
-	// cadence/tests/DefaultContract_test.cdc
-	// README.md
+	// Generate standard cadence files
+	// cadence/contracts/Counter.cdc
+	// cadence/scripts/GetCounter.cdc
+	// cadence/transactions/IncrementCounter.cdc
+	// cadence/tests/Counter_test.cdc
 
 	templates := []generator.TemplateItem{
 		generator.ContractTemplate{
