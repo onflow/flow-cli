@@ -20,6 +20,7 @@ package dependencymanager
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/onflow/flow-go/fvm/systemcontracts"
 
@@ -100,7 +101,7 @@ func add(
 
 func findCoreContractCaseInsensitive(name string) string {
 	for _, contract := range systemcontracts.SystemContractsForChain(flowGo.Mainnet).All() {
-		if name == contract.Name {
+		if strings.EqualFold(contract.Name, name) {
 			return contract.Name
 		}
 	}
