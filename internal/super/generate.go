@@ -84,13 +84,6 @@ func init() {
 	GenerateScriptCommand.AddToParent(GenerateCommand)
 }
 
-const (
-	DefaultCadenceDirectory = "cadence"
-	ContractType            = "contract"
-	TransactionType         = "transaction"
-	ScriptType              = "script"
-)
-
 func generateContract(
 	args []string,
 	_ command.GlobalFlags,
@@ -100,15 +93,7 @@ func generateContract(
 ) (result command.Result, err error) {
 	g := generator.NewGenerator("", state, logger, false, true)
 	name := util.StripCDCExtension(args[0])
-
-	templates := []generator.TemplateItem{
-		generator.ContractTemplate{Name: name, SkipTests: generateFlags.SkipTests, SaveState: true},
-	}
-	if !generateFlags.SkipTests {
-		templates = append(templates, generator.TestTemplate{Name: name + "_test", Data: map[string]interface{}{"ContractName": "Counter"}})
-	}
-
-	err = g.Create()
+	err = g.Create(generator.ContractTemplate{Name: name, SkipTests: generateFlags.SkipTests, SaveState: true})
 	return nil, err
 }
 

@@ -4,7 +4,10 @@ import (
 	"path/filepath"
 
 	"github.com/onflow/flow-cli/internal/util"
-	"github.com/onflow/flowkit/v2"
+)
+
+const (
+	DefaultTestDirectory = "tests"
 )
 
 type TestTemplate struct {
@@ -14,6 +17,10 @@ type TestTemplate struct {
 }
 
 var _ TemplateItem = TestTemplate{}
+
+func (o TestTemplate) GetType() string {
+	return "test"
+}
 
 // GetName returns the name of the script or transaction
 func (o TestTemplate) GetName() string {
@@ -35,9 +42,5 @@ func (o TestTemplate) GetData() map[string]interface{} {
 }
 
 func (o TestTemplate) GetTargetPath() string {
-	return filepath.Join(DefaultCadenceDirectory, "tests", util.AddCDCExtension(o.Name))
-}
-
-func (o TestTemplate) UpdateState(state *flowkit.State) error {
-	return nil
+	return filepath.Join(DefaultCadenceDirectory, DefaultTestDirectory, util.AddCDCExtension(o.Name))
 }

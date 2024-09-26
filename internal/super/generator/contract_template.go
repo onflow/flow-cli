@@ -10,6 +10,11 @@ import (
 	"github.com/onflow/flowkit/v2/config"
 )
 
+const (
+	DefaultContractDirectory = "cadence"
+	DefaultTestAddress       = "0x0000000000000007"
+)
+
 // Contract contains properties for contracts
 type ContractTemplate struct {
 	Name         string
@@ -21,8 +26,13 @@ type ContractTemplate struct {
 }
 
 var _ TemplateItem = ContractTemplate{}
+var _ TemplateItemWithStateUpdate = ContractTemplate{}
+var _ TemplateItemWithChildren = ContractTemplate{}
 
-// GetTemplate returns the template of the contract
+func (c ContractTemplate) GetType() string {
+	return "contract"
+}
+
 func (c ContractTemplate) GetTemplatePath() string {
 	if c.TemplatePath == "" {
 		return "contract_init.cdc.tmpl"
@@ -31,7 +41,6 @@ func (c ContractTemplate) GetTemplatePath() string {
 	return c.TemplatePath
 }
 
-// GetData returns the data of the contract
 func (c ContractTemplate) GetData() map[string]interface{} {
 	data := map[string]interface{}{
 		"Name": c.Name,
@@ -44,7 +53,7 @@ func (c ContractTemplate) GetData() map[string]interface{} {
 }
 
 func (c ContractTemplate) GetTargetPath() string {
-	return filepath.Join(DefaultCadenceDirectory, "contracts", c.Account, util.AddCDCExtension(c.Name))
+	return filepath.Join(DefaultCadenceDirectory, DefaultContractDirectory, c.Account, util.AddCDCExtension(c.Name))
 }
 
 func (c ContractTemplate) UpdateState(state *flowkit.State) error {
@@ -53,7 +62,7 @@ func (c ContractTemplate) UpdateState(state *flowkit.State) error {
 	if c.SkipTests != true {
 		aliases = config.Aliases{{
 			Network: config.TestingNetwork.Name,
-			Address: flowsdk.HexToAddress("0x0000000000000007"),
+			Address: flowsdk.HexToAddress(DefaultTestAddress),
 		}}
 	}
 
@@ -73,4 +82,19 @@ func (c ContractTemplate) UpdateState(state *flowkit.State) error {
 	}
 
 	return nil
+}
+
+func (c ContractTemplate) GetChildren() []TemplateItem {
+	if c.SkipTests {
+		return []TemplateItem{}
+	}
+
+	return []TemplateItem{
+		TestTemplate{
+			Name: fmt.Sprintf("%s_test", c.Name),
+			Data: map[string]interface{}{
+				"ContractName": c.Name,
+			},
+		},
+	}
 }

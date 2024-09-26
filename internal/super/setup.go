@@ -229,10 +229,6 @@ func startInteractiveSetup(
 			TemplatePath: "transaction_counter.cdc.tmpl",
 			Data:         map[string]interface{}{"ContractName": "Counter"},
 		},
-		generator.TestTemplate{
-			Name: "Counter_test",
-			Data: map[string]interface{}{"ContractName": "Counter"},
-		},
 	}
 
 	g := generator.NewGenerator(tempDir, state, logger, true, false)

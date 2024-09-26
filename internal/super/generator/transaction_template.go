@@ -4,7 +4,10 @@ import (
 	"path/filepath"
 
 	"github.com/onflow/flow-cli/internal/util"
-	"github.com/onflow/flowkit/v2"
+)
+
+const (
+	DefaultTransactionDirectory = "transactions"
 )
 
 // TransactionTemplate contains only a name property for scripts and transactions
@@ -17,8 +20,8 @@ type TransactionTemplate struct {
 var _ TemplateItem = TransactionTemplate{}
 
 // GetName returns the name of the script or transaction
-func (o TransactionTemplate) GetName() string {
-	return o.Name
+func (o TransactionTemplate) GetType() string {
+	return "transaction"
 }
 
 // GetTemplate returns an empty string for scripts and transactions
@@ -36,9 +39,5 @@ func (o TransactionTemplate) GetData() map[string]interface{} {
 }
 
 func (o TransactionTemplate) GetTargetPath() string {
-	return filepath.Join(DefaultCadenceDirectory, "transactions", util.AddCDCExtension(o.Name))
-}
-
-func (o TransactionTemplate) UpdateState(state *flowkit.State) error {
-	return nil
+	return filepath.Join(DefaultCadenceDirectory, DefaultTransactionDirectory, util.AddCDCExtension(o.Name))
 }

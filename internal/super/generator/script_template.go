@@ -4,10 +4,12 @@ import (
 	"path/filepath"
 
 	"github.com/onflow/flow-cli/internal/util"
-	"github.com/onflow/flowkit/v2"
 )
 
-// ScriptTemplate contains only a name property for scripts and transactions
+const (
+	DefaultScriptDirectory = "scripts"
+)
+
 type ScriptTemplate struct {
 	Name         string
 	TemplatePath string
@@ -16,12 +18,10 @@ type ScriptTemplate struct {
 
 var _ TemplateItem = ScriptTemplate{}
 
-// GetName returns the name of the script or transaction
-func (o ScriptTemplate) GetName() string {
-	return o.Name
+func (o ScriptTemplate) GetType() string {
+	return "script"
 }
 
-// GetTemplate returns an empty string for scripts and transactions
 func (o ScriptTemplate) GetTemplatePath() string {
 	if o.TemplatePath == "" {
 		return "script_init.cdc.tmpl"
@@ -30,15 +30,10 @@ func (o ScriptTemplate) GetTemplatePath() string {
 	return o.TemplatePath
 }
 
-// GetData returns the data of the script or transaction
 func (o ScriptTemplate) GetData() map[string]interface{} {
 	return o.Data
 }
 
 func (o ScriptTemplate) GetTargetPath() string {
-	return filepath.Join(DefaultCadenceDirectory, "scripts", util.AddCDCExtension(o.Name))
-}
-
-func (o ScriptTemplate) UpdateState(state *flowkit.State) error {
-	return nil
+	return filepath.Join(DefaultCadenceDirectory, DefaultScriptDirectory, util.AddCDCExtension(o.Name))
 }

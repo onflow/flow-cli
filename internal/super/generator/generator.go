@@ -39,10 +39,22 @@ var templatesFS embed.FS
 
 // TemplateItem is an interface for different template types
 type TemplateItem interface {
+	GetType() string
 	GetTemplatePath() string
 	GetData() map[string]interface{}
 	GetTargetPath() string
+}
+
+// TemplateItemWithStateUpdate is an interface for template items that need to update the Flowkit state/flow.json
+type TemplateItemWithStateUpdate interface {
+	TemplateItem
 	UpdateState(state *flowkit.State) error
+}
+
+// TemplateItemWithChildren is an interface for template items that have children
+type TemplateItemWithChildren interface {
+	TemplateItem
+	GetChildren() []TemplateItem
 }
 
 type Generator struct {
@@ -74,6 +86,13 @@ func (g *Generator) Create(items ...TemplateItem) error {
 		err := g.generate(item)
 		if err != nil {
 			return err
+		}
+
+		if itemWithChildren, ok := item.(TemplateItemWithChildren); ok {
+			err = g.Create(itemWithChildren.GetChildren()...)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -123,9 +142,11 @@ func (g *Generator) generate(item TemplateItem) error {
 	}
 
 	// Call template state update function if it exists
-	err = item.UpdateState(g.state)
-	if err != nil {
-		return err
+	if itemWithStateUpdate, ok := item.(TemplateItemWithStateUpdate); ok {
+		err = itemWithStateUpdate.UpdateState(g.state)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
