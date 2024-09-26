@@ -16,37 +16,33 @@
  * limitations under the License.
  */
 
-package super
+package generator
 
 import (
 	"fmt"
 	"path/filepath"
 	"testing"
 
-	"github.com/onflow/flow-cli/internal/util"
-
 	"github.com/stretchr/testify/assert"
 
 	"github.com/onflow/flowkit/v2/output"
+
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 func TestGenerateNewContract(t *testing.T) {
 	logger := output.NewStdoutLogger(output.NoneLog)
 	_, state, _ := util.TestMocks(t)
 
-	generator := NewGenerator("", state, logger, false, true)
+	g := NewGenerator("", state, logger, false, true)
 
 	// Test contract generation
-	err := generator.Create(TemplateMap{"contract": []TemplateItem{Contract{Name: "TestContract", Account: ""}}})
+	err := g.Create(ContractTemplate{Name: "TestContract"})
 	assert.NoError(t, err, "Failed to generate contract")
 
 	fileContent, err := state.ReaderWriter().ReadFile(filepath.FromSlash("cadence/contracts/TestContract.cdc"))
 	assert.NoError(t, err, "Failed to read generated file")
 	assert.NotNil(t, fileContent)
-
-	testContent, err := state.ReaderWriter().ReadFile(filepath.FromSlash("cadence/tests/TestContract_test.cdc"))
-	assert.NoError(t, err, "Failed to read generated file")
-	assert.NotNil(t, testContent)
 
 	// Check content is correct
 	expectedContent := `access(all)
@@ -54,26 +50,11 @@ contract TestContract {
     init() {}
 }`
 
-	expectedTestContent := `import Test
-
-access(all) let account = Test.createAccount()
-
-access(all) fun testContract() {
-    let err = Test.deployContract(
-        name: "TestContract",
-        path: "../contracts/TestContract.cdc",
-        arguments: [],
-    )
-
-    Test.expect(err, Test.beNil())
-}`
-
 	assert.Equal(t, expectedContent, util.NormalizeLineEndings(string(fileContent)))
-	assert.Equal(t, expectedTestContent, util.NormalizeLineEndings(string(testContent)))
 
 	// Test file already exists scenario
 	generatorTwo := NewGenerator("", state, logger, false, true)
-	err = generatorTwo.Create(TemplateMap{"contract": []TemplateItem{Contract{Name: "TestContract", Account: ""}}})
+	err = generatorTwo.Create(ContractTemplate{Name: "TestContract"})
 	assert.Error(t, err)
 	expectedError := fmt.Sprintf("file already exists: %s", filepath.FromSlash("cadence/contracts/TestContract.cdc"))
 	assert.Equal(t, expectedError, err.Error())
@@ -83,34 +64,25 @@ func TestGenerateContractWithAccount(t *testing.T) {
 	logger := output.NewStdoutLogger(output.NoneLog)
 	_, state, _ := util.TestMocks(t)
 
-	generator := NewGenerator("", state, logger, false, true)
+	g := NewGenerator("", state, logger, false, true)
 
 	// Test contract generation
-	err := generator.Create(TemplateMap{"contract": []TemplateItem{Contract{Name: "TestContract", Account: "example-account"}}})
+	err := g.Create(ContractTemplate{Name: "TestContract", Account: "example-account"})
 	assert.NoError(t, err, "Failed to generate contract")
 
 	fileContent, err := state.ReaderWriter().ReadFile(filepath.FromSlash("cadence/contracts/example-account/TestContract.cdc"))
 	assert.NoError(t, err, "Failed to read generated file")
 	assert.NotNil(t, fileContent)
-
-	testContent, err := state.ReaderWriter().ReadFile(filepath.FromSlash("cadence/tests/TestContract_test.cdc"))
-	assert.NoError(t, err, "Failed to read generated file")
-	assert.NotNil(t, testContent)
 }
 
 func TestGenerateNewContractSkipTests(t *testing.T) {
 	logger := output.NewStdoutLogger(output.NoneLog)
 	_, state, _ := util.TestMocks(t)
 
-	generateFlags.SkipTests = true
-
-	generator := NewGenerator("", state, logger, false, true)
-	t.Cleanup(func() {
-		generateFlags.SkipTests = false
-	})
+	g := NewGenerator("", state, logger, false, true)
 
 	// Test contract generation
-	err := generator.Create(TemplateMap{"contract": []TemplateItem{Contract{Name: "TestContract", Account: ""}}})
+	err := g.Create(ContractTemplate{Name: "TestContract", Account: "", SkipTests: true})
 	assert.NoError(t, err, "Failed to generate contract")
 
 	fileContent, err := state.ReaderWriter().ReadFile(filepath.FromSlash("cadence/contracts/TestContract.cdc"))
@@ -122,31 +94,13 @@ func TestGenerateNewContractSkipTests(t *testing.T) {
 	assert.Nil(t, testContent)
 }
 
-func TestGenerateNewContractWithCDCExtension(t *testing.T) {
-	logger := output.NewStdoutLogger(output.NoneLog)
-	_, state, _ := util.TestMocks(t)
-
-	// Test contract generation
-	generator := NewGenerator("", state, logger, false, true)
-	err := generator.Create(TemplateMap{"contract": []TemplateItem{Contract{Name: "Tester.cdc", Account: ""}}})
-	assert.NoError(t, err, "Failed to generate contract")
-
-	fileContent, err := state.ReaderWriter().ReadFile(filepath.FromSlash("cadence/contracts/Tester.cdc"))
-	assert.NoError(t, err, "Failed to read generated file")
-	assert.NotNil(t, fileContent)
-
-	testContent, err := state.ReaderWriter().ReadFile(filepath.FromSlash("cadence/tests/Tester_test.cdc"))
-	assert.NoError(t, err, "Failed to read generated file")
-	assert.NotNil(t, testContent)
-}
-
 func TestGenerateNewContractFileAlreadyExists(t *testing.T) {
 	logger := output.NewStdoutLogger(output.NoneLog)
 	_, state, _ := util.TestMocks(t)
 
 	// Test contract generation
-	generator := NewGenerator("", state, logger, false, true)
-	err := generator.Create(TemplateMap{"contract": []TemplateItem{Contract{Name: "TestContract", Account: ""}}})
+	g := NewGenerator("", state, logger, false, true)
+	err := g.Create(ContractTemplate{Name: "TestContract", Account: ""})
 	assert.NoError(t, err, "Failed to generate contract")
 
 	//// Check if the file exists in the correct directory
@@ -156,7 +110,7 @@ func TestGenerateNewContractFileAlreadyExists(t *testing.T) {
 
 	// Test file already exists scenario
 	generatorTwo := NewGenerator("", state, logger, false, true)
-	err = generatorTwo.Create(TemplateMap{"contract": []TemplateItem{Contract{Name: "TestContract", Account: ""}}})
+	err = generatorTwo.Create(ContractTemplate{Name: "TestContract", Account: ""})
 	assert.Error(t, err)
 	expectedError := fmt.Sprintf("file already exists: %s", filepath.FromSlash("cadence/contracts/TestContract.cdc"))
 	assert.Equal(t, expectedError, err.Error())
@@ -166,8 +120,8 @@ func TestGenerateNewContractWithFileExtension(t *testing.T) {
 	logger := output.NewStdoutLogger(output.NoneLog)
 	_, state, _ := util.TestMocks(t)
 
-	generator := NewGenerator("", state, logger, false, true)
-	err := generator.Create(TemplateMap{"contract": []TemplateItem{Contract{Name: "TestContract.cdc", Account: ""}}})
+	g := NewGenerator("", state, logger, false, true)
+	err := g.Create(ContractTemplate{Name: "TestContract.cdc", Account: ""})
 	assert.NoError(t, err, "Failed to generate contract")
 
 	// Check file exists
@@ -180,8 +134,8 @@ func TestGenerateNewScript(t *testing.T) {
 	logger := output.NewStdoutLogger(output.NoneLog)
 	_, state, _ := util.TestMocks(t)
 
-	generator := NewGenerator("", state, logger, false, true)
-	err := generator.Create(TemplateMap{"script": []TemplateItem{ScriptTemplate{Name: "TestScript"}}})
+	g := NewGenerator("", state, logger, false, true)
+	err := g.Create(ScriptTemplate{Name: "TestScript"})
 	assert.NoError(t, err, "Failed to generate contract")
 
 	content, err := state.ReaderWriter().ReadFile(filepath.FromSlash("cadence/scripts/TestScript.cdc"))
@@ -199,8 +153,8 @@ func TestGenerateNewTransaction(t *testing.T) {
 	logger := output.NewStdoutLogger(output.NoneLog)
 	_, state, _ := util.TestMocks(t)
 
-	generator := NewGenerator("", state, logger, false, true)
-	err := generator.Create(TemplateMap{"transaction": []TemplateItem{TransactionTemplate{Name: "TestTransaction"}}})
+	g := NewGenerator("", state, logger, false, true)
+	err := g.Create(TransactionTemplate{Name: "TestTransaction"})
 	assert.NoError(t, err, "Failed to generate contract")
 
 	content, err := state.ReaderWriter().ReadFile(filepath.FromSlash("cadence/transactions/TestTransaction.cdc"))
@@ -219,21 +173,51 @@ func TestGenerateNewWithDirFlag(t *testing.T) {
 	logger := output.NewStdoutLogger(output.NoneLog)
 	_, state, _ := util.TestMocks(t)
 
-	generator := NewGenerator("customDir", state, logger, false, true)
-	err := generator.Create(TemplateMap{"contract": []TemplateItem{Contract{Name: "TestContract", Account: ""}}})
+	g := NewGenerator("customDir", state, logger, false, true)
+	err := g.Create(ContractTemplate{Name: "TestContract", Account: ""})
 	assert.NoError(t, err, "Failed to generate contract")
 
 	content, err := state.ReaderWriter().ReadFile(filepath.FromSlash("customDir/cadence/contracts/TestContract.cdc"))
 	assert.NoError(t, err, "Failed to read generated file")
 	assert.NotNil(t, content)
 
-	testContent, err := state.ReaderWriter().ReadFile(filepath.FromSlash("customDir/cadence/tests/TestContract_test.cdc"))
-	assert.NoError(t, err, "Failed to read generated file")
-	assert.NotNil(t, testContent)
-
 	expectedContent := `access(all)
 contract TestContract {
     init() {}
+}`
+	assert.Equal(t, expectedContent, util.NormalizeLineEndings(string(content)))
+}
+
+func TestGenerateTestTemplate(t *testing.T) {
+	logger := output.NewStdoutLogger(output.NoneLog)
+	_, state, _ := util.TestMocks(t)
+
+	g := NewGenerator("", state, logger, false, true)
+	err := g.Create(TestTemplate{
+		Name:         "Foobar_test",
+		TemplatePath: "contract_init_test.cdc.tmpl",
+		Data: map[string]interface{}{
+			"ContractName": "Foobar",
+		}},
+	)
+	assert.NoError(t, err, "Failed to generate file")
+
+	content, err := state.ReaderWriter().ReadFile(filepath.FromSlash("cadence/tests/Foobar_test.cdc"))
+	assert.NoError(t, err, "Failed to read generated file")
+	assert.NotNil(t, content)
+
+	expectedContent := `import Test
+
+access(all) let account = Test.createAccount()
+
+access(all) fun testContract() {
+    let err = Test.deployContract(
+        name: "Foobar",
+        path: "../contracts/Foobar.cdc",
+        arguments: [],
+    )
+
+    Test.expect(err, Test.beNil())
 }`
 	assert.Equal(t, expectedContent, util.NormalizeLineEndings(string(content)))
 }

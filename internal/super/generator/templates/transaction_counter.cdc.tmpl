@@ -1,8 +1,8 @@
 import "{{ .ContractName }}"
 
 transaction {
-    prepare(signer: auth(Account) &Account) {
-        // Borrow a reference to the {{ .Name }} contract's public capability
+    prepare(signer: auth(BorrowValue) &Account) {
+        // Borrow a reference to the {{ .ContractName }} contract's public capability
         let counterRef = signer.borrow<&{{ .ContractName }}>(from: /storage/counter)
             ?? panic("Could not borrow reference to the counter")
 

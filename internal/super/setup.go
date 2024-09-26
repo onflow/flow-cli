@@ -25,9 +25,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/onflow/flow-cli/internal/dependencymanager"
-	"github.com/onflow/flow-cli/internal/util"
-
 	"github.com/spf13/afero"
 
 	"github.com/onflow/flow-cli/internal/prompt"
@@ -37,9 +34,11 @@ import (
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/output"
 
-	"github.com/onflow/flow-cli/internal/config"
-
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/config"
+	"github.com/onflow/flow-cli/internal/dependencymanager"
+	"github.com/onflow/flow-cli/internal/super/generator"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 type flagsSetup struct {
@@ -202,37 +201,30 @@ func startInteractiveSetup(
 	}
 
 	// Generate standard cadence files
-	// cadence/contracts/DefaultContract.cdc
-	// cadence/scripts/DefaultScript.cdc
-	// cadence/transactions/DefaultTransaction.cdc
-	// cadence/tests/DefaultContract_test.cdc
+	// cadence/contracts/Counter.cdc
+	// cadence/scripts/GetCounter.cdc
+	// cadence/transactions/IncrementCounter.cdc
+	// cadence/tests/Counter_test.cdc
 
-	templates := TemplateMap{
-		"contract": []TemplateItem{
-			Contract{
-				Name:     "Counter",
-				Template: "contract_counter",
-				Account:  "",
-			},
+	templates := []generator.TemplateItem{
+		generator.ContractTemplate{
+			Name:         "Counter",
+			TemplatePath: "contract_counter.cdc.tmpl",
 		},
-		"script": []TemplateItem{
-			ScriptTemplate{
-				Name:     "GetCounter",
-				Template: "script_counter",
-				Data:     map[string]interface{}{"ContractName": "Counter"},
-			},
+		generator.ScriptTemplate{
+			Name:         "GetCounter",
+			TemplatePath: "script_counter.cdc.tmpl",
+			Data:         map[string]interface{}{"ContractName": "Counter"},
 		},
-		"transaction": []TemplateItem{
-			TransactionTemplate{
-				Name:     "IncrementCounter",
-				Template: "transaction_counter",
-				Data:     map[string]interface{}{"ContractName": "Counter"},
-			},
+		generator.TransactionTemplate{
+			Name:         "IncrementCounter",
+			TemplatePath: "transaction_counter.cdc.tmpl",
+			Data:         map[string]interface{}{"ContractName": "Counter"},
 		},
 	}
 
-	generator := NewGenerator(tempDir, state, logger, true, false)
-	err = generator.Create(templates)
+	g := generator.NewGenerator(tempDir, state, logger, true, false)
+	err = g.Create(templates...)
 	if err != nil {
 		return "", err
 	}
