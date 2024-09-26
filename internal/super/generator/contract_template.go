@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	DefaultContractDirectory = "cadence"
+	DefaultContractDirectory = "contracts"
 	DefaultTestAddress       = "0x0000000000000007"
 )
 
