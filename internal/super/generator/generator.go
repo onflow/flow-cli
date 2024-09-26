@@ -113,8 +113,7 @@ func (g *Generator) generate(item TemplateItem) error {
 
 	outputContent, err := g.processTemplate(templatePath, fileData)
 	if err != nil {
-		// TODO, better error based on template type
-		return fmt.Errorf("error generating template: %w", err)
+		return fmt.Errorf("error generating %s template: %w", item.GetType(), err)
 	}
 
 	targetPath := filepath.Join(rootDir, targetRelativeToRoot)
@@ -137,8 +136,7 @@ func (g *Generator) generate(item TemplateItem) error {
 	}
 
 	if !g.disableLogs {
-		// TODO: Add more detailed logging
-		g.logger.Info(fmt.Sprintf("Generated %s", targetPath))
+		g.logger.Info(fmt.Sprintf("Generated new %s: %s", item.GetType(), targetPath))
 	}
 
 	// Call template state update function if it exists
