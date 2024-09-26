@@ -23,11 +23,11 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/onflow/flow-cli/internal/util"
-
 	"github.com/stretchr/testify/assert"
 
 	"github.com/onflow/flowkit/v2/output"
+
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 func TestGenerateNewContract(t *testing.T) {

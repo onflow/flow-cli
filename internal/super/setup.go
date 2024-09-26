@@ -25,10 +25,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/onflow/flow-cli/internal/dependencymanager"
-	"github.com/onflow/flow-cli/internal/super/generator"
-	"github.com/onflow/flow-cli/internal/util"
-
 	"github.com/spf13/afero"
 
 	"github.com/onflow/flow-cli/internal/prompt"
@@ -38,9 +34,11 @@ import (
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/output"
 
-	"github.com/onflow/flow-cli/internal/config"
-
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/config"
+	"github.com/onflow/flow-cli/internal/dependencymanager"
+	"github.com/onflow/flow-cli/internal/super/generator"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 type flagsSetup struct {

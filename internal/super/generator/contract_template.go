@@ -22,10 +22,11 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/onflow/flow-cli/internal/util"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"
+
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 const (
