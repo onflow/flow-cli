@@ -5,5 +5,17 @@
     "description": "Simple TypeScript web application using next.js, FCL, and Cadence.",
     "commit": "3a5d4f87eef72cebf45f1c48c51c2b786b28f7b6",
     "type": "web"
+  },
+  {
+    "name": "Simple Cadence Project",
+    "repo": "https://github.com/sideninja/flow-basic-scaffold.git",
+    "description": "Scaffold contains required folder structure as well as some example Cadence code.",
+    "commit": "8065287e55bc298d776665bef98a577ceb4a226c"
+  },
+  {
+    "name": "Cadence NFT Project",
+    "repo": "https://github.com/nvdtf/flow-nft-scaffold.git",
+    "description": "Scaffold contains the ExampleNFT sample NFT contract.",
+    "commit": "ef9437c05549e3f581cf619dec9d59d8c7f6e3ec"
   }
 ]
