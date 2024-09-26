@@ -110,7 +110,8 @@ func (c ContractTemplate) GetChildren() []TemplateItem {
 
 	return []TemplateItem{
 		TestTemplate{
-			Name: fmt.Sprintf("%s_test", c.Name),
+			Name:         fmt.Sprintf("%s_test", c.Name),
+			TemplatePath: "contract_init_test.cdc.tmpl",
 			Data: map[string]interface{}{
 				"ContractName": c.Name,
 			},
