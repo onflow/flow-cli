@@ -155,7 +155,8 @@ func (g *Generator) generate(item TemplateItem) error {
 // processTemplate reads a template file from the embedded filesystem and processes it with the provided data
 // If you don't need to provide data, pass nil
 func (g *Generator) processTemplate(templatePath string, data map[string]interface{}) (string, error) {
-	templateData, err := templatesFS.ReadFile(filepath.Join("templates", templatePath))
+	resolvedPath := filepath.Join("templates", templatePath)
+	templateData, err := templatesFS.ReadFile(filepath.ToSlash(resolvedPath))
 	if err != nil {
 		return "", fmt.Errorf("failed to read template file: %w", err)
 	}
