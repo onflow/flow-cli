@@ -76,10 +76,22 @@ var GenerateScriptCommand = &command.Command{
 	RunS:  generateScript,
 }
 
+var GenerateTestCommand = &command.Command{
+	Cmd: &cobra.Command{
+		Use:     "test <name>",
+		Short:   "Generate a Cadence test template",
+		Example: "flow generate test SomeTest",
+		Args:    cobra.ExactArgs(1),
+	},
+	Flags: &generateFlags,
+	RunS:  generateTest,
+}
+
 func init() {
 	GenerateContractCommand.AddToParent(GenerateCommand)
 	GenerateTransactionCommand.AddToParent(GenerateCommand)
 	GenerateScriptCommand.AddToParent(GenerateCommand)
+	GenerateTestCommand.AddToParent(GenerateCommand)
 }
 
 func generateContract(
@@ -118,5 +130,18 @@ func generateScript(
 	g := generator.NewGenerator("", state, logger, false, true)
 	name := util.StripCDCExtension(args[0])
 	err = g.Create(generator.ScriptTemplate{Name: name})
+	return nil, err
+}
+
+func generateTest(
+	args []string,
+	_ command.GlobalFlags,
+	logger output.Logger,
+	_ flowkit.Services,
+	state *flowkit.State,
+) (result command.Result, err error) {
+	g := generator.NewGenerator("", state, logger, false, true)
+	name := util.StripCDCExtension(args[0])
+	err = g.Create(generator.TestTemplate{Name: name})
 	return nil, err
 }
