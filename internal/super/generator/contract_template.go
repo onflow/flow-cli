@@ -1,13 +1,37 @@
+/*
+ * Flow CLI
+ *
+ * Copyright Flow Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package generator
 
 import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/onflow/flow-cli/internal/util"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"
+
+	"github.com/onflow/flow-cli/internal/util"
+)
+
+const (
+	DefaultContractDirectory = "contracts"
+	DefaultTestAddress       = "0x0000000000000007"
 )
 
 // Contract contains properties for contracts
@@ -21,8 +45,13 @@ type ContractTemplate struct {
 }
 
 var _ TemplateItem = ContractTemplate{}
+var _ TemplateItemWithStateUpdate = ContractTemplate{}
+var _ TemplateItemWithChildren = ContractTemplate{}
 
-// GetTemplate returns the template of the contract
+func (c ContractTemplate) GetType() string {
+	return "contract"
+}
+
 func (c ContractTemplate) GetTemplatePath() string {
 	if c.TemplatePath == "" {
 		return "contract_init.cdc.tmpl"
@@ -31,7 +60,6 @@ func (c ContractTemplate) GetTemplatePath() string {
 	return c.TemplatePath
 }
 
-// GetData returns the data of the contract
 func (c ContractTemplate) GetData() map[string]interface{} {
 	data := map[string]interface{}{
 		"Name": c.Name,
@@ -44,7 +72,7 @@ func (c ContractTemplate) GetData() map[string]interface{} {
 }
 
 func (c ContractTemplate) GetTargetPath() string {
-	return filepath.Join(DefaultCadenceDirectory, "contracts", c.Account, util.AddCDCExtension(c.Name))
+	return filepath.Join(DefaultCadenceDirectory, DefaultContractDirectory, c.Account, util.AddCDCExtension(c.Name))
 }
 
 func (c ContractTemplate) UpdateState(state *flowkit.State) error {
@@ -53,7 +81,7 @@ func (c ContractTemplate) UpdateState(state *flowkit.State) error {
 	if c.SkipTests != true {
 		aliases = config.Aliases{{
 			Network: config.TestingNetwork.Name,
-			Address: flowsdk.HexToAddress("0x0000000000000007"),
+			Address: flowsdk.HexToAddress(DefaultTestAddress),
 		}}
 	}
 
@@ -73,4 +101,20 @@ func (c ContractTemplate) UpdateState(state *flowkit.State) error {
 	}
 
 	return nil
+}
+
+func (c ContractTemplate) GetChildren() []TemplateItem {
+	if c.SkipTests {
+		return []TemplateItem{}
+	}
+
+	return []TemplateItem{
+		TestTemplate{
+			Name:         fmt.Sprintf("%s_test", c.Name),
+			TemplatePath: "contract_init_test.cdc.tmpl",
+			Data: map[string]interface{}{
+				"ContractName": c.Name,
+			},
+		},
+	}
 }

@@ -23,12 +23,11 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/onflow/flow-cli/internal/util"
-	"github.com/spf13/afero"
-
 	"github.com/stretchr/testify/assert"
 
 	"github.com/onflow/flowkit/v2/output"
+
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 func TestGenerateNewContract(t *testing.T) {
@@ -83,7 +82,7 @@ func TestGenerateNewContractSkipTests(t *testing.T) {
 	g := NewGenerator("", state, logger, false, true)
 
 	// Test contract generation
-	err := g.Create(ContractTemplate{Name: "TestContract", Account: "", skipTests: true})
+	err := g.Create(ContractTemplate{Name: "TestContract", Account: "", SkipTests: true})
 	assert.NoError(t, err, "Failed to generate contract")
 
 	fileContent, err := state.ReaderWriter().ReadFile(filepath.FromSlash("cadence/contracts/TestContract.cdc"))
@@ -193,52 +192,32 @@ func TestGenerateTestTemplate(t *testing.T) {
 	logger := output.NewStdoutLogger(output.NoneLog)
 	_, state, _ := util.TestMocks(t)
 
-	// Create a mock template file
-	tmplFs := afero.Afero{Fs: afero.NewMemMapFs()}
-	err := tmplFs.WriteFile("file.tmpl", []byte("{{.content}}"), 0644)
-	assert.NoError(t, err, "Failed to create template file")
-
 	g := NewGenerator("", state, logger, false, true)
-	err = g.Create(TestTemplate{
-		Name:         "FooBar_test",
-		TemplatePath: "file.tmpl",
+	err := g.Create(TestTemplate{
+		Name:         "Foobar_test",
+		TemplatePath: "contract_init_test.cdc.tmpl",
 		Data: map[string]interface{}{
-			"content": "test template",
+			"ContractName": "Foobar",
 		}},
 	)
 	assert.NoError(t, err, "Failed to generate file")
 
-	content, err := state.ReaderWriter().ReadFile(filepath.FromSlash("cadence/tests/FooBar_test.cdc"))
+	content, err := state.ReaderWriter().ReadFile(filepath.FromSlash("cadence/tests/Foobar_test.cdc"))
 	assert.NoError(t, err, "Failed to read generated file")
 	assert.NotNil(t, content)
 
-	expectedContent := `test template`
-	assert.Equal(t, expectedContent, util.NormalizeLineEndings(string(content)))
-}
+	expectedContent := `import Test
 
-func TestGenerateFileTemplate(t *testing.T) {
-	logger := output.NewStdoutLogger(output.NoneLog)
-	_, state, _ := util.TestMocks(t)
+access(all) let account = Test.createAccount()
 
-	// Create a mock template file
-	tmplFs := afero.Afero{Fs: afero.NewMemMapFs()}
-	err := tmplFs.WriteFile("file.tmpl", []byte("{{.content}}"), 0644)
-	assert.NoError(t, err, "Failed to create template file")
+access(all) fun testContract() {
+    let err = Test.deployContract(
+        name: "Foobar",
+        path: "../contracts/Foobar.cdc",
+        arguments: [],
+    )
 
-	g := NewGenerator("", state, logger, false, true)
-	err = g.Create(FileTemplate{
-		TargetPath:   "TestFile",
-		TemplatePath: "file.tmpl",
-		Data: map[string]interface{}{
-			"content": "test template",
-		}},
-	)
-	assert.NoError(t, err, "Failed to generate file")
-
-	content, err := state.ReaderWriter().ReadFile(filepath.FromSlash("TestFile"))
-	assert.NoError(t, err, "Failed to read generated file")
-	assert.NotNil(t, content)
-
-	expectedContent := `test template`
+    Test.expect(err, Test.beNil())
+}`
 	assert.Equal(t, expectedContent, util.NormalizeLineEndings(string(content)))
 }

@@ -39,19 +39,25 @@ var templatesFS embed.FS
 
 // TemplateItem is an interface for different template types
 type TemplateItem interface {
+	GetType() string
 	GetTemplatePath() string
 	GetData() map[string]interface{}
 	GetTargetPath() string
+}
+
+// TemplateItemWithStateUpdate is an interface for template items that need to update the Flowkit state/flow.json
+type TemplateItemWithStateUpdate interface {
+	TemplateItem
 	UpdateState(state *flowkit.State) error
 }
 
-//go:generate mockery --name Generator --case underscore
-type Generator interface {
-	// Create generates files from the provided template items
-	Create(items ...TemplateItem) error
+// TemplateItemWithChildren is an interface for template items that have children
+type TemplateItemWithChildren interface {
+	TemplateItem
+	GetChildren() []TemplateItem
 }
 
-type GeneratorImpl struct {
+type Generator struct {
 	directory   string
 	state       *flowkit.State
 	logger      output.Logger
@@ -65,8 +71,8 @@ func NewGenerator(
 	logger output.Logger,
 	disableLogs,
 	saveState bool,
-) *GeneratorImpl {
-	return &GeneratorImpl{
+) *Generator {
+	return &Generator{
 		directory:   directory,
 		state:       state,
 		logger:      logger,
@@ -75,18 +81,25 @@ func NewGenerator(
 	}
 }
 
-func (g *GeneratorImpl) Create(items ...TemplateItem) error {
+func (g *Generator) Create(items ...TemplateItem) error {
 	for _, item := range items {
 		err := g.generate(item)
 		if err != nil {
 			return err
+		}
+
+		if itemWithChildren, ok := item.(TemplateItemWithChildren); ok {
+			err = g.Create(itemWithChildren.GetChildren()...)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
 	return nil
 }
 
-func (g *GeneratorImpl) generate(item TemplateItem) error {
+func (g *Generator) generate(item TemplateItem) error {
 	rootDir := g.directory
 
 	targetRelativeToRoot := item.GetTargetPath()
@@ -100,8 +113,7 @@ func (g *GeneratorImpl) generate(item TemplateItem) error {
 
 	outputContent, err := g.processTemplate(templatePath, fileData)
 	if err != nil {
-		// TODO, better error based on template type
-		return fmt.Errorf("error generating template: %w", err)
+		return fmt.Errorf("error generating %s template: %w", item.GetType(), err)
 	}
 
 	targetPath := filepath.Join(rootDir, targetRelativeToRoot)
@@ -124,14 +136,15 @@ func (g *GeneratorImpl) generate(item TemplateItem) error {
 	}
 
 	if !g.disableLogs {
-		// TODO: Add more detailed logging
-		g.logger.Info(fmt.Sprintf("Generated %s", targetPath))
+		g.logger.Info(fmt.Sprintf("Generated new %s: %s", item.GetType(), targetPath))
 	}
 
 	// Call template state update function if it exists
-	err = item.UpdateState(g.state)
-	if err != nil {
-		return err
+	if itemWithStateUpdate, ok := item.(TemplateItemWithStateUpdate); ok {
+		err = itemWithStateUpdate.UpdateState(g.state)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -139,8 +152,9 @@ func (g *GeneratorImpl) generate(item TemplateItem) error {
 
 // processTemplate reads a template file from the embedded filesystem and processes it with the provided data
 // If you don't need to provide data, pass nil
-func (g *GeneratorImpl) processTemplate(templatePath string, data map[string]interface{}) (string, error) {
-	templateData, err := templatesFS.ReadFile(filepath.Join("templates", templatePath))
+func (g *Generator) processTemplate(templatePath string, data map[string]interface{}) (string, error) {
+	resolvedPath := filepath.Join("templates", templatePath)
+	templateData, err := templatesFS.ReadFile(filepath.ToSlash(resolvedPath))
 	if err != nil {
 		return "", fmt.Errorf("failed to read template file: %w", err)
 	}

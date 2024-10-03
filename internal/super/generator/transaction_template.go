@@ -1,10 +1,31 @@
+/*
+ * Flow CLI
+ *
+ * Copyright Flow Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package generator
 
 import (
 	"path/filepath"
 
 	"github.com/onflow/flow-cli/internal/util"
-	"github.com/onflow/flowkit/v2"
+)
+
+const (
+	DefaultTransactionDirectory = "transactions"
 )
 
 // TransactionTemplate contains only a name property for scripts and transactions
@@ -17,8 +38,8 @@ type TransactionTemplate struct {
 var _ TemplateItem = TransactionTemplate{}
 
 // GetName returns the name of the script or transaction
-func (o TransactionTemplate) GetName() string {
-	return o.Name
+func (o TransactionTemplate) GetType() string {
+	return "transaction"
 }
 
 // GetTemplate returns an empty string for scripts and transactions
@@ -36,9 +57,5 @@ func (o TransactionTemplate) GetData() map[string]interface{} {
 }
 
 func (o TransactionTemplate) GetTargetPath() string {
-	return filepath.Join(DefaultCadenceDirectory, "transactions", util.AddCDCExtension(o.Name))
-}
-
-func (o TransactionTemplate) UpdateState(state *flowkit.State) error {
-	return nil
+	return filepath.Join(DefaultCadenceDirectory, DefaultTransactionDirectory, util.AddCDCExtension(o.Name))
 }

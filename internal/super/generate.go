@@ -19,16 +19,14 @@
 package super
 
 import (
-	"github.com/onflow/flow-cli/internal/super/generator"
-	"github.com/onflow/flow-cli/internal/util"
-
 	"github.com/onflow/flowkit/v2"
-
 	"github.com/onflow/flowkit/v2/output"
 
-	"github.com/onflow/flow-cli/internal/command"
-
 	"github.com/spf13/cobra"
+
+	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/super/generator"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 type generateFlagsDef struct {
@@ -78,18 +76,23 @@ var GenerateScriptCommand = &command.Command{
 	RunS:  generateScript,
 }
 
+var GenerateTestCommand = &command.Command{
+	Cmd: &cobra.Command{
+		Use:     "test <name>",
+		Short:   "Generate a Cadence test template",
+		Example: "flow generate test SomeTest",
+		Args:    cobra.ExactArgs(1),
+	},
+	Flags: &generateFlags,
+	RunS:  generateTest,
+}
+
 func init() {
 	GenerateContractCommand.AddToParent(GenerateCommand)
 	GenerateTransactionCommand.AddToParent(GenerateCommand)
 	GenerateScriptCommand.AddToParent(GenerateCommand)
+	GenerateTestCommand.AddToParent(GenerateCommand)
 }
-
-const (
-	DefaultCadenceDirectory = "cadence"
-	ContractType            = "contract"
-	TransactionType         = "transaction"
-	ScriptType              = "script"
-)
 
 func generateContract(
 	args []string,
@@ -100,15 +103,7 @@ func generateContract(
 ) (result command.Result, err error) {
 	g := generator.NewGenerator("", state, logger, false, true)
 	name := util.StripCDCExtension(args[0])
-
-	templates := []generator.TemplateItem{
-		generator.ContractTemplate{Name: name, SkipTests: generateFlags.SkipTests, SaveState: true},
-	}
-	if !generateFlags.SkipTests {
-		templates = append(templates, generator.TestTemplate{Name: name + "_test", Data: map[string]interface{}{"ContractName": "Counter"}})
-	}
-
-	err = g.Create()
+	err = g.Create(generator.ContractTemplate{Name: name, SkipTests: generateFlags.SkipTests, SaveState: true})
 	return nil, err
 }
 
@@ -135,5 +130,18 @@ func generateScript(
 	g := generator.NewGenerator("", state, logger, false, true)
 	name := util.StripCDCExtension(args[0])
 	err = g.Create(generator.ScriptTemplate{Name: name})
+	return nil, err
+}
+
+func generateTest(
+	args []string,
+	_ command.GlobalFlags,
+	logger output.Logger,
+	_ flowkit.Services,
+	state *flowkit.State,
+) (result command.Result, err error) {
+	g := generator.NewGenerator("", state, logger, false, true)
+	name := util.StripCDCExtension(args[0])
+	err = g.Create(generator.TestTemplate{Name: name})
 	return nil, err
 }

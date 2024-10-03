@@ -20,15 +20,19 @@ package dependencymanager
 
 import (
 	"fmt"
+	"strings"
 
-	"github.com/onflow/flow-cli/internal/util"
+	"github.com/onflow/flow-go/fvm/systemcontracts"
 
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/output"
 
+	flowGo "github.com/onflow/flow-go/model/flow"
+
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 type addFlagsCollection struct {
@@ -42,10 +46,11 @@ var addFlags = addFlagsCollection{
 
 var addCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "add <source string>",
-		Short:   "Add a single contract and its dependencies.",
-		Example: "flow dependencies add testnet://0afe396ebc8eee65.FlowToken",
-		Args:    cobra.ExactArgs(1),
+		Use:   "add <source string or core contract name>",
+		Short: "Add a single contract and its dependencies.",
+		Example: `flow dependencies add testnet://0afe396ebc8eee65.FlowToken
+flow dependencies add FlowToken`,
+		Args: cobra.ExactArgs(1),
 	},
 	RunS:  add,
 	Flags: &struct{}{},
@@ -75,10 +80,30 @@ func add(
 		return nil, err
 	}
 
+	// First check if the dependency is a core contract.
+	coreContractName := findCoreContractCaseInsensitive(dep)
+	if coreContractName != "" {
+		if err := installer.AddByCoreContractName(coreContractName, addFlags.name); err != nil {
+			logger.Error(fmt.Sprintf("Error: %v", err))
+			return nil, err
+		}
+		return nil, nil
+	}
+
+	// Otherwise, add the dependency by source string.
 	if err := installer.AddBySourceString(dep, addFlags.name); err != nil {
 		logger.Error(fmt.Sprintf("Error: %v", err))
 		return nil, err
 	}
 
 	return nil, nil
+}
+
+func findCoreContractCaseInsensitive(name string) string {
+	for _, contract := range systemcontracts.SystemContractsForChain(flowGo.Mainnet).All() {
+		if strings.EqualFold(contract.Name, name) {
+			return contract.Name
+		}
+	}
+	return ""
 }
