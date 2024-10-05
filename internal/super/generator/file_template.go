@@ -25,7 +25,11 @@ func NewFileTemplate(
 
 var _ TemplateItem = FileTemplate{}
 
-// GetTemplate returns the template of the contract
+// GetType returns the type of the contract
+func (c FileTemplate) GetType() string {
+	return "file"
+}
+
 func (c FileTemplate) GetTemplatePath() string {
 	return c.TemplatePath
 }
