@@ -50,7 +50,9 @@ import (
 //
 // This process takes the user through couple of steps with prompts asking for them to provide name and network,
 // and it then uses account creation APIs to automatically create the account on the network as well as save it.
-func createInteractive(state *flowkit.State) (*accountResult, error) {
+func createInteractive(
+	state *flowkit.State,
+) (*accountResult, error) {
 	log := output.NewStdoutLogger(output.InfoLog)
 	name := prompt.AccountNamePrompt(state.Accounts().Names())
 	networkName, selectedNetwork := prompt.CreateAccountNetworkPrompt()
@@ -110,12 +112,14 @@ func createInteractive(state *flowkit.State) (*accountResult, error) {
 	}
 	outputList(log, items, false)
 
+	// Get account details from the network
+	networkAccount, err := flow.GetAccount(context.Background(), account.Address)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get details for created account %s: %w", account.Address, err)
+	}
+
 	return &accountResult{
-		Account: &flowsdk.Account{
-			Address: account.Address,
-			Balance: 0,
-			Keys:    []*flowsdk.AccountKey{flowsdk.NewAccountKey().FromPrivateKey(key)},
-		},
+		Account: networkAccount,
 		include: nil,
 	}, nil
 }
