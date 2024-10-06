@@ -1,30 +1,20 @@
 ## 👋 Welcome Flow Developer!
-Welcome to your new {{ .ProjectType }} project. This project is a starting point for you to develop smart contracts on the Flow blockchain. It comes with a few example contracts and scripts to help you get started.
+Welcome to your new Flow project. This project is a starting point for you to develop smart contracts on the Flow blockchain. It comes with a few example contracts and scripts to help you get started.
 
 ## 🔨 Getting started
-Getting started can feel overwhelming, but we are here for you. Depending on how accustomed you are to Flow here's a list of resources you might find useful:
-- **[Cadence documentation](https://cadence-lang.org/docs/language)** - Cadence is the native language for Flow blockchain, it is a resource-oriented programming language that is designed for developing smart contracts.  The documentation is a great place to start learning about the language.
+
+Here are some essential resources to help you hit the ground running:
+
+- **[Cadence Documentation](https://cadence-lang.org/docs/language)** - Cadence is the native language for Flow blockchain, it is a resource-oriented programming language that is designed for developing smart contracts.  The documentation is a great place to start learning about the language.
 - **[Visual Studio Code](https://code.visualstudio.com/?wt.mc_id=DX_841432)** and **[Cadence extension](https://marketplace.visualstudio.com/items?itemName=onflow.cadence)** - It is recommended to use the Visual Studio Code IDE with the Cadence extension installed.  This will include syntax highlighting, code completion, and other features to support Cadence development.
 - **[Flow Documentation](https://docs.onflow.org/)** - The official Flow documentation is a great resource for learning about the Flow blockchain and its features.
 - **[Clients](https://developers.flow.com/tools/clients)** - There are clients available in multiple languages to interact with the Flow blockchain.  You can use these clients to interact with your smart contracts, run transactions, and query data from the blockchain.
 - **[Block Explorers](https://developers.flow.com/ecosystem/block-explorers)** - Block explorers are tools that allow you to explore the Flow blockchain.  You can use them to view transactions, accounts, and other data on the blockchain.  [Flowser](https://flowser.dev/) is a powerful block explorer for local development on the Flow Emulator.
 
-{{ if .IsNFTProject }}
-
-NFT Resources:
-- **[flow-nft](https://github.com/onflow/flow-nft)**: home of the Flow NFT standards, contains utility contracts, examples, and documentation
-- **[nft-storefront](https://github.com/onflow/nft-storefront/)**: NFT Storefront is an open marketplace contract used by most Flow NFT marketplaces
-{{ end }}
-{{ if .IsFungibleProject }}
-
-Fungible Token Resources:
-- **[flow-ft](https://github.com/onflow/flow-ft)**: home of the Flow Fungible Token standards, contains utility contracts, examples, and documentation
-{{ end }}
-
-
 ## 📦 Project Structure
 Your project has been set up with the following structure:
-- `flow.json` configuration file for your project, you can think of it as package.json.  It has been initialized with a basic configuration{{ if len .Dependecies }} and some Core Contract dependencies{{ end }}.
+
+- `flow.json` configuration file for your project, analagous to a `package.json` file for NPM.  It has been initialized with a basic configuration{{ if len .Dependecies }} and some Core Contract dependencies{{ end }}.
 - `/cadence` inside here is where your Cadence smart contracts code lives
 
 Your project is set up with the following dependencies:
@@ -137,4 +127,3 @@ This command will deploy your project to the Flow Mainnet. You can then interact
 
 - Cadence Language Reference https://cadence-lang.org/docs/language
 - Flow Smart Contract Project Development Standards https://cadence-lang.org/docs/project-development-tips
-- Cadence anti-patterns https://cadence-lang.org/docs/anti-patterns
