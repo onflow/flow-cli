@@ -200,11 +200,12 @@ func startInteractiveSetup(
 		return "", fmt.Errorf("failed to initialize configuration: %w", err)
 	}
 
-	// Generate standard cadence files
-	// cadence/contracts/Counter.cdc
-	// cadence/scripts/GetCounter.cdc
-	// cadence/transactions/IncrementCounter.cdc
-	// cadence/tests/Counter_test.cdc
+	// Generate standard cadence files & README.md
+	// cadence/contracts/DefaultContract.cdc
+	// cadence/scripts/DefaultScript.cdc
+	// cadence/transactions/DefaultTransaction.cdc
+	// cadence/tests/DefaultContract_test.cdc
+	// README.md
 
 	templates := []generator.TemplateItem{
 		generator.ContractTemplate{
@@ -220,6 +221,17 @@ func startInteractiveSetup(
 			Name:         "IncrementCounter",
 			TemplatePath: "transaction_counter.cdc.tmpl",
 			Data:         map[string]interface{}{"ContractName": "Counter"},
+		},
+		generator.TestTemplate{
+			Name: "Counter_test",
+			Data: map[string]interface{}{"ContractName": "Counter"},
+		},
+		generator.FileTemplate{
+			TemplatePath: "README.md.tmpl",
+			TargetPath:   "README.md",
+			Data: map[string]interface{}{
+				"ProjectName": filepath.Base(targetDir),
+			},
 		},
 	}
 

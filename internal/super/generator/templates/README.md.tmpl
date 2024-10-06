@@ -1,0 +1,129 @@
+## 👋 Welcome Flow Developer!
+Welcome to your new Flow project. This project is a starting point for you to develop smart contracts on the Flow blockchain. It comes with a few example contracts and scripts to help you get started.
+
+## 🔨 Getting started
+
+Here are some essential resources to help you hit the ground running:
+
+- **[Cadence Documentation](https://cadence-lang.org/docs/language)** - Cadence is the native language for Flow blockchain, it is a resource-oriented programming language that is designed for developing smart contracts.  The documentation is a great place to start learning about the language.
+- **[Visual Studio Code](https://code.visualstudio.com/?wt.mc_id=DX_841432)** and **[Cadence extension](https://marketplace.visualstudio.com/items?itemName=onflow.cadence)** - It is recommended to use the Visual Studio Code IDE with the Cadence extension installed.  This will include syntax highlighting, code completion, and other features to support Cadence development.
+- **[Flow Documentation](https://docs.onflow.org/)** - The official Flow documentation is a great resource for learning about the Flow blockchain and its features.
+- **[Clients](https://developers.flow.com/tools/clients)** - There are clients available in multiple languages to interact with the Flow blockchain.  You can use these clients to interact with your smart contracts, run transactions, and query data from the blockchain.
+- **[Block Explorers](https://developers.flow.com/ecosystem/block-explorers)** - Block explorers are tools that allow you to explore the Flow blockchain.  You can use them to view transactions, accounts, and other data on the blockchain.  [Flowser](https://flowser.dev/) is a powerful block explorer for local development on the Flow Emulator.
+
+## 📦 Project Structure
+Your project has been set up with the following structure:
+
+- `flow.json` configuration file for your project, analagous to a `package.json` file for NPM.  It has been initialized with a basic configuration{{ if len .Dependecies }} and some Core Contract dependencies{{ end }}.
+- `/cadence` inside here is where your Cadence smart contracts code lives
+
+Your project is set up with the following dependencies:
+{{ range .Dependecies }}
+  - `{{ .Name }}`
+{{ end }}
+
+Inside `cadence` folder you will find:
+- `/contracts` location for Cadence contracts go in this folder
+{{ range .Contracts }}
+  - `{{ .Name }}.cdc` is the file for the `{{ .Name }}` contract
+{{ end }}
+- `/scripts` location for Cadence scripts goes here
+{{ range .Scripts }}
+  - `{{ .Name }}.cdc` is the file for the `{{ .Name }}` script
+{{ end }}
+- `/transactions` location for Cadence transactions goes in this folder
+{{ range .Transactions }}
+  - `{{ .Name }}.cdc` is the file for the `{{ .Name }}` transaction
+{{ end }}
+- `/tests` location for Cadence tests goes in this folder
+{{ range .Tests }}
+  - `{{ .Name }}.cdc` is the file for the `{{ .Name }}` test
+{{ end }}
+
+## 👨‍💻 Start Developing
+
+### Creating a new contract
+To add a new contract to your project, run the following command:
+
+```shell
+> flow generate contract
+```
+
+This command will create a new contract file and add it to the `flow.json` configuration file.
+
+### Creating a new script
+
+To add a new script to your project, run the following command:
+
+```shell
+> flow generate script
+```
+
+This command will create a new script file and add it to the `flow.json` configuration file.
+
+You can import any of your own contracts or installed dependencies in your script file using the `import` keyword.  For example:
+
+```cadence
+import Counter from "Counter"
+```
+
+### Creating a new transaction
+
+To add a new transaction to your project you can use the following command:
+
+```shell
+> flow generate transaction
+```
+
+This command will create a new transaction file and add it to the `flow.json` configuration file.  You can import any dependencies as you would in a script file.
+
+### Installing external dependencies
+
+If you want to use external contract dependencies (like NonFungibleToken, FlowToken, FungibleToken,..) you can install them using Cadence dependency manager: https://developers.flow.com/tools/flow-cli/dependency-manager
+
+Use [ContractBrowser](https://contractbrowser.com/) to explore available 3rd party contracts in the Flow ecosystem.
+
+## 🧪 Testing
+
+To verify that your project is working as expected you can run the tests using the following command:
+```shell
+> flow test
+```
+
+This command will run all the tests in the `cadence/tests` folder. You can add more tests to this folder as you develop your project.
+
+To learn more about testing in Cadence, check out the [Cadence testing documentation](https://cadence-lang.org/docs/testing-framework).
+
+## 🚀 Deploying
+
+### Deploying to the Flow Emulator
+
+To deploy your project to the Flow Emulator you can use the following command:
+```shell
+> flow emulator --start
+```
+
+This command will start the Flow Emulator and deploy your project to it. You can then interact with your project using the Flow Emulator.
+
+### Deploying to the Flow Testnet
+
+To deploy your project to the Flow Testnet you can use the following command:
+```shell
+> flow project deploy --network=testnet
+```
+
+This command will deploy your project to the Flow Testnet. You can then interact with your project using the Flow Testnet.
+
+### Deploying to the Flow Mainnet
+
+To deploy your project to the Flow Mainnet you can use the following command:
+```shell
+> flow project deploy --network=mainnet
+```
+
+This command will deploy your project to the Flow Mainnet. You can then interact with your project using the Flow Mainnet.
+
+## Further Reading
+
+- Cadence Language Reference https://cadence-lang.org/docs/language
+- Flow Smart Contract Project Development Standards https://cadence-lang.org/docs/project-development-tips
