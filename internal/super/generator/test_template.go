@@ -36,29 +36,25 @@ type TestTemplate struct {
 
 var _ TemplateItem = TestTemplate{}
 
-func (o TestTemplate) GetType() string {
+func (t TestTemplate) GetType() string {
 	return "test"
 }
 
-// GetName returns the name of the script or transaction
-func (o TestTemplate) GetName() string {
-	return o.Name
-}
-
 // GetTemplate returns an empty string for scripts and transactions
-func (o TestTemplate) GetTemplatePath() string {
-	if o.TemplatePath == "" {
+func (t TestTemplate) GetTemplatePath() string {
+	if t.TemplatePath == "" {
 		return "empty_test.cdc.tmpl"
 	}
 
-	return o.TemplatePath
+	return t.TemplatePath
 }
 
 // GetData returns the data of the script or transaction
-func (o TestTemplate) GetData() map[string]interface{} {
-	return o.Data
+func (t TestTemplate) GetData() map[string]interface{} {
+	return t.Data
 }
 
-func (o TestTemplate) GetTargetPath() string {
-	return filepath.Join(DefaultCadenceDirectory, DefaultTestDirectory, util.AddCDCExtension(o.Name))
+func (t TestTemplate) GetTargetPath() string {
+	baseName := t.Name + "_test"
+	return filepath.Join(DefaultCadenceDirectory, DefaultTestDirectory, util.AddCDCExtension(baseName))
 }
