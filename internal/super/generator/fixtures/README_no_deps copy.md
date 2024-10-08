@@ -14,11 +14,11 @@ Here are some essential resources to help you hit the ground running:
 ## 📦 Project Structure
 Your project has been set up with the following structure:
 
-- `flow.json` configuration file for your project, analagous to a `package.json` file for NPM.  It has been initialized with a basic configuration{{ if len .Dependencies }} and some Core Contract dependencies{{ end }}.
+- `flow.json` configuration file for your project, analagous to a `package.json` file for NPM.  It has been initialized with a basic configuration{{ if len .Dependecies }} and some Core Contract dependencies{{ end }}.
 - `/cadence` inside here is where your Cadence smart contracts code lives
 
 Your project is set up with the following dependencies:
-{{ range .Dependencies }}
+{{ range .Dependecies }}
   - `{{ .Name }}`
 {{ end }}
 
