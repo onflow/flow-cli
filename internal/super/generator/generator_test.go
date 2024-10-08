@@ -194,7 +194,7 @@ func TestGenerateTestTemplate(t *testing.T) {
 
 	g := NewGenerator("", state, logger, false, true)
 	err := g.Create(TestTemplate{
-		Name:         "Foobar_test",
+		Name:         "Foobar",
 		TemplatePath: "contract_init_test.cdc.tmpl",
 		Data: map[string]interface{}{
 			"ContractName": "Foobar",
