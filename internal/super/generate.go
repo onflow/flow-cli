@@ -19,6 +19,8 @@
 package super
 
 import (
+	"strings"
+
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/output"
 
@@ -141,7 +143,8 @@ func generateTest(
 	state *flowkit.State,
 ) (result command.Result, err error) {
 	g := generator.NewGenerator("", state, logger, false, true)
-	name := util.StripCDCExtension(args[0])
-	err = g.Create(generator.TestTemplate{Name: name})
+	nameWithoutCdc := util.StripCDCExtension(args[0])
+	nameWithoutSuffix := strings.TrimSuffix(nameWithoutCdc, "_test")
+	err = g.Create(generator.TestTemplate{Name: nameWithoutSuffix})
 	return nil, err
 }

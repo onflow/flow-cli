@@ -37,7 +37,6 @@ type TransactionTemplate struct {
 
 var _ TemplateItem = TransactionTemplate{}
 
-// GetName returns the name of the script or transaction
 func (o TransactionTemplate) GetType() string {
 	return "transaction"
 }
