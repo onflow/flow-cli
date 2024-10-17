@@ -21,6 +21,7 @@ package super
 import (
 	"bytes"
 	"fmt"
+	"github.com/onflow/flowkit/v2"
 	"io"
 	"os"
 	"path/filepath"
@@ -31,7 +32,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/output"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -300,8 +300,7 @@ func (s *setupResult) String() string {
 	out.WriteString("Start development by following these steps:\n")
 	out.WriteString(fmt.Sprintf("1. '%s' to change to your new project,\n", output.Bold(fmt.Sprintf("cd %s", relDir))))
 	out.WriteString(fmt.Sprintf("2. '%s' or run Flowser to start the emulator,\n", output.Bold("flow emulator")))
-	out.WriteString(fmt.Sprintf("3. '%s' to start developing.\n", output.Bold("flow dev")))
-	out.WriteString(fmt.Sprintf("4. '%s' to test your project.\n\n", output.Bold("flow test")))
+	out.WriteString(fmt.Sprintf("3. '%s' to test your project.\n\n", output.Bold("flow test")))
 	out.WriteString(fmt.Sprintf("You should also read README.md to learn more about the development process!\n"))
 
 	return out.String()
