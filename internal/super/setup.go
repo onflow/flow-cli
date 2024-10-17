@@ -21,10 +21,11 @@ package super
 import (
 	"bytes"
 	"fmt"
-	"github.com/onflow/flowkit/v2"
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/onflow/flowkit/v2"
 
 	"github.com/spf13/afero"
 
