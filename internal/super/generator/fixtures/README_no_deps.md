@@ -15,34 +15,18 @@ Here are some essential resources to help you hit the ground running:
 ## 📦 Project Structure
 Your project has been set up with the following structure:
 
-- `flow.json` - This is the configuration file for your project (analogous to a `package.json` file for NPM).  It has been initialized with a basic configuration{{ if len .Dependencies }} and your selected Core Contract dependencies{{ end }} to get started.
-
-{{ if len .Dependencies }}
-  Your project has also been configured with the following dependencies.  You can add more dependencies using the `flow deps add` command:
-  {{ range .Dependencies }}
-    - `{{ .Name }}`
-  {{ end }}
-{{ end }}
-
+- `flow.json` - This is the configuration file for your project (analogous to a `package.json` file for NPM).  It has been initialized with a basic configuration to get started.
 - `/cadence` - This is where your Cadence smart contracts code lives
 
 Inside `cadence` folder you will find:
 - `/contracts` - This folder contains your Cadence contracts (these are deployed to the network and contain the business logic for your application)
-{{ range .Contracts }}
-  - `{{ .Name }}.cdc`
-{{ end }}
+  - `ExampleContract.cdc`
 - `/scripts` - This folder contains your Cadence scripts (read-only operations)
-{{ range .Scripts }}
-  - `{{ .Name }}.cdc`
-{{ end }}
+  - `ExampleScript.cdc`
 - `/transactions` - This folder contains your Cadence transactions (state-changing operations)
-{{ range .Transactions }}
-  - `{{ .Name }}.cdc`
-{{ end }}
+  - `ExampleTransaction.cdc`
 - `/tests` - This folder contains your Cadence tests (integration tests for your contracts, scripts, and transactions to verify they behave as expected)
-{{ range .Tests }}
-  - `{{ .Name }}.cdc`
-{{ end }}
+  - `ExampleTest.cdc`
 
 ## 👨‍💻 Start Developing
 
