@@ -19,6 +19,7 @@
 package generator
 
 import (
+	"embed"
 	"fmt"
 	"path/filepath"
 	"testing"
@@ -29,6 +30,9 @@ import (
 
 	"github.com/onflow/flow-cli/internal/util"
 )
+
+//go:embed fixtures/*.*
+var fixturesFS embed.FS
 
 func TestGenerateNewContract(t *testing.T) {
 	logger := output.NewStdoutLogger(output.NoneLog)
@@ -220,4 +224,75 @@ access(all) fun testContract() {
     Test.expect(err, Test.beNil())
 }`
 	assert.Equal(t, expectedContent, util.NormalizeLineEndings(string(content)))
+}
+
+func TestGenerateReadmeNoDeps(t *testing.T) {
+	logger := output.NewStdoutLogger(output.NoneLog)
+	_, state, _ := util.TestMocks(t)
+
+	g := NewGenerator("", state, logger, false, true)
+	err := g.Create(FileTemplate{
+		TemplatePath: "README.md.tmpl",
+		TargetPath:   "README.md",
+		Data: map[string]interface{}{
+			"Dependencies": []map[string]interface{}{},
+			"Contracts": []map[string]interface{}{
+				{"Name": "ExampleContract"},
+			},
+			"Transactions": []map[string]interface{}{
+				{"Name": "ExampleTransaction"},
+			},
+			"Scripts": []map[string]interface{}{
+				{"Name": "ExampleScript"},
+			},
+			"Tests": []map[string]interface{}{
+				{"Name": "ExampleTest"},
+			},
+		},
+	})
+	assert.NoError(t, err, "Failed to generate file")
+
+	content, err := state.ReaderWriter().ReadFile(filepath.FromSlash("README.md"))
+	assert.NoError(t, err, "Failed to read generated file")
+	assert.NotNil(t, content)
+
+	readmeNoDepsFixture, _ := fixturesFS.ReadFile("fixtures/README_no_deps.md")
+	assert.Equal(t, string(readmeNoDepsFixture), string(content))
+}
+
+func TestGenerateReadmeWithDeps(t *testing.T) {
+	logger := output.NewStdoutLogger(output.NoneLog)
+	_, state, _ := util.TestMocks(t)
+
+	g := NewGenerator("", state, logger, false, true)
+	err := g.Create(FileTemplate{
+		TemplatePath: "README.md.tmpl",
+		TargetPath:   "README.md",
+		Data: map[string]interface{}{
+			"Dependencies": []map[string]interface{}{
+				{"Name": "FlowToken"},
+				{"Name": "FungibleToken"},
+			},
+			"Contracts": []map[string]interface{}{
+				{"Name": "ExampleContract"},
+			},
+			"Transactions": []map[string]interface{}{
+				{"Name": "ExampleTransaction"},
+			},
+			"Scripts": []map[string]interface{}{
+				{"Name": "ExampleScript"},
+			},
+			"Tests": []map[string]interface{}{
+				{"Name": "ExampleTest"},
+			},
+		},
+	})
+	assert.NoError(t, err, "Failed to generate file")
+
+	content, err := state.ReaderWriter().ReadFile(filepath.FromSlash("README.md"))
+	assert.NoError(t, err, "Failed to read generated file")
+	assert.NotNil(t, content)
+
+	readmeWithDepsFixture, _ := fixturesFS.ReadFile("fixtures/README_with_deps.md")
+	assert.Equal(t, string(readmeWithDepsFixture), string(content))
 }

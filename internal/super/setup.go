@@ -201,11 +201,20 @@ func startInteractiveSetup(
 		return "", fmt.Errorf("failed to initialize configuration: %w", err)
 	}
 
-	// Generate standard cadence files
-	// cadence/contracts/Counter.cdc
-	// cadence/scripts/GetCounter.cdc
-	// cadence/transactions/IncrementCounter.cdc
-	// cadence/tests/Counter_test.cdc
+	msg := "Would you like to install any core contracts and their dependencies?"
+	if prompt.GenericBoolPrompt(msg) {
+		err := dependencymanager.PromptInstallCoreContracts(logger, state, tempDir, nil)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	// Generate standard cadence files & README.md
+	// cadence/contracts/DefaultContract.cdc
+	// cadence/scripts/DefaultScript.cdc
+	// cadence/transactions/DefaultTransaction.cdc
+	// cadence/tests/DefaultContract_test.cdc
+	// README.md
 
 	templates := []generator.TemplateItem{
 		generator.ContractTemplate{
@@ -222,20 +231,39 @@ func startInteractiveSetup(
 			TemplatePath: "transaction_counter.cdc.tmpl",
 			Data:         map[string]interface{}{"ContractName": "Counter"},
 		},
+		generator.FileTemplate{
+			TemplatePath: "README.md.tmpl",
+			TargetPath:   "README.md",
+			Data: map[string]interface{}{
+				"Dependencies": (func() []map[string]interface{} {
+					contracts := []map[string]interface{}{}
+					for _, dep := range *state.Dependencies() {
+						contracts = append(contracts, map[string]interface{}{
+							"Name": dep.Name,
+						})
+					}
+					return contracts
+				})(),
+				"Contracts": []map[string]interface{}{
+					{"Name": "Counter"},
+				},
+				"Scripts": []map[string]interface{}{
+					{"Name": "GetCounter"},
+				},
+				"Transactions": []map[string]interface{}{
+					{"Name": "IncrementCounter"},
+				},
+				"Tests": []map[string]interface{}{
+					{"Name": "Counter_test"},
+				},
+			},
+		},
 	}
 
 	g := generator.NewGenerator(tempDir, state, logger, true, false)
 	err = g.Create(templates...)
 	if err != nil {
 		return "", err
-	}
-
-	msg := "Would you like to install any core contracts and their dependencies?"
-	if prompt.GenericBoolPrompt(msg) {
-		err := dependencymanager.PromptInstallCoreContracts(logger, state, tempDir, nil)
-		if err != nil {
-			return "", err
-		}
 	}
 
 	err = state.Save(filepath.Join(tempDir, "flow.json"))
