@@ -6,9 +6,9 @@ Welcome to your new Flow project. This project is a starting point for you to de
 
 Here are some essential resources to help you hit the ground running:
 
-- **[Flow Documentation](https://docs.onflow.org/)** - The official Flow Documentation is a great starting point to begin learn about [building](https://developers.flow.com/build/flow) on Flow.
-- **[Cadence Documentation](https://cadence-lang.org/docs/language)** - Cadence is the native language for the Flow Blockchain, it is a resource-oriented programming language that is designed for developing smart contracts.  The documentation is a great place to start learning about the language.
-- **[Visual Studio Code](https://code.visualstudio.com/)** and the **[Cadence Extension](https://marketplace.visualstudio.com/items?itemName=onflow.cadence)** - It is recommended to use the Visual Studio Code IDE with the Cadence extension installed.  This will include syntax highlighting, code completion, and other features to support Cadence development.
+- **[Flow Documentation](https://developers.onflow.org/)** - The official Flow Documentation is a great starting point to start learning about about [building](https://developers.flow.com/build/flow) on Flow.
+- **[Cadence Documentation](https://cadence-lang.org/docs/language)** - Cadence is the native language for the Flow Blockchain. It is a resource-oriented programming language that is designed for developing smart contracts.  The documentation is a great place to start learning about the language.
+- **[Visual Studio Code](https://code.visualstudio.com/)** and the **[Cadence Extension](https://marketplace.visualstudio.com/items?itemName=onflow.cadence)** - It is recommended to use the Visual Studio Code IDE with the Cadence extension installed.  This will provide syntax highlighting, code completion, and other features to support Cadence development.
 - **[Flow Clients](https://developers.flow.com/tools/clients)** - There are clients available in multiple languages to interact with the Flow Blockchain.  You can use these clients to interact with your smart contracts, run transactions, and query data from the network.
 - **[Block Explorers](https://developers.flow.com/ecosystem/block-explorers)** - Block explorers are tools that allow you to explore on-chain data.  You can use them to view transactions, accounts, events, and other information.  [Flowser](https://flowser.dev/) is a powerful block explorer for local development on the Flow Emulator.
 
@@ -23,7 +23,7 @@ Your project has been set up with the following structure:
 
 - `/cadence` - This is where your Cadence smart contracts code lives
 
-Inside `cadence` folder you will find:
+Inside the `cadence` folder you will find:
 - `/contracts` - This folder contains your Cadence contracts (these are deployed to the network and contain the business logic for your application)
   - `ExampleContract.cdc`
 - `/scripts` - This folder contains your Cadence scripts (read-only operations)
@@ -133,7 +133,7 @@ To deploy your project, run the following command:
 flow project deploy --network=emulator
 ```
 
-This command will start the Flow Emulator and deploy your project to it. You can now interact with your smart contracts using the Flow CLI or any other Flow client.
+This command will start the Flow Emulator and deploy your project to it. You can now interact with your project using the Flow CLI or alternate [client](https://developers.flow.com/tools/clients).
 
 ### Deploying to Flow Testnet
 
@@ -143,7 +143,7 @@ To deploy your project to Flow Testnet you can use the following command:
 flow project deploy --network=testnet
 ```
 
-This command will deploy your project to Flow Testnet. You can now interact with your project using the Flow Testnet.
+This command will deploy your project to Flow Testnet. You can now interact with your project on this network using the Flow CLI or any other Flow client.
 
 ### Deploying to Flow Mainnet
 
@@ -153,7 +153,7 @@ To deploy your project to Flow Mainnet you can use the following command:
 flow project deploy --network=mainnet
 ```
 
-This command will deploy your project to Flow Mainnet. You now then interact with your project using the Flow Mainnet.
+This command will deploy your project to Flow Mainnet. You can now interact with your project using the Flow CLI or alternate [client](https://developers.flow.com/tools/clients).
 
 ## 📚 Other Resources
 
