@@ -2,7 +2,7 @@
 
 Welcome to your new Flow project. This project is a starting point for you to develop smart contracts on the Flow Blockchain. It comes with example contracts, scripts, transactions, and tests to help you get started.
 
-## 🔨 Getting started
+## 🔨 Getting Started
 
 Here are some essential resources to help you hit the ground running:
 
@@ -13,6 +13,7 @@ Here are some essential resources to help you hit the ground running:
 - **[Block Explorers](https://developers.flow.com/ecosystem/block-explorers)** - Block explorers are tools that allow you to explore on-chain data.  You can use them to view transactions, accounts, events, and other information.  [Flowser](https://flowser.dev/) is a powerful block explorer for local development on the Flow Emulator.
 
 ## 📦 Project Structure
+
 Your project has been set up with the following structure:
 
 - `flow.json` - This is the configuration file for your project (analogous to a `package.json` file for NPM).  It has been initialized with a basic configuration and your selected Core Contract dependencies to get started.
@@ -35,7 +36,7 @@ Inside the `cadence` folder you will find:
 
 ## 👨‍💻 Start Developing
 
-### Creating a new contract
+### Creating a New Contract
 
 To add a new contract to your project, run the following command:
 
@@ -45,7 +46,7 @@ flow generate contract
 
 This command will create a new contract file and add it to the `flow.json` configuration file.
 
-### Creating a new script
+### Creating a New Script
 
 To add a new script to your project, run the following command:
 
@@ -61,7 +62,7 @@ You can import any of your own contracts or installed dependencies in your scrip
 import "Counter"
 ```
 
-### Creating a new transaction
+### Creating a New Transaction
 
 To add a new transaction to your project you can use the following command:
 
@@ -73,7 +74,7 @@ This command will create a new transaction file.  Transactions are used to modif
 
 You can import any dependencies as you would in a script file.
 
-### Creating a new test
+### Creating a New Test
 
 To add a new test to your project you can use the following command:
 
@@ -83,7 +84,7 @@ flow generate test
 
 This command will create a new test file.  Tests are used to verify that your contracts, scripts, and transactions are working as expected.
 
-### Installing external dependencies
+### Installing External Dependencies
 
 If you want to use external contract dependencies (such as NonFungibleToken, FlowToken, FungibleToken, etc.) you can install them using [Flow CLI Dependency Manager](https://developers.flow.com/tools/flow-cli/dependency-manager).
 
@@ -107,7 +108,7 @@ This command will run all tests with the `_test.cdc` suffix (these can be found 
 
 To learn more about testing in Cadence, check out the [Cadence Test Framework Documentation](https://cadence-lang.org/docs/testing-framework).
 
-## 🚀 Deploying your project
+## 🚀 Deploying Your Project
 
 To deploy your project to the Flow network, you must first have a Flow account and have configured your deployment targets in the `flow.json` configuration file.
 
