@@ -19,6 +19,7 @@
 package generator
 
 import (
+	"embed"
 	"fmt"
 	"path/filepath"
 	"testing"
@@ -30,11 +31,8 @@ import (
 	"github.com/onflow/flow-cli/internal/util"
 )
 
-// go:embed fixtures/README_no_deps.md
-var readmeNoDepsFixture string
-
-// go:embed fixtures/README_with_deps.md
-var readmeWithDepsFixture string
+//go:embed fixtures/*.*
+var fixturesFS embed.FS
 
 func TestGenerateNewContract(t *testing.T) {
 	logger := output.NewStdoutLogger(output.NoneLog)
@@ -258,7 +256,8 @@ func TestGenerateReadmeNoDeps(t *testing.T) {
 	assert.NoError(t, err, "Failed to read generated file")
 	assert.NotNil(t, content)
 
-	assert.Equal(t, readmeNoDepsFixture, string(content))
+	readmeNoDepsFixture, _ := fixturesFS.ReadFile("fixtures/README_no_deps.md")
+	assert.Equal(t, string(readmeNoDepsFixture), string(content))
 }
 
 func TestGenerateReadmeWithDeps(t *testing.T) {
@@ -294,5 +293,6 @@ func TestGenerateReadmeWithDeps(t *testing.T) {
 	assert.NoError(t, err, "Failed to read generated file")
 	assert.NotNil(t, content)
 
-	assert.Equal(t, readmeWithDepsFixture, string(content))
+	readmeWithDepsFixture, _ := fixturesFS.ReadFile("fixtures/README_with_deps.md")
+	assert.Equal(t, string(readmeWithDepsFixture), string(content))
 }
