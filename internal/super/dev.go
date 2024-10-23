@@ -24,7 +24,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/onflow/cadence/runtime/parser"
+	"github.com/onflow/cadence/parser"
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/output"
 	"github.com/spf13/cobra"
