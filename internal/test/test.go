@@ -66,7 +66,7 @@ const defaultTestSuffix = "_test.cdc"
 
 type flagsTests struct {
 	Cover        bool   `default:"false" flag:"cover" info:"Use the cover flag to calculate coverage report"`
-	CoverProfile string `default:"coverage.json" flag:"coverprofile" info:"Filename to write the calculated coverage report. Supported extensions are .json and .lcov"`
+	CoverProfile string `default:"lcov.info" flag:"coverprofile" info:"Filename to write the calculated coverage report. Supported extensions are .info, .lcov, and .json"`
 	CoverCode    string `default:"all" flag:"covercode" info:"Use the covercode flag to calculate coverage report only for certain types of code. Available values are \"all\" & \"contracts\""`
 	Random       bool   `default:"false" flag:"random" info:"Use the random flag to execute test cases randomly"`
 	Seed         int64  `default:"0" flag:"seed" info:"Use the seed flag to manipulate random execution of test cases"`
@@ -98,7 +98,7 @@ func run(
 	_ flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	if !testFlags.Cover && testFlags.CoverProfile != "coverage.json" {
+	if !testFlags.Cover && testFlags.CoverProfile != "lcov.info" {
 		return nil, fmt.Errorf("the '--coverprofile' flag requires the '--cover' flag")
 	}
 	if testFlags.Random && testFlags.Seed > 0 {
@@ -139,14 +139,14 @@ func run(
 		var err error
 
 		ext := filepath.Ext(testFlags.CoverProfile)
-		if ext == ".json" {
+		switch ext {
+		case ".json":
 			file, err = json.MarshalIndent(result.CoverageReport, "", "  ")
-		} else if ext == ".lcov" {
+		case ".lcov", ".info":
 			file, err = result.CoverageReport.MarshalLCOV()
-		} else {
+		default:
 			return nil, fmt.Errorf("given format: %v, only .json and .lcov are supported", ext)
 		}
-
 		if err != nil {
 			return nil, fmt.Errorf("error serializing coverage report: %w", err)
 		}
