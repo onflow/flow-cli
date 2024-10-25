@@ -1,6 +1,6 @@
 import "{{ .ContractName }}"
 
 access(all)
-fun main(): String {
-  return {{ .ContractName }}.greeting
+fun main(): Int {
+  return {{ .ContractName }}.getCount()
 }
