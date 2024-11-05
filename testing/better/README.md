@@ -38,6 +38,26 @@ Inside `cadence` folder you will find:
 - `/tests` - This folder contains your Cadence tests (integration tests for your contracts, scripts, and transactions to verify they behave as expected)
   - `Counter_test.cdc`
 
+## Running the Existing Project
+
+### Executing the `GetCounter` Script
+
+To run the `GetCounter` script, use the following command:
+
+```shell
+flow scripts execute cadence/scripts/GetCounter.cdc
+```
+
+### Sending the `IncrementCounter` Transaction
+
+To run the `IncrementCounter` transaction, use the following command:
+
+```shell
+flow transactions send cadence/transactions/IncrementCounter.cdc
+```
+
+To learn more about using the CLI, check out the [Flow CLI Documentation](https://developers.flow.com/tools/flow-cli).
+
 ## 👨‍💻 Start Developing
 
 ### Creating a New Contract
