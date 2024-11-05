@@ -1,6 +1,6 @@
 ## 👋 Welcome Flow Developer!
 
-Welcome to your new Flow project. This project is a starting point for you to develop smart contracts on the Flow Blockchain. It comes with example contracts, scripts, transactions, and tests to help you get started.
+This project is a starting point for you to develop smart contracts on the Flow Blockchain. It comes with example contracts, scripts, transactions, and tests to help you get started.
 
 ## 🔨 Getting started
 
