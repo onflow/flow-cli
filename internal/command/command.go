@@ -317,7 +317,7 @@ func checkVersion(logger output.Logger) {
 	if currentSemver.LessThan(*latestSemver) {
 		logger.Info(fmt.Sprintf(
 			"\n%s  Version warning: a new version of Flow CLI is available (%s).\n"+
-				"   Read the installation guide for upgrade instructions: https://docs.onflow.org/flow-cli/install\n",
+				"   Read the installation guide for upgrade instructions: https://developers.flow.com/tools/flow-cli/install \n",
 			output.WarningEmoji(),
 			strings.ReplaceAll(latestVersion, "\n", ""),
 		))
