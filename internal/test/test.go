@@ -28,8 +28,8 @@ import (
 	"strings"
 
 	cdcTests "github.com/onflow/cadence-tools/test"
+	"github.com/onflow/cadence/common"
 	"github.com/onflow/cadence/runtime"
-	"github.com/onflow/cadence/runtime/common"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
