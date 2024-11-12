@@ -183,6 +183,6 @@ This command will deploy your project to Flow Mainnet. You can now interact with
 - [Flow Core Contracts](https://developers.flow.com/build/core-contracts)
 
 ## 🤝 Community
-- [Flow Community Forum](https://forum.onflow.org/)
+- [Flow Community Forum](https://forum.flow.com/)
 - [Flow Discord](https://discord.gg/flow)
 - [Flow Twitter](https://x.com/flow_blockchain)
