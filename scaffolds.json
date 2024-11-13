@@ -11,5 +11,12 @@
     "repo": "https://github.com/sideninja/flow-basic-scaffold.git",
     "description": "Scaffold contains required folder structure as well as some example Cadence code.",
     "commit": "8065287e55bc298d776665bef98a577ceb4a226c"
+  },
+  {
+    "name": "FCL Web Dapp (Svelte)",
+    "repo": "https://github.com/muttoni/fcl-sveltekit-quickstart.git",
+    "description": "Simple JS Web application using SvelteKit, Vite, FCL, and Cadence",
+    "commit": "fac88ec10cbf0db504211bd86640e58f26a0ea32",
+    "type": "web"
   }
 ]
