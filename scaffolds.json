@@ -3,7 +3,7 @@
     "name": "FCL Web Dapp",
     "repo": "https://github.com/chasefleming/fcl-next-scaffold.git",
     "description": "Simple TypeScript web application using next.js, FCL, and Cadence.",
-    "commit": "3a5d4f87eef72cebf45f1c48c51c2b786b28f7b6",
+    "commit": "eb52658d7a8fdc95cd6fe57dc65d6ee94a7531d8",
     "type": "web"
   },
   {
