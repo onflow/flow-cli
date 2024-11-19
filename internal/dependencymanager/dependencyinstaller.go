@@ -446,6 +446,12 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 		}
 	}
 
+	err := di.updateDependencyState(networkName, contractAddr, assignedName, contractName, originalContractDataHash)
+	if err != nil {
+		di.Logger.Error(fmt.Sprintf("Error updating state: %v", err))
+		return err
+	}
+
 	// Needs to happen before handleFileSystem
 	if !di.contractFileExists(contractAddr, contractName) {
 		err := di.handleAdditionalDependencyTasks(networkName, contractName)
@@ -455,15 +461,9 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 		}
 	}
 
-	err := di.handleFileSystem(contractAddr, contractName, contractData, networkName)
+	err = di.handleFileSystem(contractAddr, contractName, contractData, networkName)
 	if err != nil {
 		return fmt.Errorf("error handling file system: %w", err)
-	}
-
-	err = di.updateDependencyState(networkName, contractAddr, assignedName, contractName, originalContractDataHash)
-	if err != nil {
-		di.Logger.Error(fmt.Sprintf("Error updating state: %v", err))
-		return err
 	}
 
 	return nil
