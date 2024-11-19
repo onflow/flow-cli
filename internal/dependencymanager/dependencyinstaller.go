@@ -454,7 +454,6 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 
 	// Needs to happen before handleFileSystem
 	if !di.contractFileExists(contractAddr, contractName) {
-		fmt.Println("Contract file does not exist")
 		err := di.handleAdditionalDependencyTasks(networkName, contractName)
 		if err != nil {
 			di.Logger.Error(fmt.Sprintf("Error handling additional dependency tasks: %v", err))
