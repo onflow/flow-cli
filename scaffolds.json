@@ -1,9 +1,9 @@
 [
   {
-    "name": "FCL Web Dapp (React)",
-    "repo": "https://github.com/muttoni/fcl-nextjs-quickstart.git",
+    "name": "FCL Web Dapp",
+    "repo": "https://github.com/chasefleming/fcl-next-scaffold.git",
     "description": "Simple TypeScript web application using next.js, FCL, and Cadence.",
-    "commit": "5ee11147d83017c23aca58de1c86187514eb8d00",
+    "commit": "eb52658d7a8fdc95cd6fe57dc65d6ee94a7531d8",
     "type": "web"
   },
   {
@@ -13,10 +13,17 @@
     "commit": "8065287e55bc298d776665bef98a577ceb4a226c"
   },
   {
-    "name": "FCL Web Dapp (Svelte)",
-    "repo": "https://github.com/muttoni/fcl-sveltekit-quickstart.git",
+    "name": "FCL React Dapp Starter",
+    "repo": "https://github.com/nialexsan/fcl-nextjs-quickstart.git",
+    "description": "Simple TypeScript web application using next.js, FCL, and Cadence.",
+    "commit": "e688ff534d6b9bfdac8ab1a6171401dd9a84e354",
+    "type": "web"
+  },
+  {
+    "name": "FCL Svelte Dapp Starter",
+    "repo": "https://github.com/nialexsan/fcl-sveltekit-quickstart.git",
     "description": "Simple JS Web application using SvelteKit, Vite, FCL, and Cadence",
-    "commit": "fac88ec10cbf0db504211bd86640e58f26a0ea32",
+    "commit": "52b8dcff8d9cc25fde88faa5bdc297d5594e5036",
     "type": "web"
   }
 ]
