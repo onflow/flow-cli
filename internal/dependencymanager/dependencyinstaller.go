@@ -182,20 +182,14 @@ func (di *DependencyInstaller) Install() error {
 }
 
 // AddBySourceString processes a single dependency and installs it and any dependencies it has, as well as adding it to the state
-func (di *DependencyInstaller) AddBySourceString(depSource, customName string) error {
+func (di *DependencyInstaller) AddBySourceString(depSource string) error {
 	depNetwork, depAddress, depContractName, err := config.ParseSourceString(depSource)
 	if err != nil {
 		return fmt.Errorf("error parsing source: %w", err)
 	}
 
-	name := depContractName
-
-	if customName != "" {
-		name = customName
-	}
-
 	dep := config.Dependency{
-		Name: name,
+		Name: depContractName,
 		Source: config.Source{
 			NetworkName:  depNetwork,
 			Address:      flowsdk.HexToAddress(depAddress),
@@ -206,7 +200,7 @@ func (di *DependencyInstaller) AddBySourceString(depSource, customName string) e
 	return di.Add(dep)
 }
 
-func (di *DependencyInstaller) AddByCoreContractName(coreContractName, customName string) error {
+func (di *DependencyInstaller) AddByCoreContractName(coreContractName string) error {
 	var depNetwork, depAddress, depContractName string
 	sc := systemcontracts.SystemContractsForChain(flowGo.Mainnet)
 	for _, coreContract := range sc.All() {
@@ -222,13 +216,8 @@ func (di *DependencyInstaller) AddByCoreContractName(coreContractName, customNam
 		return fmt.Errorf("contract %s not found in core contracts", coreContractName)
 	}
 
-	name := depContractName
-	if customName != "" {
-		name = customName
-	}
-
 	dep := config.Dependency{
-		Name: name,
+		Name: depContractName,
 		Source: config.Source{
 			NetworkName:  depNetwork,
 			Address:      flowsdk.HexToAddress(depAddress),

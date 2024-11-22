@@ -59,8 +59,6 @@ flow dependencies add FlowToken`,
 func init() {
 	// Add common flags.
 	addFlags.Flags.AddToCommand(addCommand.Cmd)
-	// Add command-specific flags.
-	addCommand.Cmd.Flags().StringVar(&addFlags.name, "name", "", "Name of the dependency")
 }
 
 func add(
@@ -91,7 +89,7 @@ func add(
 	}
 
 	// Otherwise, add the dependency by source string.
-	if err := installer.AddBySourceString(dep, addFlags.name); err != nil {
+	if err := installer.AddBySourceString(dep); err != nil {
 		logger.Error(fmt.Sprintf("Error: %v", err))
 		return nil, err
 	}
