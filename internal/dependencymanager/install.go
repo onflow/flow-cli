@@ -20,6 +20,9 @@ package dependencymanager
 
 import (
 	"fmt"
+	"github.com/onflow/flow-go/fvm/systemcontracts"
+	flowGo "github.com/onflow/flow-go/model/flow"
+	"strings"
 
 	"github.com/onflow/flow-cli/internal/util"
 
@@ -35,21 +38,54 @@ var installFlags = Flags{}
 
 var installCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "install",
-		Short:   "Install contract and dependencies.",
-		Example: "flow dependencies install",
+		Use:   "install",
+		Short: "Install contract and dependencies.",
+		Example: `flow dependencies install
+flow dependencies install testnet://0afe396ebc8eee65.FlowToken
+flow dependencies install FlowToken`,
+		Args: cobra.ArbitraryArgs,
 	},
 	Flags: &installFlags,
 	RunS:  install,
 }
 
 func install(
-	_ []string,
+	args []string,
 	_ command.GlobalFlags,
 	logger output.Logger,
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
+	if len(args) > 0 {
+		logger.Info(fmt.Sprintf("%s Installing dependency %s...", util.PrintEmoji("🔄"), args[0]))
+
+		dep := args[0]
+
+		installer, err := NewDependencyInstaller(logger, state, true, "", installFlags)
+		if err != nil {
+			logger.Error(fmt.Sprintf("Error: %v", err))
+			return nil, err
+		}
+
+		// Check if the dependency is a core contract
+		coreContractName := findCoreContractCaseInsensitive(dep)
+		if coreContractName != "" {
+			if err := installer.AddByCoreContractName(coreContractName); err != nil {
+				logger.Error(fmt.Sprintf("Error: %v", err))
+				return nil, err
+			}
+			return nil, nil
+		}
+
+		// Otherwise, add the dependency by source string
+		if err := installer.AddBySourceString(dep); err != nil {
+			logger.Error(fmt.Sprintf("Error: %v", err))
+			return nil, err
+		}
+
+		return nil, nil
+	}
+
 	logger.Info(util.MessageWithEmojiPrefix("🔄", "Installing dependencies from flow.json..."))
 
 	installer, err := NewDependencyInstaller(logger, state, true, "", installFlags)
@@ -64,4 +100,13 @@ func install(
 	}
 
 	return nil, nil
+}
+
+func findCoreContractCaseInsensitive(name string) string {
+	for _, contract := range systemcontracts.SystemContractsForChain(flowGo.Mainnet).All() {
+		if strings.EqualFold(contract.Name, name) {
+			return contract.Name
+		}
+	}
+	return ""
 }
