@@ -20,9 +20,10 @@ package dependencymanager
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/onflow/flow-go/fvm/systemcontracts"
 	flowGo "github.com/onflow/flow-go/model/flow"
-	"strings"
 
 	"github.com/onflow/flow-cli/internal/util"
 
