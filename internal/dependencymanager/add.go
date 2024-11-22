@@ -46,7 +46,6 @@ func add(
 	_ flowkit.Services,
 	_ *flowkit.State,
 ) (command.Result, error) {
-	// Output a no-op message using the logger
 	logger.Info(fmt.Sprintf("%s The 'add' command has been deprecated. Please use 'install' instead.", util.PrintEmoji("⚠️")))
 	return nil, nil
 }
