@@ -81,7 +81,7 @@ func add(
 	// First check if the dependency is a core contract.
 	coreContractName := findCoreContractCaseInsensitive(dep)
 	if coreContractName != "" {
-		if err := installer.AddByCoreContractName(coreContractName, addFlags.name); err != nil {
+		if err := installer.AddByCoreContractName(coreContractName); err != nil {
 			logger.Error(fmt.Sprintf("Error: %v", err))
 			return nil, err
 		}
