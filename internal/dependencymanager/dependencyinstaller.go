@@ -147,6 +147,7 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State, saveStat
 		SkipDeployments: flags.skipDeployments,
 		SkipAlias:       flags.skipAlias,
 		dependencies:    make(map[string]config.Dependency),
+		logs:            categorizedLogs{},
 	}, nil
 }
 
@@ -175,8 +176,6 @@ func (di *DependencyInstaller) Install() error {
 	if err := di.saveState(); err != nil {
 		return fmt.Errorf("error saving state: %w", err)
 	}
-
-	di.logs.LogAll(di.Logger)
 
 	return nil
 }
@@ -240,8 +239,6 @@ func (di *DependencyInstaller) Add(dep config.Dependency) error {
 		return err
 	}
 
-	di.logs.LogAll(di.Logger)
-
 	return nil
 }
 
@@ -256,8 +253,6 @@ func (di *DependencyInstaller) AddMany(dependencies []config.Dependency) error {
 	if err := di.saveState(); err != nil {
 		return err
 	}
-
-	di.logs.LogAll(di.Logger)
 
 	return nil
 }
