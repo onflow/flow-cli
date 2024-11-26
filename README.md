@@ -37,13 +37,11 @@ Usage:
   flow [command]
 
 👋 Welcome Flow developer!
-   If you are starting a new flow project try running 'flow setup <project_name>'. 
+   If you are starting a new flow project use our super commands, start by running 'flow init'. 
 
 🔥 Super Commands
-  dev          Build your Flow project
-  flix         Execute FLIX template with a given id, name, or local filename
-  generate     Generate new boilerplate files
-  setup        Start a new Flow project
+  generate     Generate template files for common Cadence code
+  init         Start a new Flow project
 
 📦 Flow Entities
   accounts     Create and retrieve accounts and deploy contracts
@@ -59,12 +57,12 @@ Usage:
   cadence      Execute Cadence code
   dev-wallet   Run a development wallet
   emulator     Run Flow network for development
+  flix         execute, generate, package
   flowser      Run Flowser project explorer
   test         Run Cadence tests
 
 🏄 Flow Project
   deploy       Deploy all project contracts
-  init         Initialize a new configuration
   project      Manage your Cadence project
   run          Start emulator and deploy all project contracts
 
@@ -72,6 +70,8 @@ Usage:
   keys         Generate and decode Flow keys
   signatures   Signature verification and creation
 
+🔗 Dependency Manager
+  dependencies Manage contracts and dependencies
 ```
 
 The Flow CLI includes several commands to interact with Flow networks, such as querying account information, or sending transactions. It also includes the [Flow Emulator](https://developers.flow.com/tools/emulator).
