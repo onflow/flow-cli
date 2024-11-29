@@ -147,6 +147,7 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State, saveStat
 		SkipDeployments: flags.skipDeployments,
 		SkipAlias:       flags.skipAlias,
 		dependencies:    make(map[string]config.Dependency),
+		logs:            categorizedLogs{},
 	}, nil
 }
 
@@ -176,26 +177,18 @@ func (di *DependencyInstaller) Install() error {
 		return fmt.Errorf("error saving state: %w", err)
 	}
 
-	di.logs.LogAll(di.Logger)
-
 	return nil
 }
 
 // AddBySourceString processes a single dependency and installs it and any dependencies it has, as well as adding it to the state
-func (di *DependencyInstaller) AddBySourceString(depSource, customName string) error {
+func (di *DependencyInstaller) AddBySourceString(depSource string) error {
 	depNetwork, depAddress, depContractName, err := config.ParseSourceString(depSource)
 	if err != nil {
 		return fmt.Errorf("error parsing source: %w", err)
 	}
 
-	name := depContractName
-
-	if customName != "" {
-		name = customName
-	}
-
 	dep := config.Dependency{
-		Name: name,
+		Name: depContractName,
 		Source: config.Source{
 			NetworkName:  depNetwork,
 			Address:      flowsdk.HexToAddress(depAddress),
@@ -206,7 +199,7 @@ func (di *DependencyInstaller) AddBySourceString(depSource, customName string) e
 	return di.Add(dep)
 }
 
-func (di *DependencyInstaller) AddByCoreContractName(coreContractName, customName string) error {
+func (di *DependencyInstaller) AddByCoreContractName(coreContractName string) error {
 	var depNetwork, depAddress, depContractName string
 	sc := systemcontracts.SystemContractsForChain(flowGo.Mainnet)
 	for _, coreContract := range sc.All() {
@@ -222,13 +215,8 @@ func (di *DependencyInstaller) AddByCoreContractName(coreContractName, customNam
 		return fmt.Errorf("contract %s not found in core contracts", coreContractName)
 	}
 
-	name := depContractName
-	if customName != "" {
-		name = customName
-	}
-
 	dep := config.Dependency{
-		Name: name,
+		Name: depContractName,
 		Source: config.Source{
 			NetworkName:  depNetwork,
 			Address:      flowsdk.HexToAddress(depAddress),
@@ -251,8 +239,6 @@ func (di *DependencyInstaller) Add(dep config.Dependency) error {
 		return err
 	}
 
-	di.logs.LogAll(di.Logger)
-
 	return nil
 }
 
@@ -267,8 +253,6 @@ func (di *DependencyInstaller) AddMany(dependencies []config.Dependency) error {
 	if err := di.saveState(); err != nil {
 		return err
 	}
-
-	di.logs.LogAll(di.Logger)
 
 	return nil
 }
@@ -446,6 +430,12 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 		}
 	}
 
+	err := di.updateDependencyState(networkName, contractAddr, assignedName, contractName, originalContractDataHash)
+	if err != nil {
+		di.Logger.Error(fmt.Sprintf("Error updating state: %v", err))
+		return err
+	}
+
 	// Needs to happen before handleFileSystem
 	if !di.contractFileExists(contractAddr, contractName) {
 		err := di.handleAdditionalDependencyTasks(networkName, contractName)
@@ -455,15 +445,9 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 		}
 	}
 
-	err := di.handleFileSystem(contractAddr, contractName, contractData, networkName)
+	err = di.handleFileSystem(contractAddr, contractName, contractData, networkName)
 	if err != nil {
 		return fmt.Errorf("error handling file system: %w", err)
-	}
-
-	err = di.updateDependencyState(networkName, contractAddr, assignedName, contractName, originalContractDataHash)
-	if err != nil {
-		di.Logger.Error(fmt.Sprintf("Error updating state: %v", err))
-		return err
 	}
 
 	return nil

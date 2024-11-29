@@ -29,7 +29,7 @@ Examples:
 {{.Example}}{{end}}
 {{if .HasAvailableSubCommands}}{{if (eq .Name "flow")}}
 [1m👋 Welcome Flow developer![0m
-   If you are starting a new flow project use our super commands, start by running 'flow setup'. {{end}}{{end}}{{if .HasAvailableSubCommands}}{{$cmds := .Commands}}{{if eq (len .Groups) 0}}
+   If you are starting a new flow project use our super commands, start by running 'flow init'. {{end}}{{end}}{{if .HasAvailableSubCommands}}{{$cmds := .Commands}}{{if eq (len .Groups) 0}}
 Available Commands:{{range $cmds}}{{if (or .IsAvailableCommand (eq .Name "help"))}}
   {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{else}}{{range $group := .Groups}}
 

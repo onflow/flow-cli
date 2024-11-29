@@ -20,7 +20,7 @@ require (
 	github.com/onflow/cadence-tools/test v1.0.0
 	github.com/onflow/fcl-dev-wallet v0.8.0
 	github.com/onflow/flixkit-go/v2 v2.0.1
-	github.com/onflow/flow-core-contracts/lib/go/templates v1.3.1
+	github.com/onflow/flow-core-contracts/lib/go/templates v1.4.0
 	github.com/onflow/flow-emulator v1.0.1
 	github.com/onflow/flow-evm-gateway v0.36.5-0.20241005010031-1f3f5439d553
 	github.com/onflow/flow-go v0.38.0-preview.0.0.20241002124048-21cfe5aea5a8
@@ -37,7 +37,7 @@ require (
 	github.com/spf13/afero v1.10.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.16.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
 	google.golang.org/grpc v1.67.1
 )
@@ -207,9 +207,9 @@ require (
 	github.com/onflow/crypto v0.25.2 // indirect
 	github.com/onflow/flow-core-contracts/lib/go/contracts v1.3.1 // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v1.0.0 // indirect
-	github.com/onflow/flow-ft/lib/go/templates v1.0.0 // indirect
+	github.com/onflow/flow-ft/lib/go/templates v1.0.1 // indirect
 	github.com/onflow/flow-nft/lib/go/contracts v1.2.1 // indirect
-	github.com/onflow/flow-nft/lib/go/templates v1.2.0 // indirect
+	github.com/onflow/flow-nft/lib/go/templates v1.2.1 // indirect
 	github.com/onflow/flow/protobuf/go/flow v0.4.7 // indirect
 	github.com/onflow/sdks v0.6.0-preview.1 // indirect
 	github.com/onflow/wal v1.0.2 // indirect

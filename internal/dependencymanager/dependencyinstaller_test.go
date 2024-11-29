@@ -131,7 +131,7 @@ func TestDependencyInstallerAdd(t *testing.T) {
 		}
 
 		sourceStr := fmt.Sprintf("emulator://%s.%s", serviceAddress.String(), tests.ContractHelloString.Name)
-		err := di.AddBySourceString(sourceStr, "")
+		err := di.AddBySourceString(sourceStr)
 		assert.NoError(t, err, "Failed to install dependencies")
 
 		filePath := fmt.Sprintf("imports/%s/%s.cdc", serviceAddress.String(), tests.ContractHelloString.Name)
@@ -215,7 +215,7 @@ func TestDependencyInstallerAdd(t *testing.T) {
 			dependencies:    make(map[string]config.Dependency),
 		}
 
-		err := di.AddByCoreContractName("FlowToken", "")
+		err := di.AddByCoreContractName("FlowToken")
 		assert.NoError(t, err, "Failed to install dependencies")
 
 		filePath := fmt.Sprintf("imports/%s/%s.cdc", "1654653399040a61", "FlowToken")

@@ -75,7 +75,7 @@ func configuredServiceKey(
 		state, err = flowkit.Load(command.Flags.ConfigPaths, loader)
 		if err != nil {
 			if errors.Is(err, config.ErrDoesNotExist) {
-				exitf(1, "🙏 Configuration is missing, initialize it with: 'flow init' and then rerun this command.")
+				exitf(1, "🙏 Configuration (flow.json) is missing, are you in the correct directory? If you are trying to create a new project, initialize it with 'flow init' and then rerun this command.")
 			} else {
 				exitf(1, err.Error())
 			}
