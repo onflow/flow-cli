@@ -19,7 +19,7 @@ require (
 	github.com/onflow/cadence-tools/lint v1.0.0
 	github.com/onflow/cadence-tools/test v1.0.0
 	github.com/onflow/fcl-dev-wallet v0.8.0
-	github.com/onflow/flixkit-go/v2 v2.0.1
+	github.com/onflow/flixkit-go/v2 v2.2.0
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.4.0
 	github.com/onflow/flow-emulator v1.0.1
 	github.com/onflow/flow-evm-gateway v0.36.5-0.20241005010031-1f3f5439d553
@@ -203,7 +203,7 @@ require (
 	github.com/multiformats/go-multistream v0.5.0 // indirect
 	github.com/multiformats/go-varint v0.0.7 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
-	github.com/onflow/atree v0.8.0-rc.6 // indirect
+	github.com/onflow/atree v0.8.0 // indirect
 	github.com/onflow/crypto v0.25.2 // indirect
 	github.com/onflow/flow-core-contracts/lib/go/contracts v1.3.1 // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v1.0.0 // indirect
@@ -273,13 +273,13 @@ require (
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
-	golang.org/x/crypto v0.26.0 // indirect
+	golang.org/x/crypto v0.28.0 // indirect
 	golang.org/x/net v0.28.0 // indirect
 	golang.org/x/oauth2 v0.22.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
-	golang.org/x/sys v0.24.0 // indirect
-	golang.org/x/term v0.23.0 // indirect
-	golang.org/x/text v0.17.0 // indirect
+	golang.org/x/sys v0.26.0 // indirect
+	golang.org/x/term v0.25.0 // indirect
+	golang.org/x/text v0.19.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	gonum.org/v1/gonum v0.14.0 // indirect
