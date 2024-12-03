@@ -33,10 +33,11 @@ import (
 	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/output"
 
+	"golang.org/x/exp/slices"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/scripts"
 	"github.com/onflow/flow-cli/internal/transactions"
-	"golang.org/x/exp/slices"
 )
 
 type flixFlags struct {
