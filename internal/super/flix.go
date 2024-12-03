@@ -25,8 +25,8 @@ import (
 
 	"github.com/onflow/flixkit-go/v2/flixkit"
 	"github.com/onflow/flow-go/fvm/systemcontracts"
+	"github.com/onflow/flow-go/model/flow"
 
-	flowGo "github.com/onflow/flow-go/model/flow"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flowkit/v2"
@@ -65,9 +65,10 @@ var (
 	flags   = flixFlags{}
 	FlixCmd = &cobra.Command{
 		Use:              "flix",
-		Short:            "execute, generate, package",
+		Short:            "Commands to execute, generate, package FLIX templates",
 		TraverseChildren: true,
 		GroupID:          "tools",
+		Example:          "flow flix execute transfer-flow 1 0x123456789",
 	}
 )
 
@@ -298,40 +299,27 @@ func (fr *flixResult) Oneliner() string {
 func getCoreContracts(excludeNetworks []string) (flixkit.ContractInfos, error) {
 	coreContracts := make(flixkit.ContractInfos)
 
-	excludeMainnet := slices.Contains(excludeNetworks, config.MainnetNetwork.Name)
-	excludeTestnet := slices.Contains(excludeNetworks, config.TestnetNetwork.Name)
-	excludeEmulator := slices.Contains(excludeNetworks, config.EmulatorNetwork.Name)
-
-	if !excludeMainnet {
-		// Add mainnet contracts
-		sc := systemcontracts.SystemContractsForChain(flowGo.Mainnet)
-		for _, c := range sc.All() {
-			if _, exists := coreContracts[c.Name]; !exists {
-				coreContracts[c.Name] = make(flixkit.NetworkAddressMap)
-			}
-			coreContracts[c.Name][config.MainnetNetwork.Name] = c.Address.HexWithPrefix()
-		}
+	networkConfigs := []struct {
+		chainID     flow.ChainID
+		networkName string
+		excluded    bool
+	}{
+		{flow.ChainID("flow-mainnet"), config.MainnetNetwork.Name, slices.Contains(excludeNetworks, config.MainnetNetwork.Name)},
+		{flow.ChainID("flow-testnet"), config.TestnetNetwork.Name, slices.Contains(excludeNetworks, config.TestnetNetwork.Name)},
+		{flow.ChainID("flow-emulator"), config.EmulatorNetwork.Name, slices.Contains(excludeNetworks, config.EmulatorNetwork.Name)},
 	}
 
-	if !excludeTestnet {
-		// Add testnet contracts
-		cc := systemcontracts.SystemContractsForChain(flowGo.Testnet)
-		for _, c := range cc.All() {
-			if _, exists := coreContracts[c.Name]; !exists {
-				coreContracts[c.Name] = make(flixkit.NetworkAddressMap)
-			}
-			coreContracts[c.Name][config.TestnetNetwork.Name] = c.Address.HexWithPrefix()
+	for _, nc := range networkConfigs {
+		if nc.excluded {
+			continue
 		}
-	}
 
-	if !excludeEmulator {
-		// Add emulator contracts
-		em := systemcontracts.SystemContractsForChain(flowGo.Emulator)
-		for _, c := range em.All() {
+		contracts := systemcontracts.SystemContractsForChain(nc.chainID)
+		for _, c := range contracts.All() {
 			if _, exists := coreContracts[c.Name]; !exists {
 				coreContracts[c.Name] = make(flixkit.NetworkAddressMap)
 			}
-			coreContracts[c.Name][config.EmulatorNetwork.Name] = c.Address.HexWithPrefix()
+			coreContracts[c.Name][nc.networkName] = c.Address.HexWithPrefix()
 		}
 	}
 
