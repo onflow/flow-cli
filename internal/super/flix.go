@@ -24,7 +24,9 @@ import (
 	"os"
 
 	"github.com/onflow/flixkit-go/v2/flixkit"
+	"github.com/onflow/flow-go/fvm/systemcontracts"
 
+	flowGo "github.com/onflow/flow-go/model/flow"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flowkit/v2"
@@ -34,6 +36,7 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/scripts"
 	"github.com/onflow/flow-cli/internal/transactions"
+	"golang.org/x/exp/slices"
 )
 
 type flixFlags struct {
@@ -57,13 +60,15 @@ type flixResult struct {
 	result    string
 }
 
-var flags = flixFlags{}
-var FlixCmd = &cobra.Command{
-	Use:              "flix",
-	Short:            "execute, generate, package",
-	TraverseChildren: true,
-	GroupID:          "tools",
-}
+var (
+	flags   = flixFlags{}
+	FlixCmd = &cobra.Command{
+		Use:              "flix",
+		Short:            "execute, generate, package",
+		TraverseChildren: true,
+		GroupID:          "tools",
+	}
+)
 
 var executeCommand = &command.Command{
 	Cmd: &cobra.Command{
@@ -218,6 +223,10 @@ func generateFlixCmd(
 ) (result command.Result, err error) {
 	cadenceFile := args[0]
 	depContracts := getDeployedContracts(state)
+	coreContracts, err := getCoreContracts(flags.ExcludeNetworks)
+	if err != nil {
+		return nil, fmt.Errorf("could not get core contracts %w", err)
+	}
 
 	if cadenceFile == "" {
 		return nil, fmt.Errorf("no cadence code found")
@@ -226,10 +235,6 @@ func generateFlixCmd(
 	code, err := state.ReadFile(cadenceFile)
 	if err != nil {
 		return nil, fmt.Errorf("could not read cadence file %s: %w", cadenceFile, err)
-	}
-
-	if err != nil {
-		return nil, fmt.Errorf("could not create flix generator %w", err)
 	}
 
 	// get user's configured networks
@@ -241,7 +246,7 @@ func generateFlixCmd(
 			excludeMap[net] = true
 		}
 
-		var filteredNetworks []config.Network
+		var filteredNetworks []flixkit.NetworkConfig
 		for _, network := range depNetworks {
 			if !excludeMap[network.Name] {
 				filteredNetworks = append(filteredNetworks, network)
@@ -256,6 +261,13 @@ func generateFlixCmd(
 
 	ctx := context.Background()
 
+	// merge deployed contracts and core contracts
+	for name, addresses := range coreContracts {
+		if _, exists := depContracts[name]; !exists {
+			depContracts[name] = addresses
+		}
+	}
+
 	prettyJSON, err := flixService.CreateTemplate(ctx, depContracts, string(code), flags.PreFill, depNetworks)
 	if err != nil {
 		return nil, fmt.Errorf("could not generate flix %w", err)
@@ -265,7 +277,6 @@ func generateFlixCmd(
 		flixQuery: cadenceFile,
 		result:    prettyJSON,
 	}, err
-
 }
 
 func (fr *flixResult) JSON() any {
@@ -281,6 +292,49 @@ func (fr *flixResult) String() string {
 
 func (fr *flixResult) Oneliner() string {
 	return fr.result
+}
+
+func getCoreContracts(excludeNetworks []string) (flixkit.ContractInfos, error) {
+	coreContracts := make(flixkit.ContractInfos)
+
+	excludeMainnet := slices.Contains(excludeNetworks, config.MainnetNetwork.Name)
+	excludeTestnet := slices.Contains(excludeNetworks, config.TestnetNetwork.Name)
+	excludeEmulator := slices.Contains(excludeNetworks, config.EmulatorNetwork.Name)
+
+	if !excludeMainnet {
+		// Add mainnet contracts
+		sc := systemcontracts.SystemContractsForChain(flowGo.Mainnet)
+		for _, c := range sc.All() {
+			if _, exists := coreContracts[c.Name]; !exists {
+				coreContracts[c.Name] = make(flixkit.NetworkAddressMap)
+			}
+			coreContracts[c.Name][config.MainnetNetwork.Name] = c.Address.HexWithPrefix()
+		}
+	}
+
+	if !excludeTestnet {
+		// Add testnet contracts
+		cc := systemcontracts.SystemContractsForChain(flowGo.Testnet)
+		for _, c := range cc.All() {
+			if _, exists := coreContracts[c.Name]; !exists {
+				coreContracts[c.Name] = make(flixkit.NetworkAddressMap)
+			}
+			coreContracts[c.Name][config.TestnetNetwork.Name] = c.Address.HexWithPrefix()
+		}
+	}
+
+	if !excludeEmulator {
+		// Add emulator contracts
+		em := systemcontracts.SystemContractsForChain(flowGo.Emulator)
+		for _, c := range em.All() {
+			if _, exists := coreContracts[c.Name]; !exists {
+				coreContracts[c.Name] = make(flixkit.NetworkAddressMap)
+			}
+			coreContracts[c.Name][config.EmulatorNetwork.Name] = c.Address.HexWithPrefix()
+		}
+	}
+
+	return coreContracts, nil
 }
 
 func getDeployedContracts(state *flowkit.State) flixkit.ContractInfos {
@@ -335,10 +389,14 @@ func getDeployedContracts(state *flowkit.State) flixkit.ContractInfos {
 	return allContracts
 }
 
-func getNetworks(state *flowkit.State) []config.Network {
-	networks := make([]config.Network, 0)
+func getNetworks(state *flowkit.State) []flixkit.NetworkConfig {
+	networks := make([]flixkit.NetworkConfig, 0)
 	for _, n := range *state.Networks() {
-		networks = append(networks, n)
+		networks = append(networks, flixkit.NetworkConfig{
+			Name: n.Name,
+			Host: n.Host,
+			Key:  n.Key,
+		})
 	}
 	return networks
 }
