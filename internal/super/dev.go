@@ -38,11 +38,12 @@ var devFlags = flagsDev{}
 
 var DevCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "dev",
-		Short:   "Build your Flow project",
-		Args:    cobra.ExactArgs(0),
-		Example: "flow dev",
-		GroupID: "super",
+		Use:        "dev",
+		Short:      "Build your Flow project",
+		Args:       cobra.ExactArgs(0),
+		Example:    "flow dev",
+		GroupID:    "super",
+		Deprecated: "The 'dev' command is deprecated and will be removed in a future release.",
 	},
 	Flags: &devFlags,
 	RunS:  dev,

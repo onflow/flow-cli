@@ -20,6 +20,10 @@ package dependencymanager
 
 import (
 	"fmt"
+	"strings"
+
+	"github.com/onflow/flow-go/fvm/systemcontracts"
+	flowGo "github.com/onflow/flow-go/model/flow"
 
 	"github.com/onflow/flow-cli/internal/util"
 
@@ -35,33 +39,84 @@ var installFlags = Flags{}
 
 var installCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "install",
-		Short:   "Install contract and dependencies.",
-		Example: "flow dependencies install",
+		Use:   "install",
+		Short: "Install contract and dependencies.",
+		Example: `flow dependencies install
+flow dependencies install testnet://0afe396ebc8eee65.FlowToken
+flow dependencies install FlowToken
+flow dependencies install FlowToken NonFungibleToken`,
+		Args: cobra.ArbitraryArgs,
 	},
 	Flags: &installFlags,
 	RunS:  install,
 }
 
 func install(
-	_ []string,
+	args []string,
 	_ command.GlobalFlags,
 	logger output.Logger,
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	logger.Info(util.MessageWithEmojiPrefix("🔄", "Installing dependencies from flow.json..."))
-
 	installer, err := NewDependencyInstaller(logger, state, true, "", installFlags)
 	if err != nil {
-		logger.Error(fmt.Sprintf("Error: %v", err))
+		logger.Error(fmt.Sprintf("Error initializing dependency installer: %v", err))
 		return nil, err
 	}
+
+	if len(args) > 0 {
+		for _, dep := range args {
+			logger.Info(fmt.Sprintf("%s Processing dependency %s...", util.PrintEmoji("🔄"), dep))
+
+			// Check if the dependency is a core contract
+			coreContractName := findCoreContractCaseInsensitive(dep)
+			if coreContractName != "" {
+				if err := installer.AddByCoreContractName(coreContractName); err != nil {
+					logger.Error(fmt.Sprintf("Error adding core contract %s: %v", coreContractName, err))
+					return nil, err
+				}
+				continue
+			}
+
+			if err := installer.AddBySourceString(dep); err != nil {
+				if strings.Contains(err.Error(), "invalid dependency source format") {
+					logger.Error(fmt.Sprintf("Error: '%s' is neither a core contract nor a valid dependency source format.\nPlease provide a valid dependency source in the format 'network://address.ContractName', e.g., 'testnet://0x1234567890abcdef.MyContract', or use a valid core contract name such as 'FlowToken'.", dep))
+				} else {
+					logger.Error(fmt.Sprintf("Error adding dependency %s: %v", dep, err))
+				}
+				return nil, err
+			}
+		}
+
+		logger.Info(util.MessageWithEmojiPrefix("🔄", "Installing added dependencies..."))
+
+		if err := installer.Install(); err != nil {
+			logger.Error(fmt.Sprintf("Error installing dependencies: %v", err))
+			return nil, err
+		}
+
+		installer.logs.LogAll(logger)
+
+		return nil, nil
+	}
+
+	logger.Info(util.MessageWithEmojiPrefix("🔄", "Installing dependencies from flow.json..."))
 
 	if err := installer.Install(); err != nil {
-		logger.Error(fmt.Sprintf("Error: %v", err))
+		logger.Error(fmt.Sprintf("Error installing dependencies: %v", err))
 		return nil, err
 	}
 
+	installer.logs.LogAll(logger)
+
 	return nil, nil
+}
+
+func findCoreContractCaseInsensitive(name string) string {
+	for _, contract := range systemcontracts.SystemContractsForChain(flowGo.Mainnet).All() {
+		if strings.EqualFold(contract.Name, name) {
+			return contract.Name
+		}
+	}
+	return ""
 }
