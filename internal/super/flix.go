@@ -224,7 +224,7 @@ func generateFlixCmd(
 	flags flixFlags,
 ) (result command.Result, err error) {
 	cadenceFile := args[0]
-	depContracts := getDeployedContracts(state)
+	depContracts := getContractsFromState(state, flags.ExcludeNetworks)
 	coreContracts, err := getCoreContracts(flags.ExcludeNetworks)
 	if err != nil {
 		return nil, fmt.Errorf("could not get core contracts %w", err)
@@ -326,7 +326,7 @@ func getCoreContracts(excludeNetworks []string) (flixkit.ContractInfos, error) {
 	return coreContracts, nil
 }
 
-func getDeployedContracts(state *flowkit.State) flixkit.ContractInfos {
+func getContractsFromState(state *flowkit.State, excludeNetworks []string) flixkit.ContractInfos {
 	allContracts := make(flixkit.ContractInfos)
 	depNetworks := make([]string, 0)
 	accountAddresses := make(map[string]string)
@@ -346,6 +346,9 @@ func getDeployedContracts(state *flowkit.State) flixkit.ContractInfos {
 			if _, ok := allContracts[c.Name]; !ok {
 				allContracts[c.Name] = make(flixkit.NetworkAddressMap)
 			}
+			if slices.Contains(excludeNetworks, d.Network) {
+				continue
+			}
 			allContracts[c.Name][d.Network] = addr
 		}
 	}
@@ -361,6 +364,9 @@ func getDeployedContracts(state *flowkit.State) flixkit.ContractInfos {
 			if _, ok := allContracts[c.Name]; !ok {
 				allContracts[c.Name] = make(flixkit.NetworkAddressMap)
 			}
+			if slices.Contains(excludeNetworks, network) {
+				continue
+			}
 			allContracts[c.Name][network] = c.AccountAddress.HexWithPrefix()
 		}
 		locAliases := state.AliasesForNetwork(cfg)
@@ -371,7 +377,23 @@ func getDeployedContracts(state *flowkit.State) flixkit.ContractInfos {
 			if _, ok := allContracts[name]; !ok {
 				allContracts[name] = make(flixkit.NetworkAddressMap)
 			}
+			if slices.Contains(excludeNetworks, network) {
+				continue
+			}
 			allContracts[name][network] = addr
+		}
+	}
+
+	// add contracts that have not been deployed
+	for _, c := range *state.Dependencies() {
+		if _, ok := allContracts[c.Name]; !ok {
+			allContracts[c.Name] = make(flixkit.NetworkAddressMap)
+		}
+		for _, alias := range c.Aliases {
+			if slices.Contains(excludeNetworks, alias.Network) {
+				continue
+			}
+			allContracts[c.Name][alias.Network] = alias.Address.HexWithPrefix()
 		}
 	}
 
