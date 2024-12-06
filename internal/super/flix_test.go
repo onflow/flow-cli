@@ -213,8 +213,7 @@ func Test_GenerateFlix(t *testing.T) {
 		"CreateTemplate",
 		mock.Anything,
 		mock.MatchedBy(func(contracts flixkit.ContractInfos) bool {
-			// test more than 4 contracts, which will include core contracts
-			return len(contracts) > 4
+			return len(contracts) == 1
 		}),
 		cadenceCode,
 		"",
@@ -254,8 +253,7 @@ func Test_GenerateFlixPrefill(t *testing.T) {
 		"CreateTemplate",
 		mock.Anything,
 		mock.MatchedBy(func(contracts flixkit.ContractInfos) bool {
-			// test more than 4 contracts, which will include core contracts
-			return len(contracts) > 4
+			return len(contracts) == 0
 		}),
 		CADENCE_SCRIPT,
 		templateName,
