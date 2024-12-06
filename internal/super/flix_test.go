@@ -348,8 +348,8 @@ func Test_GenerateFlixMissingAlias(t *testing.T) {
 	assert.NoError(t, err)
 	state, _ := flowkit.Init(rw)
 	state.Contracts().AddOrUpdate(config.Contract{
-		Name:     "Foobar",
-		Aliases:  []config.Alias{{Address: flow.Address{0x01}, Network: "mainnet"}},
+		Name:    "Foobar",
+		Aliases: []config.Alias{{Address: flow.Address{0x01}, Network: "mainnet"}},
 	})
 
 	mockFlixService := new(MockFlixService)
