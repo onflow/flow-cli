@@ -28,8 +28,9 @@ import (
 	"text/tabwriter"
 
 	"github.com/onflow/flow-go-sdk"
-	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
+	"github.com/onflow/flow-go/fvm/systemcontracts"
+	flowGo "github.com/onflow/flow-go/model/flow"
 
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/accounts"
@@ -70,11 +71,11 @@ func AddToGitIgnore(filename string, loader flowkit.ReaderWriter) error {
 }
 
 // GetAddressNetwork returns the chain ID for an address.
-func GetAddressNetwork(address flowsdk.Address) (flowsdk.ChainID, error) {
-	networks := []flowsdk.ChainID{
-		flowsdk.Mainnet,
-		flowsdk.Testnet,
-		flowsdk.Emulator,
+func GetAddressNetwork(address flow.Address) (flow.ChainID, error) {
+	networks := []flow.ChainID{
+		flow.Mainnet,
+		flow.Testnet,
+		flow.Emulator,
 	}
 	for _, net := range networks {
 		if address.IsValid(net) {
@@ -174,4 +175,15 @@ func Pluralize(word string, count int) string {
 		return word
 	}
 	return word + "s"
+}
+
+func IsCoreContract(contractName string) bool {
+	sc := systemcontracts.SystemContractsForChain(flowGo.Emulator)
+
+	for _, coreContract := range sc.All() {
+		if coreContract.Name == contractName {
+			return true
+		}
+	}
+	return false
 }

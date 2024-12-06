@@ -27,6 +27,7 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/onflow/flixkit-go/v2/flixkit"
+	"github.com/onflow/flow-go-sdk"
 
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"
@@ -61,9 +62,15 @@ func (m *MockFlixService) GetTemplateAndReplaceImports(ctx context.Context, temp
 	return result, nil
 }
 
-func (m *MockFlixService) CreateTemplate(ctx context.Context, contractInfos flixkit.ContractInfos, code string, preFill string, networks []config.Network) (string, error) {
-	args := m.Called(ctx, contractInfos, code, preFill)
-	return TEMPLATE_STR, args.Error(1)
+func (m *MockFlixService) CreateTemplate(
+	ctx context.Context,
+	contractInfos flixkit.ContractInfos,
+	code string,
+	preFill string,
+	networks []flixkit.NetworkConfig,
+) (string, error) {
+	args := m.Called(ctx, contractInfos, code, preFill, networks)
+	return args.String(0), args.Error(1)
 }
 
 var JS_CODE = "export async function request() { const info = await fcl.query({ template: flixTemplate }); return info; }"
@@ -144,6 +151,7 @@ func Test_PackageFlix(t *testing.T) {
 	assert.NotNil(t, result)
 	assert.Equal(t, JS_CODE, result.String())
 }
+
 func Test_GenerateFlix(t *testing.T) {
 	srv := mocks.DefaultMockServices()
 	cadenceFile := "cadence.cdc"
@@ -167,11 +175,11 @@ func Test_GenerateFlix(t *testing.T) {
 	}`)
 
 	af := afero.Afero{Fs: afero.NewMemMapFs()}
-	err := afero.WriteFile(af.Fs, "flow.json", configJson, 0644)
+	err := afero.WriteFile(af.Fs, "flow.json", configJson, 0o644)
 	assert.NoError(t, err)
-	err = afero.WriteFile(af.Fs, cadenceFile, []byte(cadenceCode), 0644)
+	err = afero.WriteFile(af.Fs, cadenceFile, []byte(cadenceCode), 0o644)
 	assert.NoError(t, err)
-	err = afero.WriteFile(af.Fs, tests.ContractHelloString.Filename, []byte(tests.ContractHelloString.Source), 0644)
+	err = afero.WriteFile(af.Fs, tests.ContractHelloString.Filename, []byte(tests.ContractHelloString.Source), 0o644)
 	assert.NoError(t, err)
 	paths := []string{"flow.json"}
 	state, err := flowkit.Load(paths, af)
@@ -197,14 +205,32 @@ func Test_GenerateFlix(t *testing.T) {
 	assert.Equal(t, 1, len(contracts))
 
 	logger := output.NewStdoutLogger(output.NoneLog)
-	contractInfos := make(flixkit.ContractInfos)
-	contractInfos[tests.ContractHelloString.Name] = make(flixkit.NetworkAddressMap)
-	contractInfos[tests.ContractHelloString.Name]["emulator"] = "0xf8d6e0586b0a20c7"
+	cInfos := make(flixkit.ContractInfos)
+	cInfos[tests.ContractHelloString.Name] = make(flixkit.NetworkAddressMap)
+	cInfos[tests.ContractHelloString.Name]["emulator"] = "0xf8d6e0586b0a20c7"
 
-	ctx := context.Background()
-	mockFlixService.On("CreateTemplate", ctx, contractInfos, cadenceCode, "").Return(TEMPLATE_STR, nil)
+	mockFlixService.On(
+		"CreateTemplate",
+		mock.Anything,
+		mock.MatchedBy(func(contracts flixkit.ContractInfos) bool {
+			return len(contracts) == 1
+		}),
+		cadenceCode,
+		"",
+		mock.MatchedBy(func(networks []flixkit.NetworkConfig) bool {
+			return len(networks) == 1 && networks[0].Name == config.EmulatorNetwork.Name
+		}),
+	).Return(TEMPLATE_STR, nil)
 
-	result, err := generateFlixCmd([]string{cadenceFile}, command.GlobalFlags{}, logger, srv.Mock, state, mockFlixService, flixFlags{})
+	result, err := generateFlixCmd(
+		[]string{cadenceFile},
+		command.GlobalFlags{},
+		logger,
+		srv.Mock,
+		state,
+		mockFlixService,
+		flixFlags{ExcludeNetworks: []string{"mainnet", "testnet"}},
+	)
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, TEMPLATE_STR, result.String())
@@ -216,17 +242,129 @@ func Test_GenerateFlixPrefill(t *testing.T) {
 	templateName := "templateName"
 	cadenceFile := "cadence.cdc"
 
-	var mockFS = afero.NewMemMapFs()
-	var rw = afero.Afero{Fs: mockFS}
-	err := rw.WriteFile(cadenceFile, []byte(CADENCE_SCRIPT), 0644)
+	mockFS := afero.NewMemMapFs()
+	rw := afero.Afero{Fs: mockFS}
+	err := rw.WriteFile(cadenceFile, []byte(CADENCE_SCRIPT), 0o644)
 	assert.NoError(t, err)
 	state, _ := flowkit.Init(rw)
 
 	mockFlixService := new(MockFlixService)
-	ctx := context.Background()
-	mockFlixService.On("CreateTemplate", ctx, flixkit.ContractInfos{}, CADENCE_SCRIPT, templateName).Return(TEMPLATE_STR, nil)
+	mockFlixService.On(
+		"CreateTemplate",
+		mock.Anything,
+		mock.MatchedBy(func(contracts flixkit.ContractInfos) bool {
+			return len(contracts) == 0
+		}),
+		CADENCE_SCRIPT,
+		templateName,
+		mock.MatchedBy(func(networks []flixkit.NetworkConfig) bool {
+			return len(networks) == 2
+		}),
+	).Return(TEMPLATE_STR, nil)
 
-	result, err := generateFlixCmd([]string{cadenceFile}, command.GlobalFlags{}, logger, srv.Mock, state, mockFlixService, flixFlags{PreFill: templateName})
+	result, err := generateFlixCmd(
+		[]string{cadenceFile},
+		command.GlobalFlags{},
+		logger,
+		srv.Mock,
+		state,
+		mockFlixService,
+		flixFlags{
+			PreFill:         templateName,
+			ExcludeNetworks: []string{"mainnet", "testnet"},
+		},
+	)
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
+}
+
+func Test_GenerateFlixMissingCoreContract(t *testing.T) {
+	logger := output.NewStdoutLogger(output.NoneLog)
+	srv := mocks.DefaultMockServices()
+	cadenceFile := "cadence.cdc"
+
+	mockFS := afero.NewMemMapFs()
+	rw := afero.Afero{Fs: mockFS}
+	script := "import \"FungibleToken\"\n access(all) fun main() {}"
+	err := rw.WriteFile(cadenceFile, []byte(script), 0o644)
+	assert.NoError(t, err)
+	state, _ := flowkit.Init(rw)
+
+	mockFlixService := new(MockFlixService)
+
+	_, err = generateFlixCmd(
+		[]string{cadenceFile},
+		command.GlobalFlags{},
+		logger,
+		srv.Mock,
+		state,
+		mockFlixService,
+		flixFlags{
+			ExcludeNetworks: []string{"emulator", "testnet"},
+		},
+	)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "flow deps install FungibleToken")
+}
+
+func Test_GenerateFlixMissingExternalContract(t *testing.T) {
+	logger := output.NewStdoutLogger(output.NoneLog)
+	srv := mocks.DefaultMockServices()
+	cadenceFile := "cadence.cdc"
+
+	mockFS := afero.NewMemMapFs()
+	rw := afero.Afero{Fs: mockFS}
+	script := "import \"SomeContract\"\n access(all) fun main() {}"
+	err := rw.WriteFile(cadenceFile, []byte(script), 0o644)
+	assert.NoError(t, err)
+	state, _ := flowkit.Init(rw)
+
+	mockFlixService := new(MockFlixService)
+
+	_, err = generateFlixCmd(
+		[]string{cadenceFile},
+		command.GlobalFlags{},
+		logger,
+		srv.Mock,
+		state,
+		mockFlixService,
+		flixFlags{
+			ExcludeNetworks: []string{"emulator", "testnet"},
+		},
+	)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "flow deps install <network>://<address>.SomeContract")
+}
+
+func Test_GenerateFlixMissingAlias(t *testing.T) {
+	logger := output.NewStdoutLogger(output.NoneLog)
+	srv := mocks.DefaultMockServices()
+	cadenceFile := "cadence.cdc"
+
+	mockFS := afero.NewMemMapFs()
+	rw := afero.Afero{Fs: mockFS}
+	script := "import \"Foobar\"\n access(all) fun main() {}"
+	err := rw.WriteFile(cadenceFile, []byte(script), 0o644)
+	assert.NoError(t, err)
+	state, _ := flowkit.Init(rw)
+	state.Contracts().AddOrUpdate(config.Contract{
+		Name:    "Foobar",
+		Aliases: []config.Alias{{Address: flow.Address{0x01}, Network: "mainnet"}},
+	})
+
+	mockFlixService := new(MockFlixService)
+
+	_, err = generateFlixCmd(
+		[]string{cadenceFile},
+		command.GlobalFlags{},
+		logger,
+		srv.Mock,
+		state,
+		mockFlixService,
+		flixFlags{
+			ExcludeNetworks: []string{"emulator"},
+		},
+	)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "missing an alias")
 }
