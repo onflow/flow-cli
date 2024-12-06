@@ -392,17 +392,6 @@ func (di *DependencyInstaller) handleFileSystem(contractAddr, contractName, cont
 	return nil
 }
 
-func isCoreContract(contractName string) bool {
-	sc := systemcontracts.SystemContractsForChain(flowGo.Emulator)
-
-	for _, coreContract := range sc.All() {
-		if coreContract.Name == contractName {
-			return true
-		}
-	}
-	return false
-}
-
 func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, assignedName, contractName string, program *project.Program) error {
 	hash := sha256.New()
 	hash.Write(program.CodeWithUnprocessedImports())
@@ -455,7 +444,7 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 
 func (di *DependencyInstaller) handleAdditionalDependencyTasks(networkName, contractName string) error {
 	// If the contract is not a core contract and the user does not want to skip deployments, then prompt for a deployment
-	if !di.SkipDeployments && !isCoreContract(contractName) {
+	if !di.SkipDeployments && !util.IsCoreContract(contractName) {
 		err := di.updateDependencyDeployment(contractName)
 		if err != nil {
 			di.Logger.Error(fmt.Sprintf("Error updating deployment: %v", err))
@@ -467,7 +456,7 @@ func (di *DependencyInstaller) handleAdditionalDependencyTasks(networkName, cont
 	}
 
 	// If the contract is not a core contract and the user does not want to skip aliasing, then prompt for an alias
-	if !di.SkipAlias && !isCoreContract(contractName) {
+	if !di.SkipAlias && !util.IsCoreContract(contractName) {
 		err := di.updateDependencyAlias(contractName, networkName)
 		if err != nil {
 			di.Logger.Error(fmt.Sprintf("Error updating alias: %v", err))

@@ -30,6 +30,8 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
+	"github.com/onflow/flow-go/fvm/systemcontracts"
+	flowGo "github.com/onflow/flow-go/model/flow"
 
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/accounts"
@@ -174,4 +176,15 @@ func Pluralize(word string, count int) string {
 		return word
 	}
 	return word + "s"
+}
+
+func IsCoreContract(contractName string) bool {
+	sc := systemcontracts.SystemContractsForChain(flowGo.Emulator)
+
+	for _, coreContract := range sc.All() {
+		if coreContract.Name == contractName {
+			return true
+		}
+	}
+	return false
 }
