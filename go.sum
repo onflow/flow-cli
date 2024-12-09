@@ -2198,6 +2198,8 @@ github.com/onflow/flow/protobuf/go/flow v0.4.7 h1:iP6DFx4wZ3ETORsyeqzHu7neFT3d1C
 github.com/onflow/flow/protobuf/go/flow v0.4.7/go.mod h1:NA2pX2nw8zuaxfKphhKsk00kWLwfd+tv8mS23YXO4Sk=
 github.com/onflow/flowkit/v2 v2.0.1 h1:GIZ2irR7OTO8wXx7ntYkQp/aaqX6M6Tg5I8wR6xWFI8=
 github.com/onflow/flowkit/v2 v2.0.1/go.mod h1:vT6Ml14Vti69UW3n5jbW/kY4a1Qyc/NwM1jT7Tcr/sQ=
+github.com/onflow/flowkit/v2 v2.0.2 h1:AaKwv2sycVBbklBivYCQCP4kSSuWgNkYKjWAp1IsWBc=
+github.com/onflow/flowkit/v2 v2.0.2/go.mod h1:vT6Ml14Vti69UW3n5jbW/kY4a1Qyc/NwM1jT7Tcr/sQ=
 github.com/onflow/go-ethereum v1.14.7 h1:gg3awYqI02e3AypRdpJKEvNTJ6kz/OhAqRti0h54Wlc=
 github.com/onflow/go-ethereum v1.14.7/go.mod h1:zV14QLrXyYu5ucvcwHUA0r6UaqveqbXaehAVQJlSW+I=
 github.com/onflow/sdks v0.5.1-0.20230912225508-b35402f12bba/go.mod h1:F0dj0EyHC55kknLkeD10js4mo14yTdMotnWMslPirrU=
