@@ -9,7 +9,7 @@ require (
 	github.com/charmbracelet/bubbletea v0.27.1
 	github.com/coreos/go-semver v0.3.1
 	github.com/dukex/mixpanel v1.0.1
-	github.com/getsentry/sentry-go v0.29.1
+	github.com/getsentry/sentry-go v0.30.0
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/gosuri/uilive v0.0.4
 	github.com/logrusorgru/aurora/v4 v4.0.0
