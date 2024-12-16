@@ -378,10 +378,16 @@ func UsageMetrics(command *cobra.Command, wg *sync.WaitGroup) {
 	hash := sha256.Sum256([]byte(fmt.Sprintf("%s%s", usr.Username, usr.Uid)))
 	userID := base64.StdEncoding.EncodeToString(hash[:])
 
+	network := Flags.Network
+	if network == "" {
+		network = config.EmulatorNetwork.Name
+	}
+
 	_ = client.Track(userID, "cli-command", &mixpanel.Event{
 		IP: "0", // do not track IPs
 		Properties: map[string]any{
 			"command": command.CommandPath(),
+			"network": network,
 			"version": build.Semver(),
 			"os":      runtime.GOOS,
 		},
