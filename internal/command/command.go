@@ -382,6 +382,7 @@ func UsageMetrics(command *cobra.Command, wg *sync.WaitGroup) {
 		IP: "0", // do not track IPs
 		Properties: map[string]any{
 			"command": command.CommandPath(),
+			"network": Flags.Network,
 			"version": build.Semver(),
 			"os":      runtime.GOOS,
 		},
