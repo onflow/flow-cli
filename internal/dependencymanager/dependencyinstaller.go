@@ -285,6 +285,29 @@ func (di *DependencyInstaller) processDependency(dependency config.Dependency) e
 	return di.fetchDependencies(dependency.Source.NetworkName, depAddress, dependency.Name, dependency.Source.ContractName)
 }
 
+func (di *DependencyInstaller) getContracts(network string, address flowsdk.Address) (map[string][]byte, error) {
+	gw, ok := di.Gateways[network]
+	if !ok {
+		return nil, fmt.Errorf("gateway for network %s not found", network)
+	}
+
+	ctx := context.Background()
+	acct, err := gw.GetAccount(ctx, address)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get account at %s on %s: %w", address, network, err)
+	}
+
+	if acct == nil {
+		return nil, fmt.Errorf("no account found at address %s on network %s", address, network)
+	}
+
+	if len(acct.Contracts) == 0 {
+		return nil, fmt.Errorf("no contracts found at address %s on network %s", address, network)
+	}
+
+	return acct.Contracts, nil
+}
+
 func (di *DependencyInstaller) fetchDependencies(networkName string, address flowsdk.Address, assignedName, contractName string) error {
 	sourceString := fmt.Sprintf("%s://%s.%s", networkName, address.String(), contractName)
 
@@ -304,20 +327,12 @@ func (di *DependencyInstaller) fetchDependencies(networkName string, address flo
 		return fmt.Errorf("error adding dependency: %w", err)
 	}
 
-	ctx := context.Background()
-	account, err := di.Gateways[networkName].GetAccount(ctx, address)
+	accountContracts, err := di.getContracts(networkName, address)
 	if err != nil {
-		return fmt.Errorf("failed to get account: %w", err)
-	}
-	if account == nil {
-		return fmt.Errorf("account is nil for address: %s", address)
+		return fmt.Errorf("error fetching contracts: %w", err)
 	}
 
-	if account.Contracts == nil {
-		return fmt.Errorf("contracts are nil for account: %s", address)
-	}
-
-	contract, ok := account.Contracts[contractName]
+	contract, ok := accountContracts[contractName]
 	if !ok {
 		return fmt.Errorf("contract %s not found at address %s", contractName, address.String())
 	}
