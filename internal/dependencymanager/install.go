@@ -39,7 +39,7 @@ var installFlags = Flags{}
 
 var installCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:   "install",
+		Use:   "install [dependencies]",
 		Short: "Install contract and dependencies.",
 		Example: `flow dependencies install
 flow dependencies install testnet://0afe396ebc8eee65.FlowToken
