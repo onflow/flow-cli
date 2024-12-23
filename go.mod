@@ -39,7 +39,7 @@ require (
 	github.com/spf13/viper v1.16.0
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
-	google.golang.org/grpc v1.69.0
+	google.golang.org/grpc v1.69.2
 )
 
 require (
