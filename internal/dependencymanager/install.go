@@ -78,6 +78,19 @@ func install(
 				continue
 			}
 
+			// Check if the dependency is in the "network://address" format (address only)
+			hasContract, err := hasContractName(dep)
+			if err != nil {
+				return nil, fmt.Errorf("invalid dependency format")
+			}
+
+			if !hasContract {
+				if err := installer.AddAllByNetworkAddress(dep); err != nil {
+					logger.Error(fmt.Sprintf("Error adding contracts by address: %v", err))
+					return nil, err
+				}
+			}
+
 			if err := installer.AddBySourceString(dep); err != nil {
 				if strings.Contains(err.Error(), "invalid dependency source format") {
 					logger.Error(fmt.Sprintf("Error: '%s' is neither a core contract nor a valid dependency source format.\nPlease provide a valid dependency source in the format 'network://address.ContractName', e.g., 'testnet://0x1234567890abcdef.MyContract', or use a valid core contract name such as 'FlowToken'.", dep))
@@ -119,4 +132,19 @@ func findCoreContractCaseInsensitive(name string) string {
 		}
 	}
 	return ""
+}
+
+// Check if the input is in "network://address" or "network://address.contract" format
+func hasContractName(dep string) (bool, error) {
+	parts := strings.SplitN(dep, "://", 2)
+	if len(parts) != 2 {
+		return false, fmt.Errorf("invalid format: missing '://'")
+	}
+
+	return strings.Contains(parts[1], "."), nil
+}
+
+func ParseNetworkAddressString(sourceStr string) (network, address string) {
+	parts := strings.Split(sourceStr, "://")
+	return parts[0], parts[1]
 }
