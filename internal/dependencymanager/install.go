@@ -39,10 +39,41 @@ var installFlags = Flags{}
 
 var installCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:   "install [dependencies]",
-		Short: "Install contract and dependencies.",
+		Use:   "install [dependencies...]",
+		Short: "Install contracts and their dependencies.",
+		Long: `Install Flow contracts and their dependencies.
+
+By default, this command will install any dependencies listed in the flow.json file at the root of your project. 
+You can also specify one or more dependencies directly on the command line, using any of the following formats:
+
+  • network://address
+  • network://address.ContractName
+  • core contract name (e.g., FlowToken, NonFungibleToken)
+
+Examples:
+  1. Install dependencies listed in flow.json:
+     flow dependencies install
+
+  2. Install a specific core contract by name:
+     flow dependencies install FlowToken
+
+  3. Install a single contract by network and address (all contracts at that address):
+     flow dependencies install testnet://0x1234abcd
+
+  4. Install a specific contract by network, address, and contract name:
+     flow dependencies install testnet://0x1234abcd.MyContract
+
+  5. Install multiple dependencies:
+     flow dependencies install FungibleToken NonFungibleToken
+     
+Note: 
+• Using 'network://address' will attempt to install all contracts deployed at that address.
+• Using 'network://address.ContractName' will install only the specified contract.
+• Specifying a known core contract (e.g., FlowToken) will install it from the official system contracts 
+  address on Mainnet or Testnet (depending on your project's default network).
+`,
 		Example: `flow dependencies install
-flow dependencies install testnet://0afe396ebc8eee65.FlowToken
+flow dependencies install testnet://0x7e60df042a9c0868.FlowToken
 flow dependencies install FlowToken
 flow dependencies install FlowToken NonFungibleToken`,
 		Args: cobra.ArbitraryArgs,
