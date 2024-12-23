@@ -89,15 +89,15 @@ func install(
 					logger.Error(fmt.Sprintf("Error adding contracts by address: %v", err))
 					return nil, err
 				}
-			}
-
-			if err := installer.AddBySourceString(dep); err != nil {
-				if strings.Contains(err.Error(), "invalid dependency source format") {
-					logger.Error(fmt.Sprintf("Error: '%s' is neither a core contract nor a valid dependency source format.\nPlease provide a valid dependency source in the format 'network://address.ContractName', e.g., 'testnet://0x1234567890abcdef.MyContract', or use a valid core contract name such as 'FlowToken'.", dep))
-				} else {
-					logger.Error(fmt.Sprintf("Error adding dependency %s: %v", dep, err))
+			} else {
+				if err := installer.AddBySourceString(dep); err != nil {
+					if strings.Contains(err.Error(), "invalid dependency source format") {
+						logger.Error(fmt.Sprintf("Error: '%s' is neither a core contract nor a valid dependency source format.\nPlease provide a valid dependency source in the format 'network://address.ContractName', e.g., 'testnet://0x1234567890abcdef.MyContract', or use a valid core contract name such as 'FlowToken'.", dep))
+					} else {
+						logger.Error(fmt.Sprintf("Error adding dependency %s: %v", dep, err))
+					}
+					return nil, err
 				}
-				return nil, err
 			}
 		}
 

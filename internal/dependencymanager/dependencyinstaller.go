@@ -265,6 +265,8 @@ func (di *DependencyInstaller) AddAllByNetworkAddress(sourceStr string) error {
 		return fmt.Errorf("failed to fetch account contracts: %w", err)
 	}
 
+	var dependencies []config.Dependency
+
 	for _, contract := range accountContracts {
 		program, err := project.NewProgram(contract, nil, "")
 		if err != nil {
@@ -276,23 +278,19 @@ func (di *DependencyInstaller) AddAllByNetworkAddress(sourceStr string) error {
 			return fmt.Errorf("failed to parse contract name: %w", err)
 		}
 
-		if err := di.handleFoundContract(network, address, contractName, program); err != nil {
-			return fmt.Errorf("failed to handle found contract: %w", err)
+		dep := config.Dependency{
+			Name: contractName,
+			Source: config.Source{
+				NetworkName:  network,
+				Address:      flowsdk.HexToAddress(address),
+				ContractName: contractName,
+			},
 		}
 
-		if program.HasAddressImports() {
-			imports := program.AddressImportDeclarations()
-			for _, imp := range imports {
-				contractName := imp.Identifiers[0].String()
-				err := di.fetchDependencies(network, flowsdk.HexToAddress(imp.Location.String()), contractName)
-				if err != nil {
-					return err
-				}
-			}
-		}
+		dependencies = append(dependencies, dep)
 	}
 
-	if err := di.saveState(); err != nil {
+	if err := di.AddMany(dependencies); err != nil {
 		return err
 	}
 
