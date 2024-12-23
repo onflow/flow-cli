@@ -250,6 +250,8 @@ func (di *DependencyInstaller) AddMany(dependencies []config.Dependency) error {
 		}
 	}
 
+	di.checkForConflictingContracts()
+
 	if err := di.saveState(); err != nil {
 		return err
 	}
