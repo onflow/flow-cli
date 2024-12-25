@@ -19,13 +19,18 @@
 package dependencymanager
 
 import (
+	"archive/zip"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/psiemens/sconfig"
 
 	"github.com/onflow/flow-cli/internal/prompt"
@@ -182,18 +187,22 @@ func (di *DependencyInstaller) Install() error {
 
 // AddBySourceString processes a single dependency and installs it and any dependencies it has, as well as adding it to the state
 func (di *DependencyInstaller) AddBySourceString(depSource string) error {
-	depNetwork, depAddress, depContractName, err := config.ParseSourceString(depSource)
+	source, err := config.NewSourceFromString(depSource)
 	if err != nil {
-		return fmt.Errorf("error parsing source: %w", err)
+		return fmt.Errorf("error parsing source string: %w", err)
+	}
+
+	var name string
+	switch s := source.(type) {
+	case *config.NetworkSource:
+		name = s.ContractName
+	case *config.GitSource:
+		name = s.Repo
 	}
 
 	dep := config.Dependency{
-		Name: depContractName,
-		Source: config.Source{
-			NetworkName:  depNetwork,
-			Address:      flowsdk.HexToAddress(depAddress),
-			ContractName: depContractName,
-		},
+		Name:   name,
+		Source: source,
 	}
 
 	return di.Add(dep)
@@ -217,7 +226,7 @@ func (di *DependencyInstaller) AddByCoreContractName(coreContractName string) er
 
 	dep := config.Dependency{
 		Name: depContractName,
-		Source: config.Source{
+		Source: &config.NetworkSource{
 			NetworkName:  depNetwork,
 			Address:      flowsdk.HexToAddress(depAddress),
 			ContractName: depContractName,
@@ -258,7 +267,11 @@ func (di *DependencyInstaller) AddMany(dependencies []config.Dependency) error {
 }
 
 func (di *DependencyInstaller) addDependency(dep config.Dependency) error {
-	sourceString := fmt.Sprintf("%s://%s.%s", dep.Source.NetworkName, dep.Source.Address.String(), dep.Source.ContractName)
+	networkSource, ok := dep.Source.(*config.NetworkSource)
+	if !ok {
+		return errors.New("dependency source is not a network source")
+	}
+	sourceString := fmt.Sprintf("%s://%s.%s", networkSource.NetworkName, networkSource.Address.String(), networkSource.ContractName)
 
 	if _, exists := di.dependencies[sourceString]; exists {
 		return nil
@@ -281,8 +294,16 @@ func (di *DependencyInstaller) checkForConflictingContracts() {
 }
 
 func (di *DependencyInstaller) processDependency(dependency config.Dependency) error {
-	depAddress := flowsdk.HexToAddress(dependency.Source.Address.String())
-	return di.fetchDependencies(dependency.Source.NetworkName, depAddress, dependency.Name, dependency.Source.ContractName)
+	switch source := dependency.Source.(type) {
+	case *config.NetworkSource:
+		depAddress := flowsdk.HexToAddress(source.Address.String())
+		return di.fetchDependencies(source.NetworkName, depAddress, dependency.Name, source.ContractName)
+
+	case *config.GitSource:
+		return di.fetchRepo(source.Path, source.Ref, filepath.Join(di.TargetDir, "imports", dependency.Name))
+	}
+
+	return fmt.Errorf("unsupported dependency source type: %T", dependency.Source)
 }
 
 func (di *DependencyInstaller) fetchDependencies(networkName string, address flowsdk.Address, assignedName, contractName string) error {
@@ -294,7 +315,7 @@ func (di *DependencyInstaller) fetchDependencies(networkName string, address flo
 
 	err := di.addDependency(config.Dependency{
 		Name: assignedName,
-		Source: config.Source{
+		Source: &config.NetworkSource{
 			NetworkName:  networkName,
 			Address:      address,
 			ContractName: contractName,
@@ -401,9 +422,13 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 	contractData := string(program.CodeWithUnprocessedImports())
 
 	dependency := di.State.Dependencies().ByName(assignedName)
+	networkSource, ok := dependency.Source.(*config.NetworkSource)
+	if !ok {
+		return errors.New("dependency source is not a network source")
+	}
 
 	// If a dependency by this name already exists and its remote source network or address does not match, then give option to stop or continue
-	if dependency != nil && (dependency.Source.NetworkName != networkName || dependency.Source.Address.String() != contractAddr) {
+	if dependency != nil && (networkSource.NetworkName != networkName || networkSource.Address.String() != contractAddr) {
 		di.Logger.Info(fmt.Sprintf("%s A dependency named %s already exists with a different remote source. Please fix the conflict and retry.", util.PrintEmoji("🚫"), assignedName))
 		os.Exit(0)
 		return nil
@@ -523,7 +548,7 @@ func (di *DependencyInstaller) updateDependencyAlias(contractName, aliasNetwork 
 func (di *DependencyInstaller) updateDependencyState(networkName, contractAddress, assignedName, contractName, contractHash string) error {
 	dep := config.Dependency{
 		Name: assignedName,
-		Source: config.Source{
+		Source: &config.NetworkSource{
 			NetworkName:  networkName,
 			Address:      flowsdk.HexToAddress(contractAddress),
 			ContractName: contractName,
@@ -541,5 +566,62 @@ func (di *DependencyInstaller) updateDependencyState(networkName, contractAddres
 		di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
 	}
 
+	return nil
+}
+
+func (dm *DependencyInstaller) fetchRepo(repoURL, hash string, destDir string) error {
+	repo, err := git.PlainClone(destDir, false, &git.CloneOptions{
+		URL: repoURL,
+	})
+	if err != nil {
+		return fmt.Errorf("could not download the scaffold: %w", err)
+	}
+
+	worktree, _ := repo.Worktree()
+	err = worktree.Checkout(&git.CheckoutOptions{
+		Hash:  plumbing.NewHash(hash),
+		Force: true,
+	})
+	if err != nil {
+		return fmt.Errorf("could not find the scaffold version")
+	}
+
+	return os.RemoveAll(filepath.Join(destDir, ".git"))
+}
+
+// Extract a ZIP file to the specified destination
+func extractZip(zipPath, destDir string) error {
+	r, err := zip.OpenReader(zipPath)
+	if err != nil {
+		return err
+	}
+	defer r.Close()
+
+	for _, file := range r.File {
+		destPath := filepath.Join(destDir, file.Name)
+		if file.FileInfo().IsDir() {
+			os.MkdirAll(destPath, os.ModePerm)
+			continue
+		}
+
+		// Create the file
+		outFile, err := os.OpenFile(destPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
+		if err != nil {
+			return err
+		}
+		defer outFile.Close()
+
+		// Copy file contents
+		rc, err := file.Open()
+		if err != nil {
+			return err
+		}
+		defer rc.Close()
+
+		_, err = io.Copy(outFile, rc)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

@@ -105,7 +105,7 @@ func PromptInstallCoreContracts(logger output.Logger, state *flowkit.State, targ
 		if slices.Contains(selectedContractNames, contract.Name) {
 			dependencies = append(dependencies, flowkitConfig.Dependency{
 				Name: contract.Name,
-				Source: flowkitConfig.Source{
+				Source: &flowkitConfig.NetworkSource{
 					NetworkName:  flowkitConfig.MainnetNetwork.Name,
 					Address:      flowsdk.HexToAddress(contract.Address.String()),
 					ContractName: contract.Name,
