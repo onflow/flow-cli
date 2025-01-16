@@ -39,10 +39,41 @@ var installFlags = Flags{}
 
 var installCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:   "install",
-		Short: "Install contract and dependencies.",
+		Use:   "install [dependencies...]",
+		Short: "Install contracts and their dependencies.",
+		Long: `Install Flow contracts and their dependencies.
+
+By default, this command will install any dependencies listed in the flow.json file at the root of your project. 
+You can also specify one or more dependencies directly on the command line, using any of the following formats:
+
+  • network://address
+  • network://address.ContractName
+  • core contract name (e.g., FlowToken, NonFungibleToken)
+
+Examples:
+  1. Install dependencies listed in flow.json:
+     flow dependencies install
+
+  2. Install a specific core contract by name:
+     flow dependencies install FlowToken
+
+  3. Install a single contract by network and address (all contracts at that address):
+     flow dependencies install testnet://0x1234abcd
+
+  4. Install a specific contract by network, address, and contract name:
+     flow dependencies install testnet://0x1234abcd.MyContract
+
+  5. Install multiple dependencies:
+     flow dependencies install FungibleToken NonFungibleToken
+     
+Note: 
+• Using 'network://address' will attempt to install all contracts deployed at that address.
+• Using 'network://address.ContractName' will install only the specified contract.
+• Specifying a known core contract (e.g., FlowToken) will install it from the official system contracts 
+  address on Mainnet or Testnet (depending on your project's default network).
+`,
 		Example: `flow dependencies install
-flow dependencies install testnet://0afe396ebc8eee65.FlowToken
+flow dependencies install testnet://0x7e60df042a9c0868.FlowToken
 flow dependencies install FlowToken
 flow dependencies install FlowToken NonFungibleToken`,
 		Args: cobra.ArbitraryArgs,
@@ -78,13 +109,26 @@ func install(
 				continue
 			}
 
-			if err := installer.AddBySourceString(dep); err != nil {
-				if strings.Contains(err.Error(), "invalid dependency source format") {
-					logger.Error(fmt.Sprintf("Error: '%s' is neither a core contract nor a valid dependency source format.\nPlease provide a valid dependency source in the format 'network://address.ContractName', e.g., 'testnet://0x1234567890abcdef.MyContract', or use a valid core contract name such as 'FlowToken'.", dep))
-				} else {
-					logger.Error(fmt.Sprintf("Error adding dependency %s: %v", dep, err))
+			// Check if the dependency is in the "network://address" format (address only)
+			hasContract, err := hasContractName(dep)
+			if err != nil {
+				return nil, fmt.Errorf("invalid dependency format")
+			}
+
+			if !hasContract {
+				if err := installer.AddAllByNetworkAddress(dep); err != nil {
+					logger.Error(fmt.Sprintf("Error adding contracts by address: %v", err))
+					return nil, err
 				}
-				return nil, err
+			} else {
+				if err := installer.AddBySourceString(dep); err != nil {
+					if strings.Contains(err.Error(), "invalid dependency source format") {
+						logger.Error(fmt.Sprintf("Error: '%s' is neither a core contract nor a valid dependency source format.\nPlease provide a valid dependency source in the format 'network://address.ContractName', e.g., 'testnet://0x1234567890abcdef.MyContract', or use a valid core contract name such as 'FlowToken'.", dep))
+					} else {
+						logger.Error(fmt.Sprintf("Error adding dependency %s: %v", dep, err))
+					}
+					return nil, err
+				}
 			}
 		}
 
@@ -119,4 +163,19 @@ func findCoreContractCaseInsensitive(name string) string {
 		}
 	}
 	return ""
+}
+
+// Check if the input is in "network://address" or "network://address.contract" format
+func hasContractName(dep string) (bool, error) {
+	parts := strings.SplitN(dep, "://", 2)
+	if len(parts) != 2 {
+		return false, fmt.Errorf("invalid format: missing '://'")
+	}
+
+	return strings.Contains(parts[1], "."), nil
+}
+
+func ParseNetworkAddressString(sourceStr string) (network, address string) {
+	parts := strings.Split(sourceStr, "://")
+	return parts[0], parts[1]
 }
