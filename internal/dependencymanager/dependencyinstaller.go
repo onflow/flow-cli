@@ -250,7 +250,49 @@ func (di *DependencyInstaller) AddMany(dependencies []config.Dependency) error {
 		}
 	}
 
+	di.checkForConflictingContracts()
+
 	if err := di.saveState(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (di *DependencyInstaller) AddAllByNetworkAddress(sourceStr string) error {
+	network, address := ParseNetworkAddressString(sourceStr)
+
+	accountContracts, err := di.getContracts(network, flowsdk.HexToAddress(address))
+	if err != nil {
+		return fmt.Errorf("failed to fetch account contracts: %w", err)
+	}
+
+	var dependencies []config.Dependency
+
+	for _, contract := range accountContracts {
+		program, err := project.NewProgram(contract, nil, "")
+		if err != nil {
+			return fmt.Errorf("failed to parse program: %w", err)
+		}
+
+		contractName, err := program.Name()
+		if err != nil {
+			return fmt.Errorf("failed to parse contract name: %w", err)
+		}
+
+		dep := config.Dependency{
+			Name: contractName,
+			Source: config.Source{
+				NetworkName:  network,
+				Address:      flowsdk.HexToAddress(address),
+				ContractName: contractName,
+			},
+		}
+
+		dependencies = append(dependencies, dep)
+	}
+
+	if err := di.AddMany(dependencies); err != nil {
 		return err
 	}
 
@@ -282,10 +324,33 @@ func (di *DependencyInstaller) checkForConflictingContracts() {
 
 func (di *DependencyInstaller) processDependency(dependency config.Dependency) error {
 	depAddress := flowsdk.HexToAddress(dependency.Source.Address.String())
-	return di.fetchDependencies(dependency.Source.NetworkName, depAddress, dependency.Name, dependency.Source.ContractName)
+	return di.fetchDependencies(dependency.Source.NetworkName, depAddress, dependency.Source.ContractName)
 }
 
-func (di *DependencyInstaller) fetchDependencies(networkName string, address flowsdk.Address, assignedName, contractName string) error {
+func (di *DependencyInstaller) getContracts(network string, address flowsdk.Address) (map[string][]byte, error) {
+	gw, ok := di.Gateways[network]
+	if !ok {
+		return nil, fmt.Errorf("gateway for network %s not found", network)
+	}
+
+	ctx := context.Background()
+	acct, err := gw.GetAccount(ctx, address)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get account at %s on %s: %w", address, network, err)
+	}
+
+	if acct == nil {
+		return nil, fmt.Errorf("no account found at address %s on network %s", address, network)
+	}
+
+	if len(acct.Contracts) == 0 {
+		return nil, fmt.Errorf("no contracts found at address %s on network %s", address, network)
+	}
+
+	return acct.Contracts, nil
+}
+
+func (di *DependencyInstaller) fetchDependencies(networkName string, address flowsdk.Address, contractName string) error {
 	sourceString := fmt.Sprintf("%s://%s.%s", networkName, address.String(), contractName)
 
 	if _, exists := di.dependencies[sourceString]; exists {
@@ -293,7 +358,7 @@ func (di *DependencyInstaller) fetchDependencies(networkName string, address flo
 	}
 
 	err := di.addDependency(config.Dependency{
-		Name: assignedName,
+		Name: contractName,
 		Source: config.Source{
 			NetworkName:  networkName,
 			Address:      address,
@@ -304,20 +369,12 @@ func (di *DependencyInstaller) fetchDependencies(networkName string, address flo
 		return fmt.Errorf("error adding dependency: %w", err)
 	}
 
-	ctx := context.Background()
-	account, err := di.Gateways[networkName].GetAccount(ctx, address)
+	accountContracts, err := di.getContracts(networkName, address)
 	if err != nil {
-		return fmt.Errorf("failed to get account: %w", err)
-	}
-	if account == nil {
-		return fmt.Errorf("account is nil for address: %s", address)
+		return fmt.Errorf("error fetching contracts: %w", err)
 	}
 
-	if account.Contracts == nil {
-		return fmt.Errorf("contracts are nil for account: %s", address)
-	}
-
-	contract, ok := account.Contracts[contractName]
+	contract, ok := accountContracts[contractName]
 	if !ok {
 		return fmt.Errorf("contract %s not found at address %s", contractName, address.String())
 	}
@@ -327,16 +384,7 @@ func (di *DependencyInstaller) fetchDependencies(networkName string, address flo
 		return fmt.Errorf("failed to parse program: %w", err)
 	}
 
-	parsedContractName, err := program.Name()
-	if err != nil {
-		return fmt.Errorf("failed to parse contract name: %w", err)
-	}
-
-	if parsedContractName != contractName {
-		return fmt.Errorf("contract name mismatch: expected %s, got %s", contractName, parsedContractName)
-	}
-
-	if err := di.handleFoundContract(networkName, address.String(), assignedName, contractName, program); err != nil {
+	if err := di.handleFoundContract(networkName, address.String(), contractName, program); err != nil {
 		return fmt.Errorf("failed to handle found contract: %w", err)
 	}
 
@@ -344,7 +392,7 @@ func (di *DependencyInstaller) fetchDependencies(networkName string, address flo
 		imports := program.AddressImportDeclarations()
 		for _, imp := range imports {
 			contractName := imp.Identifiers[0].String()
-			err := di.fetchDependencies(networkName, flowsdk.HexToAddress(imp.Location.String()), contractName, contractName)
+			err := di.fetchDependencies(networkName, flowsdk.HexToAddress(imp.Location.String()), contractName)
 			if err != nil {
 				return err
 			}
@@ -392,7 +440,7 @@ func (di *DependencyInstaller) handleFileSystem(contractAddr, contractName, cont
 	return nil
 }
 
-func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, assignedName, contractName string, program *project.Program) error {
+func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, contractName string, program *project.Program) error {
 	hash := sha256.New()
 	hash.Write(program.CodeWithUnprocessedImports())
 	originalContractDataHash := hex.EncodeToString(hash.Sum(nil))
@@ -400,11 +448,11 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 	program.ConvertAddressImports()
 	contractData := string(program.CodeWithUnprocessedImports())
 
-	dependency := di.State.Dependencies().ByName(assignedName)
+	dependency := di.State.Dependencies().ByName(contractName)
 
 	// If a dependency by this name already exists and its remote source network or address does not match, then give option to stop or continue
 	if dependency != nil && (dependency.Source.NetworkName != networkName || dependency.Source.Address.String() != contractAddr) {
-		di.Logger.Info(fmt.Sprintf("%s A dependency named %s already exists with a different remote source. Please fix the conflict and retry.", util.PrintEmoji("🚫"), assignedName))
+		di.Logger.Info(fmt.Sprintf("%s A dependency named %s already exists with a different remote source. Please fix the conflict and retry.", util.PrintEmoji("🚫"), contractName))
 		os.Exit(0)
 		return nil
 	}
@@ -419,7 +467,7 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 		}
 	}
 
-	err := di.updateDependencyState(networkName, contractAddr, assignedName, contractName, originalContractDataHash)
+	err := di.updateDependencyState(networkName, contractAddr, contractName, originalContractDataHash)
 	if err != nil {
 		di.Logger.Error(fmt.Sprintf("Error updating state: %v", err))
 		return err
@@ -520,9 +568,9 @@ func (di *DependencyInstaller) updateDependencyAlias(contractName, aliasNetwork 
 	return nil
 }
 
-func (di *DependencyInstaller) updateDependencyState(networkName, contractAddress, assignedName, contractName, contractHash string) error {
+func (di *DependencyInstaller) updateDependencyState(networkName, contractAddress, contractName, contractHash string) error {
 	dep := config.Dependency{
-		Name: assignedName,
+		Name: contractName,
 		Source: config.Source{
 			NetworkName:  networkName,
 			Address:      flowsdk.HexToAddress(contractAddress),
