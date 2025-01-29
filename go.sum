@@ -2205,8 +2205,8 @@ github.com/onflow/flixkit-go/v2 v2.2.1 h1:DXE55Ckrfgfr6V+Bn5ci0RSb/+Fi3n65N8Ogv9
 github.com/onflow/flixkit-go/v2 v2.2.1/go.mod h1:iSyTybGXubZ6gv0NRzveSeI5PvOmShMqS3WYVT7tLAg=
 github.com/onflow/flow-core-contracts/lib/go/contracts v1.3.1 h1:q9tXLIALwQ76bO4bmSrhtTkyc2cZF4/gH11ix9E3F5k=
 github.com/onflow/flow-core-contracts/lib/go/contracts v1.3.1/go.mod h1:u/mkP/B+PbV33tEG3qfkhhBlydSvAKxfLZSfB4lsJHg=
-github.com/onflow/flow-core-contracts/lib/go/templates v1.4.0 h1:u2DAG8pk0xFH7TwS70t1gSZ/FtIIZWMSNyiu4SeXBYg=
-github.com/onflow/flow-core-contracts/lib/go/templates v1.4.0/go.mod h1:pN768Al/wLRlf3bwugv9TyxniqJxMu4sxnX9eQJam64=
+github.com/onflow/flow-core-contracts/lib/go/templates v1.5.0 h1:foKXHHzPxiwLg/2S+FYsmIHRDe0TbkJF+Zb5NSYg/lE=
+github.com/onflow/flow-core-contracts/lib/go/templates v1.5.0/go.mod h1:pN768Al/wLRlf3bwugv9TyxniqJxMu4sxnX9eQJam64=
 github.com/onflow/flow-emulator v1.0.1 h1:yQc/YOzj4jJ4hPhWtzDTR4KXTq02LNXySMsU1ZK1uEw=
 github.com/onflow/flow-emulator v1.0.1/go.mod h1:xDln3yR7WNfv+45RojHlezV0N8QziMrII16agWaOwFE=
 github.com/onflow/flow-evm-gateway v0.36.5-0.20241005010031-1f3f5439d553 h1:FCDMPsHKT59j0AkwloTG05D4jvz+hGAYlep/OyoiCgs=
