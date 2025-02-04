@@ -416,3 +416,21 @@ func (e CheckerEnvironment) DecodeArgument(argument []byte, argumentType cadence
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
+
+func (e CheckerEnvironment) ResolveLocation(
+	identifiers []ast.Identifier,
+	location common.Location,
+) ([]runtime.ResolvedLocation, error) {
+	// TODO:
+	var cryptoContractAddress common.Address
+
+	return environment.ResolveLocation(
+		identifiers,
+		location,
+		func(address flow.Address) ([]string, error) {
+			// TODO:
+			return nil, nil
+		},
+		cryptoContractAddress,
+	)
+}
