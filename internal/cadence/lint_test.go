@@ -51,15 +51,18 @@ func Test_Lint(t *testing.T) {
 		results, err := lintFiles(state, "NoError.cdc")
 		require.NoError(t, err)
 
-		require.Equal(t, &lintResult{
-			Results: []fileResult{
-				{
-					FilePath:    "NoError.cdc",
-					Diagnostics: []analysis.Diagnostic{},
+		require.Equal(t,
+			&lintResult{
+				Results: []fileResult{
+					{
+						FilePath:    "NoError.cdc",
+						Diagnostics: []analysis.Diagnostic{},
+					},
 				},
+				exitCode: 0,
 			},
-			exitCode: 0,
-		}, results)
+			results,
+		)
 	})
 
 	t.Run("lints file with import", func(t *testing.T) {
@@ -71,15 +74,18 @@ func Test_Lint(t *testing.T) {
 		require.NoError(t, err)
 
 		// Should not have results for imported file, only for the file being linted
-		require.Equal(t, &lintResult{
-			Results: []fileResult{
-				{
-					FilePath:    "foo/WithImports.cdc",
-					Diagnostics: []analysis.Diagnostic{},
+		require.Equal(t,
+			&lintResult{
+				Results: []fileResult{
+					{
+						FilePath:    "foo/WithImports.cdc",
+						Diagnostics: []analysis.Diagnostic{},
+					},
 				},
+				exitCode: 0,
 			},
-			exitCode: 0,
-		}, results)
+			results,
+		)
 	})
 
 	t.Run("lints multiple files", func(t *testing.T) {
@@ -90,19 +96,22 @@ func Test_Lint(t *testing.T) {
 		results, err := lintFiles(state, "NoError.cdc", "foo/WithImports.cdc")
 		require.NoError(t, err)
 
-		require.Equal(t, &lintResult{
-			Results: []fileResult{
-				{
-					FilePath:    "NoError.cdc",
-					Diagnostics: []analysis.Diagnostic{},
+		require.Equal(t,
+			&lintResult{
+				Results: []fileResult{
+					{
+						FilePath:    "NoError.cdc",
+						Diagnostics: []analysis.Diagnostic{},
+					},
+					{
+						FilePath:    "foo/WithImports.cdc",
+						Diagnostics: []analysis.Diagnostic{},
+					},
 				},
-				{
-					FilePath:    "foo/WithImports.cdc",
-					Diagnostics: []analysis.Diagnostic{},
-				},
+				exitCode: 0,
 			},
-			exitCode: 0,
-		}, results)
+			results,
+		)
 	})
 
 	t.Run("lints file with warning", func(t *testing.T) {
@@ -113,25 +122,28 @@ func Test_Lint(t *testing.T) {
 		results, err := lintFiles(state, "LintWarning.cdc")
 		require.NoError(t, err)
 
-		require.Equal(t, &lintResult{
-			Results: []fileResult{
-				{
-					FilePath: "LintWarning.cdc",
-					Diagnostics: []analysis.Diagnostic{
-						{
-							Category: "removal-hint",
-							Message:  "unnecessary force operator",
-							Location: common.StringLocation("LintWarning.cdc"),
-							Range: ast.Range{
-								StartPos: ast.Position{Line: 4, Column: 11, Offset: 59},
-								EndPos:   ast.Position{Line: 4, Column: 12, Offset: 60},
+		require.Equal(t,
+			&lintResult{
+				Results: []fileResult{
+					{
+						FilePath: "LintWarning.cdc",
+						Diagnostics: []analysis.Diagnostic{
+							{
+								Category: "removal-hint",
+								Message:  "unnecessary force operator",
+								Location: common.StringLocation("LintWarning.cdc"),
+								Range: ast.Range{
+									StartPos: ast.Position{Line: 4, Column: 11, Offset: 59},
+									EndPos:   ast.Position{Line: 4, Column: 12, Offset: 60},
+								},
 							},
 						},
 					},
 				},
+				exitCode: 0,
 			},
-			exitCode: 0,
-		}, results)
+			results,
+		)
 	})
 
 	t.Run("lints file with error", func(t *testing.T) {
@@ -142,44 +154,47 @@ func Test_Lint(t *testing.T) {
 		results, err := lintFiles(state, "LintError.cdc")
 		require.NoError(t, err)
 
-		require.Equal(t, &lintResult{
-			Results: []fileResult{
-				{
-					FilePath: "LintError.cdc",
-					Diagnostics: []analysis.Diagnostic{
-						{
-							Category: "removal-hint",
-							Message:  "unnecessary force operator",
-							Location: common.StringLocation("LintError.cdc"),
-							Range: ast.Range{
-								StartPos: ast.Position{Line: 4, Column: 11, Offset: 57},
-								EndPos:   ast.Position{Line: 4, Column: 12, Offset: 58},
+		require.Equal(t,
+			&lintResult{
+				Results: []fileResult{
+					{
+						FilePath: "LintError.cdc",
+						Diagnostics: []analysis.Diagnostic{
+							{
+								Category: "removal-hint",
+								Message:  "unnecessary force operator",
+								Location: common.StringLocation("LintError.cdc"),
+								Range: ast.Range{
+									StartPos: ast.Position{Line: 4, Column: 11, Offset: 57},
+									EndPos:   ast.Position{Line: 4, Column: 12, Offset: 58},
+								},
 							},
-						},
-						{
-							Category:         "semantic-error",
-							Message:          "cannot find variable in this scope: `qqq`",
-							SecondaryMessage: "not found in this scope",
-							Location:         common.StringLocation("LintError.cdc"),
-							Range: ast.Range{
-								StartPos: ast.Position{Line: 5, Column: 3, Offset: 63},
-								EndPos:   ast.Position{Line: 5, Column: 5, Offset: 65},
+							{
+								Category:         "semantic-error",
+								Message:          "cannot find variable in this scope: `qqq`",
+								SecondaryMessage: "not found in this scope",
+								Location:         common.StringLocation("LintError.cdc"),
+								Range: ast.Range{
+									StartPos: ast.Position{Line: 5, Column: 3, Offset: 63},
+									EndPos:   ast.Position{Line: 5, Column: 5, Offset: 65},
+								},
 							},
-						},
-						{
-							Location: common.StringLocation("LintError.cdc"),
-							Category: "unused-result-hint",
-							Message:  "unused result",
-							Range: ast.Range{
-								StartPos: ast.Position{Offset: 63, Line: 5, Column: 3},
-								EndPos:   ast.Position{Offset: 65, Line: 5, Column: 5},
+							{
+								Location: common.StringLocation("LintError.cdc"),
+								Category: "unused-result-hint",
+								Message:  "unused result",
+								Range: ast.Range{
+									StartPos: ast.Position{Offset: 63, Line: 5, Column: 3},
+									EndPos:   ast.Position{Offset: 65, Line: 5, Column: 5},
+								},
 							},
 						},
 					},
 				},
+				exitCode: 1,
 			},
-			exitCode: 1,
-		}, results)
+			results,
+		)
 	})
 
 	t.Run("linter resolves imports from flowkit state", func(t *testing.T) {
@@ -190,15 +205,18 @@ func Test_Lint(t *testing.T) {
 		results, err := lintFiles(state, "WithFlowkitImport.cdc")
 		require.NoError(t, err)
 
-		require.Equal(t, results, &lintResult{
-			Results: []fileResult{
-				{
-					FilePath:    "WithFlowkitImport.cdc",
-					Diagnostics: []analysis.Diagnostic{},
+		require.Equal(t,
+			&lintResult{
+				Results: []fileResult{
+					{
+						FilePath:    "WithFlowkitImport.cdc",
+						Diagnostics: []analysis.Diagnostic{},
+					},
 				},
+				exitCode: 0,
 			},
-			exitCode: 0,
-		})
+			results,
+		)
 	})
 
 	t.Run("resolves stdlib imports contracts", func(t *testing.T) {
@@ -210,26 +228,29 @@ func Test_Lint(t *testing.T) {
 		require.NoError(t, err)
 
 		// Expects an error because getAuthAccount is only available in scripts
-		require.Equal(t, results, &lintResult{
-			Results: []fileResult{
-				{
-					FilePath: "StdlibImportsContract.cdc",
-					Diagnostics: []analysis.Diagnostic{
-						{
-							Category:         "semantic-error",
-							Message:          "cannot find variable in this scope: `getAuthAccount`",
-							SecondaryMessage: "not found in this scope",
-							Location:         common.StringLocation("StdlibImportsContract.cdc"),
-							Range: ast.Range{
-								StartPos: ast.Position{Line: 7, Column: 13, Offset: 114},
-								EndPos:   ast.Position{Line: 7, Column: 26, Offset: 127},
+		require.Equal(t,
+			&lintResult{
+				Results: []fileResult{
+					{
+						FilePath: "StdlibImportsContract.cdc",
+						Diagnostics: []analysis.Diagnostic{
+							{
+								Category:         "semantic-error",
+								Message:          "cannot find variable in this scope: `getAuthAccount`",
+								SecondaryMessage: "not found in this scope",
+								Location:         common.StringLocation("StdlibImportsContract.cdc"),
+								Range: ast.Range{
+									StartPos: ast.Position{Line: 7, Column: 13, Offset: 114},
+									EndPos:   ast.Position{Line: 7, Column: 26, Offset: 127},
+								},
 							},
 						},
 					},
 				},
+				exitCode: 1,
 			},
-			exitCode: 1,
-		})
+			results,
+		)
 	})
 
 	t.Run("resolves stdlib imports transactions", func(t *testing.T) {
@@ -241,26 +262,29 @@ func Test_Lint(t *testing.T) {
 		require.NoError(t, err)
 
 		// Expects an error because getAuthAccount is only available in scripts
-		require.Equal(t, results, &lintResult{
-			Results: []fileResult{
-				{
-					FilePath: "StdlibImportsTransaction.cdc",
-					Diagnostics: []analysis.Diagnostic{
-						{
-							Category:         "semantic-error",
-							Message:          "cannot find variable in this scope: `getAuthAccount`",
-							SecondaryMessage: "not found in this scope",
-							Location:         common.StringLocation("StdlibImportsTransaction.cdc"),
-							Range: ast.Range{
-								StartPos: ast.Position{Line: 7, Column: 13, Offset: 113},
-								EndPos:   ast.Position{Line: 7, Column: 26, Offset: 126},
+		require.Equal(t,
+			&lintResult{
+				Results: []fileResult{
+					{
+						FilePath: "StdlibImportsTransaction.cdc",
+						Diagnostics: []analysis.Diagnostic{
+							{
+								Category:         "semantic-error",
+								Message:          "cannot find variable in this scope: `getAuthAccount`",
+								SecondaryMessage: "not found in this scope",
+								Location:         common.StringLocation("StdlibImportsTransaction.cdc"),
+								Range: ast.Range{
+									StartPos: ast.Position{Line: 7, Column: 13, Offset: 113},
+									EndPos:   ast.Position{Line: 7, Column: 26, Offset: 126},
+								},
 							},
 						},
 					},
 				},
+				exitCode: 1,
 			},
-			exitCode: 1,
-		})
+			results,
+		)
 	})
 
 	t.Run("resolves stdlib imports scripts", func(t *testing.T) {
@@ -271,15 +295,18 @@ func Test_Lint(t *testing.T) {
 		results, err := lintFiles(state, "StdlibImportsScript.cdc")
 		require.NoError(t, err)
 
-		require.Equal(t, results, &lintResult{
-			Results: []fileResult{
-				{
-					FilePath:    "StdlibImportsScript.cdc",
-					Diagnostics: []analysis.Diagnostic{},
+		require.Equal(t,
+			&lintResult{
+				Results: []fileResult{
+					{
+						FilePath:    "StdlibImportsScript.cdc",
+						Diagnostics: []analysis.Diagnostic{},
+					},
 				},
+				exitCode: 0,
 			},
-			exitCode: 0,
-		})
+			results,
+		)
 	})
 }
 
