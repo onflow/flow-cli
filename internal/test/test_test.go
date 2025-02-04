@@ -344,11 +344,14 @@ func TestExecutingTests(t *testing.T) {
 				"A.0000000000000002.FungibleTokenSwitchboard",
 				"I.BlockchainHelpers",
 				"A.0000000000000001.Burner",
+				"A.0000000000000002.USDCFlow",
+				"A.0000000000000001.NFTStorefrontV2",
+				"A.0000000000000001.Crypto",
 			},
 			coverageReport.ExcludedLocationIDs(),
 		)
 
-		expected := "Coverage: 93.8% of statements"
+		expected := "Coverage: 93.9% of statements"
 
 		assert.Equal(
 			t,
@@ -446,6 +449,9 @@ func TestExecutingTests(t *testing.T) {
 				"A.0000000000000002.FungibleTokenSwitchboard",
 				"I.BlockchainHelpers",
 				"A.0000000000000001.Burner",
+				"A.0000000000000001.Crypto",
+				"A.0000000000000001.NFTStorefrontV2",
+				"A.0000000000000002.USDCFlow",
 			},
 			coverageReport.ExcludedLocationIDs(),
 		)
