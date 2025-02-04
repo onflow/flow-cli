@@ -21,8 +21,8 @@ package cadence
 import (
 	"testing"
 
-	"github.com/onflow/cadence/runtime/ast"
-	"github.com/onflow/cadence/runtime/common"
+	"github.com/onflow/cadence/ast"
+	"github.com/onflow/cadence/common"
 	"github.com/onflow/cadence/tools/analysis"
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"
