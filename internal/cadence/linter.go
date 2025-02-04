@@ -166,7 +166,6 @@ func (l *linter) newCheckerConfig(env *util.CheckerEnvironment) *sema.Config {
 		ExtendedElaborationEnabled: true, // Must be enabled for linters
 		ImportHandler:              l.handleImport,
 		SuggestionsEnabled:         true, // Must be enabled to offer semantic suggestions
-		AttachmentsEnabled:         true,
 	}
 }
 
@@ -189,11 +188,6 @@ func (l *linter) handleImport(
 	error,
 ) {
 	switch importedLocation {
-	case stdlib.CryptoCheckerLocation:
-		cryptoChecker := stdlib.CryptoChecker()
-		return sema.ElaborationImport{
-			Elaboration: cryptoChecker.Elaboration,
-		}, nil
 	case stdlib.TestContractLocation:
 		testChecker := stdlib.GetTestContractType().Checker
 		return sema.ElaborationImport{
