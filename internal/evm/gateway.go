@@ -81,13 +81,12 @@ var gatewayCommand = &command.Command{
 		readerWriter flowkit.ReaderWriter,
 		flow flowkit.Services,
 	) (command.Result, error) {
-		cfg := &config.Config{
+		cfg := config.Config{
 			DatabaseDir:       flagGateway.DatabaseDir,
 			AccessNodeHost:    flagGateway.AccessNodeHost,
 			RPCPort:           flagGateway.RPCPort,
 			RPCHost:           flagGateway.RPCHost,
 			InitCadenceHeight: flagGateway.InitCadenceHeight,
-			CreateCOAResource: flagGateway.CreateCOAResource,
 		}
 
 		if flagGateway.Coinbase == "" {
@@ -131,7 +130,8 @@ var gatewayCommand = &command.Command{
 
 		ctx, cancel := context.WithCancel(context.Background())
 
-		ready := make(chan struct{})
+		readyChan := make(chan struct{})
+		ready := func() { close(readyChan) }
 		go func() {
 			err = bootstrap.Run(ctx, cfg, ready)
 			if err != nil {
@@ -139,7 +139,7 @@ var gatewayCommand = &command.Command{
 			}
 		}()
 
-		<-ready
+		<-readyChan
 
 		osSig := make(chan os.Signal, 1)
 		signal.Notify(osSig, syscall.SIGINT, syscall.SIGTERM)
