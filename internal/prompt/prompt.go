@@ -19,6 +19,7 @@
 package prompt
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -211,7 +212,7 @@ func addressPrompt(label, errorMessage string) string {
 		Label: label,
 		Validate: func(s string) error {
 			if flow.HexToAddress(s) == flow.EmptyAddress {
-				return fmt.Errorf("%v", errorMessage)
+				return errors.New(errorMessage)
 			}
 			return nil
 		},
@@ -233,7 +234,7 @@ func AddressPromptOrEmpty(label, errorMessage string) string {
 				return nil
 			}
 			if flow.HexToAddress(s) == flow.EmptyAddress {
-				return fmt.Errorf("%v", errorMessage)
+				return errors.New(errorMessage)
 			}
 			return nil
 		},
