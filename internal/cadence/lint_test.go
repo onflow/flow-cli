@@ -240,8 +240,8 @@ func Test_Lint(t *testing.T) {
 								SecondaryMessage: "not found in this scope",
 								Location:         common.StringLocation("StdlibImportsContract.cdc"),
 								Range: ast.Range{
-									StartPos: ast.Position{Line: 7, Column: 13, Offset: 114},
-									EndPos:   ast.Position{Line: 7, Column: 26, Offset: 127},
+									StartPos: ast.Position{Line: 6, Column: 13, Offset: 99},
+									EndPos:   ast.Position{Line: 6, Column: 26, Offset: 112},
 								},
 							},
 						},
@@ -274,8 +274,8 @@ func Test_Lint(t *testing.T) {
 								SecondaryMessage: "not found in this scope",
 								Location:         common.StringLocation("StdlibImportsTransaction.cdc"),
 								Range: ast.Range{
-									StartPos: ast.Position{Line: 7, Column: 13, Offset: 113},
-									EndPos:   ast.Position{Line: 7, Column: 26, Offset: 126},
+									StartPos: ast.Position{Line: 6, Column: 13, Offset: 98},
+									EndPos:   ast.Position{Line: 6, Column: 26, Offset: 111},
 								},
 							},
 						},
@@ -353,7 +353,6 @@ func setupMockState(t *testing.T) *flowkit.State {
 		}
 	}`), 0644)
 	_ = afero.WriteFile(mockFs, "StdlibImportsContract.cdc", []byte(`
-	import Crypto
 	import Test
 	import BlockchainHelpers
 	access(all) contract WithImports{
@@ -364,7 +363,6 @@ func setupMockState(t *testing.T) *flowkit.State {
 	}
 	`), 0644)
 	_ = afero.WriteFile(mockFs, "StdlibImportsTransaction.cdc", []byte(`
-	import Crypto
 	import Test
 	import BlockchainHelpers
 	transaction {
@@ -375,7 +373,6 @@ func setupMockState(t *testing.T) *flowkit.State {
 	}
 	`), 0644)
 	_ = afero.WriteFile(mockFs, "StdlibImportsScript.cdc", []byte(`
-	import Crypto
 	import Test
 	import BlockchainHelpers
 	access(all) fun main(): Void {
