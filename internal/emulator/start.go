@@ -40,8 +40,8 @@ var Cmd *cobra.Command
 
 func configuredServiceKey(
 	init bool,
-	sigAlgo crypto.SignatureAlgorithm,
-	hashAlgo crypto.HashAlgorithm,
+	_ crypto.SignatureAlgorithm,
+	_ crypto.HashAlgorithm,
 ) (
 	crypto.PrivateKey,
 	crypto.SignatureAlgorithm,
