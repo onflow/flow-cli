@@ -211,7 +211,7 @@ func addressPrompt(label, errorMessage string) string {
 		Label: label,
 		Validate: func(s string) error {
 			if flow.HexToAddress(s) == flow.EmptyAddress {
-				return fmt.Errorf(errorMessage)
+				return fmt.Errorf("%v", errorMessage)
 			}
 			return nil
 		},
@@ -233,7 +233,7 @@ func AddressPromptOrEmpty(label, errorMessage string) string {
 				return nil
 			}
 			if flow.HexToAddress(s) == flow.EmptyAddress {
-				return fmt.Errorf(errorMessage)
+				return fmt.Errorf("%v", errorMessage)
 			}
 			return nil
 		},

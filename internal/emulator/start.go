@@ -25,7 +25,6 @@ import (
 	"sync"
 
 	"github.com/onflow/flow-emulator/cmd/emulator/start"
-	"github.com/onflow/flow-emulator/emulator"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -54,14 +53,6 @@ func configuredServiceKey(
 	command.UsageMetrics(Cmd, &sync.WaitGroup{})
 
 	if init {
-		if sigAlgo == crypto.UnknownSignatureAlgorithm {
-			sigAlgo = emulator.DefaultServiceKeySigAlgo
-		}
-
-		if hashAlgo == crypto.UnknownHashAlgorithm {
-			hashAlgo = emulator.DefaultServiceKeyHashAlgo
-		}
-
 		state, err = flowkit.Init(loader)
 		if err != nil {
 			exitf(1, err.Error())
