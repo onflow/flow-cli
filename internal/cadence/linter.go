@@ -19,22 +19,21 @@
 package cadence
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
-
-	"errors"
 
 	"github.com/onflow/flow-cli/internal/util"
 
 	cdclint "github.com/onflow/cadence-tools/lint"
 	cdctests "github.com/onflow/cadence-tools/test/helpers"
-	"github.com/onflow/cadence/runtime/ast"
-	"github.com/onflow/cadence/runtime/common"
-	cdcerrors "github.com/onflow/cadence/runtime/errors"
-	"github.com/onflow/cadence/runtime/parser"
-	"github.com/onflow/cadence/runtime/sema"
-	"github.com/onflow/cadence/runtime/stdlib"
+	"github.com/onflow/cadence/ast"
+	"github.com/onflow/cadence/common"
+	cdcerrors "github.com/onflow/cadence/errors"
+	"github.com/onflow/cadence/parser"
+	"github.com/onflow/cadence/sema"
+	"github.com/onflow/cadence/stdlib"
 	"github.com/onflow/cadence/tools/analysis"
 	"github.com/onflow/flowkit/v2"
 	"golang.org/x/exp/maps"
@@ -167,7 +166,6 @@ func (l *linter) newCheckerConfig(env *util.CheckerEnvironment) *sema.Config {
 		ExtendedElaborationEnabled: true, // Must be enabled for linters
 		ImportHandler:              l.handleImport,
 		SuggestionsEnabled:         true, // Must be enabled to offer semantic suggestions
-		AttachmentsEnabled:         true,
 	}
 }
 
@@ -190,11 +188,6 @@ func (l *linter) handleImport(
 	error,
 ) {
 	switch importedLocation {
-	case stdlib.CryptoCheckerLocation:
-		cryptoChecker := stdlib.CryptoChecker()
-		return sema.ElaborationImport{
-			Elaboration: cryptoChecker.Elaboration,
-		}, nil
 	case stdlib.TestContractLocation:
 		testChecker := stdlib.GetTestContractType().Checker
 		return sema.ElaborationImport{

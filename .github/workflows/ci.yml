@@ -19,6 +19,9 @@ defaults:
   run:
     shell: bash
 
+env:
+  GO_VERSION: "1.23"
+
 jobs:
   test:
     strategy:
@@ -26,12 +29,10 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: ${{ env.GO_VERSION }}
       - name: Run tests
         run: |
           make ci
@@ -48,15 +49,15 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: ${{ env.GO_VERSION }}
       - name: generate
         run: make generate
       - uses: golangci/golangci-lint-action@v6.2.0
         with:
-          version: v1.59.0
+          version: v1.63.4
           only-new-issues: true
           skip-pkg-cache: true
           args: --timeout=3m
