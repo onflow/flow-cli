@@ -820,8 +820,8 @@ github.com/onflow/bridged-usdc/lib/go/contracts v1.0.0 h1:ofdfKH8KgY6qVFnlngTont
 github.com/onflow/bridged-usdc/lib/go/contracts v1.0.0/go.mod h1:K4/oaEhhnSuJ9q6fpq1w9WEWRGtkNskhmoyH8t+X9Mk=
 github.com/onflow/cadence v1.3.1 h1:bs9TFHQy8HHbwTtCtg5cLdyndWhmwq55RSwID1cb220=
 github.com/onflow/cadence v1.3.1/go.mod h1:6/47FljVAdl3/31tShI8JOJW0sXYZHK1PwXkE+yk0qA=
-github.com/onflow/cadence-tools/languageserver v1.2.0 h1:5iNLvjNpjjRu5V7CNiKE/TZXG1fLRyy9iuN4EHzFq4Q=
-github.com/onflow/cadence-tools/languageserver v1.2.0/go.mod h1:T+6ujN2jowzoPjUkEno+Nbofl7R3/GtIWEvxxgW0ZMY=
+github.com/onflow/cadence-tools/languageserver v1.2.1 h1:2cBdS3iEj1ht/+5G+Ks6QY7l4OIbun3qdM4sNa7ydL8=
+github.com/onflow/cadence-tools/languageserver v1.2.1/go.mod h1:MQIE+SrxfllGrzdAvQ8xECl3RmosRDSEVJBH5LVt1TQ=
 github.com/onflow/cadence-tools/lint v1.2.0 h1:bZtCRK96kkc4CrQ3KGdjBNI9tyND+vxgkRLa4BSGkjA=
 github.com/onflow/cadence-tools/lint v1.2.0/go.mod h1:aCtvDfeIMrLY4GTsm2j/nqU/9pc9MASIDiu4N5EJphY=
 github.com/onflow/cadence-tools/test v1.2.0 h1:dodKAWTCIXka7bhAtA6XW8lg+AdKsSQl+uGx0yNMXBQ=
