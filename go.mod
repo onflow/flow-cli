@@ -6,7 +6,7 @@ toolchain go1.23.4
 
 require (
 	github.com/charmbracelet/bubbles v0.19.0
-	github.com/charmbracelet/bubbletea v1.3.3
+	github.com/charmbracelet/bubbletea v1.3.4
 	github.com/coreos/go-semver v0.3.1
 	github.com/dukex/mixpanel v1.0.1
 	github.com/getsentry/sentry-go v0.31.1
