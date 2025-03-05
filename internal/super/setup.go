@@ -74,6 +74,7 @@ func create(
 	var err error
 
 	if setupFlags.Scaffold || setupFlags.ScaffoldID != 0 {
+		fmt.Println("`scaffold` and `scaffold-id` are deprecated, and will be removed in a future release.")
 		// Error if no project name is given
 		if len(args) < 1 || args[0] == "" {
 			return nil, fmt.Errorf("no project name provided")
