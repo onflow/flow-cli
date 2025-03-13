@@ -41,7 +41,7 @@ func (o TransactionTemplate) GetType() string {
 	return "transaction"
 }
 
-// GetTemplate returns an empty string for scripts and transactions
+// GetTemplatePath returns an empty string for scripts and transactions
 func (o TransactionTemplate) GetTemplatePath() string {
 	if o.TemplatePath == "" {
 		return "transaction_init.cdc.tmpl"
