@@ -40,7 +40,7 @@ func (t TestTemplate) GetType() string {
 	return "test"
 }
 
-// GetTemplate returns an empty string for scripts and transactions
+// GetTemplatePath returns an empty string for scripts and transactions
 func (t TestTemplate) GetTemplatePath() string {
 	if t.TemplatePath == "" {
 		return "empty_test.cdc.tmpl"

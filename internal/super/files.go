@@ -190,7 +190,7 @@ func (f *projectFiles) watch() (<-chan accountChange, <-chan contractChange, err
 	return accounts, contracts, nil
 }
 
-// getFilePaths returns a list of only Cadence files that are inside the provided directory.
+// getCadenceFilepaths returns a list of only Cadence files that are inside the provided directory.
 func (f *projectFiles) getCadenceFilepaths(dir string) ([]string, error) {
 	dir = filepath.Join(f.cadencePath, dir)
 	paths := make([]string, 0)
