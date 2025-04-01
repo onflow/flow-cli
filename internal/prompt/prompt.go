@@ -207,10 +207,13 @@ func secureNetworkKeyPrompt() string {
 	return networkKey
 }
 
-func addressPrompt(label, errorMessage string) string {
+func addressPrompt(label, errorMessage string, allowEmpty bool) string {
 	addressPrompt := promptui.Prompt{
 		Label: label,
 		Validate: func(s string) error {
+			if allowEmpty && s == "" {
+				return nil
+			}
 			if flow.HexToAddress(s) == flow.EmptyAddress {
 				return errors.New(errorMessage)
 			}
@@ -227,25 +230,7 @@ func addressPrompt(label, errorMessage string) string {
 }
 
 func AddressPromptOrEmpty(label, errorMessage string) string {
-	addressPrompt := promptui.Prompt{
-		Label: label,
-		Validate: func(s string) error {
-			if s == "" {
-				return nil
-			}
-			if flow.HexToAddress(s) == flow.EmptyAddress {
-				return errors.New(errorMessage)
-			}
-			return nil
-		},
-	}
-
-	address, err := addressPrompt.Run()
-	if err == promptui.ErrInterrupt {
-		os.Exit(-1)
-	}
-
-	return address
+	return addressPrompt(label, errorMessage, true)
 }
 
 func contractPrompt(contractNames []string) string {
@@ -311,7 +296,7 @@ func NewAccountPrompt() *AccountData {
 	var err error
 	account := &AccountData{
 		Name:    NamePrompt(),
-		Address: addressPrompt("Enter address", "invalid address"),
+		Address: addressPrompt("Enter address", "invalid address", false),
 	}
 
 	sigAlgoPrompt := promptui.Select{
@@ -396,9 +381,9 @@ func NewContractPrompt() *ContractData {
 		os.Exit(-1)
 	}
 
-	contract.Emulator = addressPrompt("Enter emulator alias, if exists", "invalid alias address")
-	contract.Testnet = addressPrompt("Enter testnet alias, if exists", "invalid testnet address")
-	contract.Mainnet = addressPrompt("Enter mainnet alias, if exists", "invalid mainnet address")
+	contract.Emulator = AddressPromptOrEmpty("Enter emulator alias, if exists", "invalid alias address")
+	contract.Testnet = AddressPromptOrEmpty("Enter testnet alias, if exists", "invalid testnet address")
+	contract.Mainnet = AddressPromptOrEmpty("Enter mainnet alias, if exists", "invalid mainnet address")
 
 	return contract
 }
