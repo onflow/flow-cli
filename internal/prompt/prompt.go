@@ -396,9 +396,9 @@ func NewContractPrompt() *ContractData {
 		os.Exit(-1)
 	}
 
-	contract.Emulator = addressPrompt("Enter emulator alias, if exists", "invalid alias address")
-	contract.Testnet = addressPrompt("Enter testnet alias, if exists", "invalid testnet address")
-	contract.Mainnet = addressPrompt("Enter mainnet alias, if exists", "invalid mainnet address")
+	contract.Emulator = AddressPromptOrEmpty("Enter emulator alias, if exists", "invalid alias address")
+	contract.Testnet = AddressPromptOrEmpty("Enter testnet alias, if exists", "invalid testnet address")
+	contract.Mainnet = AddressPromptOrEmpty("Enter mainnet alias, if exists", "invalid mainnet address")
 
 	return contract
 }
