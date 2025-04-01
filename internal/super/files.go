@@ -105,12 +105,12 @@ func (f *projectFiles) deployments() (map[string][]string, error) {
 	return deployments, nil
 }
 
-// contracts returns a list of scripts in project.
+// scripts returns a list of scripts in project.
 func (f *projectFiles) scripts() ([]string, error) {
 	return f.getCadenceFilepaths(scriptDir)
 }
 
-// contracts returns a list of transactions in project.
+// transactions returns a list of transactions in project.
 func (f *projectFiles) transactions() ([]string, error) {
 	return f.getCadenceFilepaths(transactionDir)
 }
