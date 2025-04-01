@@ -207,6 +207,25 @@ func secureNetworkKeyPrompt() string {
 	return networkKey
 }
 
+func addressPrompt(label, errorMessage string) string {
+	addressPrompt := promptui.Prompt{
+		Label: label,
+		Validate: func(s string) error {
+			if flow.HexToAddress(s) == flow.EmptyAddress {
+				return errors.New(errorMessage)
+			}
+			return nil
+		},
+	}
+
+	address, err := addressPrompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+
+	return address
+}
+
 func AddressPromptOrEmpty(label, errorMessage string) string {
 	addressPrompt := promptui.Prompt{
 		Label: label,
