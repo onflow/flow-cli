@@ -138,6 +138,37 @@ func Test_Get(t *testing.T) {
 	})
 }
 
+func Test_GetSystem(t *testing.T) {
+	srv, _, _ := util.TestMocks(t)
+
+	t.Run("Success", func(t *testing.T) {
+		inArgs := []string{"0xabcdef"}
+
+		// Mocked system transaction and result
+		tx := &flow.Transaction{}
+		result := &flow.TransactionResult{}
+
+		srv.GetSystemTransaction.Run(func(args mock.Arguments) {
+			id := args.Get(1).(flow.Identifier)
+			assert.Equal(t, flow.HexToID("abcdef"), id)
+		}).Return(tx, result, nil)
+
+		res, err := getSystemTransaction(inArgs, command.GlobalFlags{}, util.NoLogger, nil, srv.Mock)
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
+	})
+
+	t.Run("Fail invalid block ID", func(t *testing.T) {
+		inArgs := []string{""}
+
+		srv.GetSystemTransaction.Return(nil, nil, fmt.Errorf("block not found"))
+
+		res, err := getSystemTransaction(inArgs, command.GlobalFlags{}, util.NoLogger, nil, srv.Mock)
+		assert.Error(t, err)
+		assert.Nil(t, res)
+	})
+}
+
 func Test_Send(t *testing.T) {
 	srv, state, _ := util.TestMocks(t)
 
