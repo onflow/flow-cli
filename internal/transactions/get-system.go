@@ -20,9 +20,7 @@ package transactions
 
 import (
 	"context"
-	"strings"
 
-	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flowkit/v2"
@@ -40,8 +38,8 @@ var getSystemFlags = flagsGetSystem{}
 
 var getSystemCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "get-system <block_id>",
-		Short:   "Get the system transaction by block ID",
+		Use:     "get-system <block_id|latest|block_height>",
+		Short:   "Get the system transaction by block info",
 		Example: "flow transactions get-system a1b2c3...",
 		Args:    cobra.ExactArgs(1),
 	},
@@ -52,13 +50,23 @@ var getSystemCommand = &command.Command{
 func getSystemTransaction(
 	args []string,
 	_ command.GlobalFlags,
-	_ output.Logger,
+	logger output.Logger,
 	_ flowkit.ReaderWriter,
 	flow flowkit.Services,
 ) (command.Result, error) {
-	blockID := flowsdk.HexToID(strings.TrimPrefix(args[0], "0x"))
+	query, err := flowkit.NewBlockQuery(args[0])
+	if err != nil {
+		return nil, err
+	}
 
-	tx, result, err := flow.GetSystemTransaction(context.Background(), blockID)
+	logger.StartProgress("Fetching Block...")
+	defer logger.StopProgress()
+	block, err := flow.GetBlock(context.Background(), query)
+	if err != nil {
+		return nil, err
+	}
+
+	tx, result, err := flow.GetSystemTransaction(context.Background(), block.ID)
 	if err != nil {
 		return nil, err
 	}

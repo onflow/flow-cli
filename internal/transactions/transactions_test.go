@@ -142,7 +142,14 @@ func Test_GetSystem(t *testing.T) {
 	srv, _, rw := util.TestMocks(t)
 
 	t.Run("Success", func(t *testing.T) {
-		inArgs := []string{"0x01"}
+		inArgs := []string{"100"}
+
+		returnBlock := tests.NewBlock()
+		returnBlock.Height = uint64(100)
+
+		srv.GetBlock.Run(func(args mock.Arguments) {
+			assert.Equal(t, uint64(100), args.Get(1).(flowkit.BlockQuery).Height)
+		}).Return(returnBlock, nil)
 
 		srv.GetSystemTransaction.Return(nil, nil, nil)
 
@@ -153,6 +160,13 @@ func Test_GetSystem(t *testing.T) {
 
 	t.Run("Fail invalid block ID", func(t *testing.T) {
 		inArgs := []string{""}
+
+		returnBlock := tests.NewBlock()
+		returnBlock.Height = uint64(100)
+
+		srv.GetBlock.Run(func(args mock.Arguments) {
+			assert.Equal(t, uint64(100), args.Get(1).(flowkit.BlockQuery).Height)
+		}).Return(returnBlock, nil)
 
 		srv.GetSystemTransaction.Return(nil, nil, fmt.Errorf("block not found"))
 
