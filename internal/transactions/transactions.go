@@ -49,6 +49,7 @@ func init() {
 	signCommand.AddToParent(Cmd)
 	buildCommand.AddToParent(Cmd)
 	sendSignedCommand.AddToParent(Cmd)
+	getSystemCommand.AddToParent(Cmd)
 	decodeCommand.AddToParent(Cmd)
 }
 

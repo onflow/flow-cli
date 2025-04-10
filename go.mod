@@ -25,7 +25,7 @@ require (
 	github.com/onflow/flow-evm-gateway v1.0.3
 	github.com/onflow/flow-go v0.38.0-util.0.20250203085701-72e6e6235fa5
 	github.com/onflow/flow-go-sdk v1.4.0
-	github.com/onflow/flowkit/v2 v2.2.0
+	github.com/onflow/flowkit/v2 v2.3.0
 	github.com/onflow/go-ethereum v1.14.7
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
@@ -148,7 +148,7 @@ require (
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/holiman/bloomfilter/v2 v2.0.3 // indirect
-	github.com/holiman/uint256 v1.3.0 // indirect
+	github.com/holiman/uint256 v1.3.1 // indirect
 	github.com/huandu/go-clone v1.6.0 // indirect
 	github.com/huandu/go-clone/generic v1.7.2 // indirect
 	github.com/huin/goupnp v1.3.0 // indirect
