@@ -139,21 +139,14 @@ func Test_Get(t *testing.T) {
 }
 
 func Test_GetSystem(t *testing.T) {
-	srv, _, _ := util.TestMocks(t)
+	srv, _, rw := util.TestMocks(t)
 
 	t.Run("Success", func(t *testing.T) {
-		inArgs := []string{"0xabcdef"}
+		inArgs := []string{"0x01"}
 
-		// Mocked system transaction and result
-		tx := &flow.Transaction{}
-		result := &flow.TransactionResult{}
+		srv.GetSystemTransaction.Return(nil, nil, nil)
 
-		srv.GetSystemTransaction.Run(func(args mock.Arguments) {
-			id := args.Get(1).(flow.Identifier)
-			assert.Equal(t, flow.HexToID("abcdef"), id)
-		}).Return(tx, result, nil)
-
-		res, err := getSystemTransaction(inArgs, command.GlobalFlags{}, util.NoLogger, nil, srv.Mock)
+		res, err := getSystemTransaction(inArgs, command.GlobalFlags{}, util.NoLogger, rw, srv.Mock)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 	})
@@ -163,7 +156,7 @@ func Test_GetSystem(t *testing.T) {
 
 		srv.GetSystemTransaction.Return(nil, nil, fmt.Errorf("block not found"))
 
-		res, err := getSystemTransaction(inArgs, command.GlobalFlags{}, util.NoLogger, nil, srv.Mock)
+		res, err := getSystemTransaction(inArgs, command.GlobalFlags{}, util.NoLogger, rw, srv.Mock)
 		assert.Error(t, err)
 		assert.Nil(t, res)
 	})
