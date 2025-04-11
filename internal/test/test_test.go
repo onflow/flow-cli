@@ -347,6 +347,9 @@ func TestExecutingTests(t *testing.T) {
 				"A.0000000000000002.USDCFlow",
 				"A.0000000000000001.NFTStorefrontV2",
 				"A.0000000000000001.Crypto",
+				"A.0000000000000002.FlowExecutionParameters",
+				"A.0000000000000001.AccountV2Migration",
+				"A.0000000000000001.Migration",
 			},
 			coverageReport.ExcludedLocationIDs(),
 		)
@@ -452,6 +455,9 @@ func TestExecutingTests(t *testing.T) {
 				"A.0000000000000001.Crypto",
 				"A.0000000000000001.NFTStorefrontV2",
 				"A.0000000000000002.USDCFlow",
+				"A.0000000000000002.FlowExecutionParameters",
+				"A.0000000000000001.AccountV2Migration",
+				"A.0000000000000001.Migration",
 			},
 			coverageReport.ExcludedLocationIDs(),
 		)
