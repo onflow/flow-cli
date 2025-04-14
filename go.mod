@@ -15,7 +15,7 @@ require (
 	github.com/logrusorgru/aurora/v4 v4.0.0
 	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v1.3.3
-	github.com/onflow/cadence-tools/languageserver v1.2.2-0.20250411215329-b629f24a45e9
+	github.com/onflow/cadence-tools/languageserver v1.3.0
 	github.com/onflow/cadence-tools/lint v1.2.0
 	github.com/onflow/cadence-tools/test v1.3.0
 	github.com/onflow/fcl-dev-wallet v0.8.0
