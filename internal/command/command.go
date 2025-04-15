@@ -385,6 +385,7 @@ func UsageMetrics(command *cobra.Command, wg *sync.WaitGroup) {
 			"network": Flags.Network,
 			"version": build.Semver(),
 			"os":      runtime.GOOS,
+			"ci":      os.Getenv("CI") != "", // CI is commonly set by CI providers
 		},
 	})
 	wg.Done()
