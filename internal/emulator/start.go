@@ -138,9 +138,15 @@ func init() {
 	// Initialize mixpanel client only if metrics are enabled and token is not empty
 	if settings.MetricsEnabled() && mixpanelToken != "" {
 		mixpanelClient = mixpanel.New(mixpanelToken, "")
-		Cmd = start.Cmd(configuredServiceKey, trackRequestMiddleware)
+		Cmd = start.Cmd(start.StartConfig{
+			GetServiceKey:   configuredServiceKey,
+			RestMiddlewares: []start.HttpMiddleware{trackRequestMiddleware},
+		})
 	} else {
-		Cmd = start.Cmd(configuredServiceKey)
+		Cmd = start.Cmd(start.StartConfig{
+			GetServiceKey:   configuredServiceKey,
+			RestMiddlewares: []start.HttpMiddleware{},
+		})
 	}
 
 	Cmd.Use = "emulator"
