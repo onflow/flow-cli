@@ -138,6 +138,44 @@ func Test_Get(t *testing.T) {
 	})
 }
 
+func Test_GetSystem(t *testing.T) {
+	srv, _, rw := util.TestMocks(t)
+
+	t.Run("Success", func(t *testing.T) {
+		inArgs := []string{"100"}
+
+		returnBlock := tests.NewBlock()
+		returnBlock.Height = uint64(100)
+
+		srv.GetBlock.Run(func(args mock.Arguments) {
+			assert.Equal(t, uint64(100), args.Get(1).(flowkit.BlockQuery).Height)
+		}).Return(returnBlock, nil)
+
+		srv.GetSystemTransaction.Return(nil, nil, nil)
+
+		res, err := getSystemTransaction(inArgs, command.GlobalFlags{}, util.NoLogger, rw, srv.Mock)
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
+	})
+
+	t.Run("Fail invalid block ID", func(t *testing.T) {
+		inArgs := []string{""}
+
+		returnBlock := tests.NewBlock()
+		returnBlock.Height = uint64(100)
+
+		srv.GetBlock.Run(func(args mock.Arguments) {
+			assert.Equal(t, uint64(100), args.Get(1).(flowkit.BlockQuery).Height)
+		}).Return(returnBlock, nil)
+
+		srv.GetSystemTransaction.Return(nil, nil, fmt.Errorf("block not found"))
+
+		res, err := getSystemTransaction(inArgs, command.GlobalFlags{}, util.NoLogger, rw, srv.Mock)
+		assert.Error(t, err)
+		assert.Nil(t, res)
+	})
+}
+
 func Test_Send(t *testing.T) {
 	srv, state, _ := util.TestMocks(t)
 
