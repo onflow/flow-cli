@@ -126,6 +126,7 @@ func trackRequestMiddleware(next http.Handler) http.Handler {
 				"url":     r.URL.String(),
 				"version": build.Semver(),
 				"os":      runtime.GOOS,
+				"ci":      os.Getenv("CI") != "", // CI is commonly set by CI providers
 			},
 		})
 
