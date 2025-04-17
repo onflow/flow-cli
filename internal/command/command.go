@@ -364,14 +364,14 @@ func initCrashReporting() {
 }
 
 // The token is injected at build-time using ldflags
-var mixpanelToken = ""
+var MixpanelToken = ""
 
 func UsageMetrics(command *cobra.Command, wg *sync.WaitGroup) {
-	if !settings.MetricsEnabled() || mixpanelToken == "" {
+	if !settings.MetricsEnabled() || MixpanelToken == "" {
 		return
 	}
 	wg.Add(1)
-	client := mixpanel.New(mixpanelToken, "")
+	client := mixpanel.New(MixpanelToken, "")
 
 	// calculates a user ID that doesn't leak any personal information
 	usr, _ := user.Current() // ignore err, just use empty string
