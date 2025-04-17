@@ -46,9 +46,6 @@ import (
 
 var Cmd *cobra.Command
 
-// The token is injected at build-time using ldflags
-var mixpanelToken = ""
-
 // Mixpanel client to be reused on each http request of the middleware
 var mixpanelClient mixpanel.Mixpanel
 
@@ -137,8 +134,8 @@ func trackRequestMiddleware(next http.Handler) http.Handler {
 
 func init() {
 	// Initialize mixpanel client only if metrics are enabled and token is not empty
-	if settings.MetricsEnabled() && mixpanelToken != "" {
-		mixpanelClient = mixpanel.New(mixpanelToken, "")
+	if settings.MetricsEnabled() && command.MixpanelToken != "" {
+		mixpanelClient = mixpanel.New(command.MixpanelToken, "")
 		Cmd = start.Cmd(start.StartConfig{
 			GetServiceKey:   configuredServiceKey,
 			RestMiddlewares: []start.HttpMiddleware{trackRequestMiddleware},
