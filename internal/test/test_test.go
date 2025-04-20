@@ -227,7 +227,7 @@ func TestExecutingTests(t *testing.T) {
 		}
 		state.Contracts().AddOrUpdate(c)
 		// fungibleToken has no `testing` alias, but it is not
-		// actually deployed/used, so there is no errror.
+		// actually deployed/used, so there is no error.
 		fungibleToken := config.Contract{
 			Name:     "FungibleToken",
 			Location: "cadence/contracts/FungibleToken.cdc",

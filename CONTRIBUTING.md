@@ -164,7 +164,7 @@ To make the new version the default version that is installed
 ## Adding a scaffold
 You can add your own scaffold by creating a GitHub repository containing the scaffold content and then making a PR 
 to update the `scaffolds.json` in the Flow CLI repository. You need to add an entry to the list 
-with the bellow content.
+with the below content.
 
 ```json
 {
@@ -220,7 +220,7 @@ equal (=) sign (ex: `--username test` or `--username=test`)
 flow accounts get --filter "address"
 ```
 
-Use common naming for default falgs such as:
+Use common naming for default flags such as:
 
 `--log`: Logging level.
 
@@ -344,7 +344,7 @@ Main help screen must contain a list of all commands with their own description,
 it must also include examples for commands. Help screen should include link to the documentation website.
 
 Commands should have a description that is not too long (less than 100 characters).
-Help should be outputed if command is ran without any arguments. Help outline should be:
+Help should be outputted if command is ran without any arguments. Help outline should be:
 
 ```Description:
     <description>
