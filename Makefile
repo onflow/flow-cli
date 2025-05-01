@@ -59,7 +59,7 @@ $(BINARY):
 	GO111MODULE=on go build \
 		-trimpath \
 		-ldflags \
-		"-X github.com/onflow/flow-cli/build.semver=$(VERSION) -X github.com/onflow/flow-cli/internal/accounts.accountToken=${ACCOUNT_TOKEN} -X github.com/onflow/flow-cli/internal/command.MixpanelToken={MIXPANEL_PROJECT_TOKEN}" \
+		"-X github.com/onflow/flow-cli/build.semver=$(VERSION) -X github.com/onflow/flow-cli/internal/accounts.accountToken=${ACCOUNT_TOKEN} -X github.com/onflow/flow-cli/internal/command.MixpanelToken=${MIXPANEL_PROJECT_TOKEN}" \
 		-o $(BINARY) ./cmd/flow
 
 .PHONY: versioned-binaries
