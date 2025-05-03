@@ -287,7 +287,7 @@ func (p *project) addContract(
 	}
 
 	existing, _ := p.state.Contracts().ByName(name)
-	if existing != nil { // make sure alises are persisted even if location changes
+	if existing != nil { // make sure aliases are persisted even if location changes
 		contract.Aliases = existing.Aliases
 	}
 
