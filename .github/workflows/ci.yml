@@ -20,7 +20,7 @@ defaults:
     shell: bash
 
 env:
-  GO_VERSION: "1.23"
+  GO_VERSION: "1.24"
 
 jobs:
   test:
@@ -57,7 +57,7 @@ jobs:
         run: make generate
       - uses: golangci/golangci-lint-action@v6.5.0
         with:
-          version: v1.63.4
+          version: v1.64.8
           only-new-issues: true
           skip-pkg-cache: true
           args: --timeout=3m
