@@ -2,6 +2,8 @@ module github.com/onflow/flow-cli
 
 go 1.24
 
+toolchain go1.24.0
+
 require (
 	github.com/charmbracelet/bubbles v0.19.0
 	github.com/charmbracelet/bubbletea v1.3.4
