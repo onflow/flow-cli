@@ -22,6 +22,7 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
+	"maps"
 	"path/filepath"
 	"text/template"
 
@@ -106,10 +107,8 @@ func (g *Generator) generate(item TemplateItem) error {
 	templatePath := item.GetTemplatePath()
 	data := item.GetData()
 
-	fileData := map[string]interface{}{}
-	for k, v := range data {
-		fileData[k] = v
-	}
+	fileData := make(map[string]interface{})
+	maps.Copy(fileData, data)
 
 	outputContent, err := g.processTemplate(templatePath, fileData)
 	if err != nil {
