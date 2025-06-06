@@ -130,6 +130,7 @@ func SendTransaction(code []byte, args []string, location string, flow flowkit.S
 
 	var transactionArgs []cadence.Value
 	if sendFlags.ArgsJSON != "" {
+		fmt.Printf("Parsing transaction arguments from JSON: %s\n", sendFlags.ArgsJSON)
 		transactionArgs, err = arguments.ParseJSON(sendFlags.ArgsJSON)
 	} else {
 		transactionArgs, err = arguments.ParseWithoutType(args[1:], code, location)
