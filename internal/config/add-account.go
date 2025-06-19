@@ -20,9 +20,8 @@ package config
 
 import (
 	"fmt"
+	"math"
 	"strconv"
-
-	"github.com/onflow/go-ethereum/common/math"
 
 	"github.com/onflow/flow-cli/internal/prompt"
 
