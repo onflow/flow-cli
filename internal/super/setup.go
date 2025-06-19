@@ -115,7 +115,7 @@ func updateGitignore(targetDir string) error {
 	}
 	defer f.Close()
 
-	_, err = f.WriteString("\n# flow\nemulator-account.pkey\nimports\n")
+	_, err = f.WriteString("\n# flow\nemulator-account.pkey\nimports\n.env\n")
 	if err != nil {
 		return err
 	}
