@@ -838,14 +838,14 @@ github.com/onflow/flow-emulator v1.5.1 h1:qsQew4NwMxcJFvy5RrVfx+gk0BCKb8RSc6iU/F
 github.com/onflow/flow-emulator v1.5.1/go.mod h1:HkO7v/hRqmWPGhDkOx7xmOc2BB0XM+diASmpBdQoXN4=
 github.com/onflow/flow-evm-bridge v0.1.0 h1:7X2osvo4NnQgHj8aERUmbYtv9FateX8liotoLnPL9nM=
 github.com/onflow/flow-evm-bridge v0.1.0/go.mod h1:5UYwsnu6WcBNrwitGFxphCl5yq7fbWYGYuiCSTVF6pk=
-github.com/onflow/flow-evm-gateway v1.1.2-0.20250611145322-595a1b2e4ec9 h1:vSnFA9u4O0DkqXh3Q5B4LhiKK42A94L4NLieYPu4QJ4=
-github.com/onflow/flow-evm-gateway v1.1.2-0.20250611145322-595a1b2e4ec9/go.mod h1:2LR+5xlQxPNr4mwW6a89aQz3bpQkblFE2bL7hRybS8k=
+github.com/onflow/flow-evm-gateway v1.2.0-batchtx.0 h1:U82jso5zIQSg+KK6nzLW15uxvqGF5ZcD6OsACcnYm34=
+github.com/onflow/flow-evm-gateway v1.2.0-batchtx.0/go.mod h1:VYI6JpTC9n64EGCVh4avgt2/Lg36+ZohcrZZmE80xAg=
 github.com/onflow/flow-ft/lib/go/contracts v1.0.1 h1:Ts5ob+CoCY2EjEd0W6vdLJ7hLL3SsEftzXG2JlmSe24=
 github.com/onflow/flow-ft/lib/go/contracts v1.0.1/go.mod h1:PwsL8fC81cjnUnTfmyL/HOIyHnyaw/JA474Wfj2tl6A=
 github.com/onflow/flow-ft/lib/go/templates v1.0.1 h1:FDYKAiGowABtoMNusLuRCILIZDtVqJ/5tYI4VkF5zfM=
 github.com/onflow/flow-ft/lib/go/templates v1.0.1/go.mod h1:uQ8XFqmMK2jxyBSVrmyuwdWjTEb+6zGjRYotfDJ5pAE=
-github.com/onflow/flow-go v0.41.0-rc.1.0.20250618213905-cfbf84027792 h1:/uQrnD16PMPqYiMTqYNRKnmxw83S0Ejd6zhLtXzixFY=
-github.com/onflow/flow-go v0.41.0-rc.1.0.20250618213905-cfbf84027792/go.mod h1:vEpa6y5ef8QniyjpqXp0o1ohmTI3fYGwE7oGasivpa4=
+github.com/onflow/flow-go v0.41.0-rc.2 h1:3IBwx8JzMvsEcsD97g4LjqC/ur/NEduEg25LY9U3GPY=
+github.com/onflow/flow-go v0.41.0-rc.2/go.mod h1:7qgYhNQ3COT3USvk4goxAOfnvd/YNt28ddFGbheF1F4=
 github.com/onflow/flow-go-sdk v1.6.1 h1:Gf+4fV2rvKN8jyubtcQfuJPpbeHmhPWbUv8YvhWnUqg=
 github.com/onflow/flow-go-sdk v1.6.1/go.mod h1:Ssf06IM5qZ2ctFe7NCBPQOxUashwm57N9AywghGyqfU=
 github.com/onflow/flow-nft/lib/go/contracts v1.2.4 h1:gWJgSSgIGo0qWOqr90+khQ69VoYF9vNlqzF+Yh6YYy4=
@@ -1159,6 +1159,8 @@ github.com/ugorji/go/codec v1.2.12 h1:9LC83zGrHhuUA9l16C9AHXAqEV/2wBQ4nkvumAE65E
 github.com/ugorji/go/codec v1.2.12/go.mod h1:UNopzCgEMSXjBc6AOMqYvWC1ktqTAfzJZUZgYf6w6lg=
 github.com/urfave/cli v1.20.0/go.mod h1:70zkFmudgCuE/ngEzBv17Jvp/497gISqfk5gWijbERA=
 github.com/urfave/cli v1.22.1/go.mod h1:Gos4lmkARVdJ6EkW0WaNv/tZAAMe9V7XWyB60NtXRu0=
+github.com/vmihailenco/msgpack v4.0.4+incompatible h1:dSLoQfGFAo3F6OoNhwUmLwVgaUXK79GlxNBwueZn0xI=
+github.com/vmihailenco/msgpack v4.0.4+incompatible/go.mod h1:fy3FlTQTDXWkZ7Bh6AcGMlsjHatGryHQYUTf1ShIgkk=
 github.com/vmihailenco/msgpack/v4 v4.3.11 h1:Q47CePddpNGNhk4GCnAx9DDtASi2rasatE0cd26cZoE=
 github.com/vmihailenco/msgpack/v4 v4.3.11/go.mod h1:gborTTJjAo/GWTqqRjrLCn9pgNN+NXzzngzBKDPIqw4=
 github.com/vmihailenco/tagparser v0.1.1 h1:quXMXlA39OCbd2wAdTsGDlK9RkOk6Wuw+x37wVyIuWY=

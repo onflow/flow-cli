@@ -22,8 +22,8 @@ require (
 	github.com/onflow/flixkit-go/v2 v2.4.0
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.6.2-0.20250528160945-19e60fc6f211
 	github.com/onflow/flow-emulator v1.5.1
-	github.com/onflow/flow-evm-gateway v1.1.2-0.20250611145322-595a1b2e4ec9
-	github.com/onflow/flow-go v0.41.0-rc.1.0.20250618213905-cfbf84027792
+	github.com/onflow/flow-evm-gateway v1.2.0-batchtx.0
+	github.com/onflow/flow-go v0.41.0-rc.2
 	github.com/onflow/flow-go-sdk v1.6.1
 	github.com/onflow/flowkit/v2 v2.4.1
 	github.com/onflow/go-ethereum v1.15.10
@@ -267,6 +267,7 @@ require (
 	github.com/tklauser/numcpus v0.6.1 // indirect
 	github.com/turbolent/prettier v0.0.0-20220320183459-661cc755135d // indirect
 	github.com/tyler-smith/go-bip39 v1.1.0 // indirect
+	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect
 	github.com/vmihailenco/msgpack/v4 v4.3.11 // indirect
 	github.com/vmihailenco/tagparser v0.1.1 // indirect
 	github.com/wlynxg/anet v0.0.5 // indirect
