@@ -20,7 +20,7 @@ require (
 	github.com/onflow/cadence-tools/test v1.4.0
 	github.com/onflow/fcl-dev-wallet v0.8.0
 	github.com/onflow/flixkit-go/v2 v2.4.0
-	github.com/onflow/flow-core-contracts/lib/go/templates v1.6.2-0.20250528160945-19e60fc6f211
+	github.com/onflow/flow-core-contracts/lib/go/templates v1.7.1
 	github.com/onflow/flow-emulator v1.5.1
 	github.com/onflow/flow-evm-gateway v1.1.2-0.20250611145322-595a1b2e4ec9
 	github.com/onflow/flow-go v0.41.0-rc.1.0.20250618213905-cfbf84027792
