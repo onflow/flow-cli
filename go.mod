@@ -14,7 +14,7 @@ require (
 	github.com/gosuri/uilive v0.0.4
 	github.com/logrusorgru/aurora/v4 v4.0.0
 	github.com/manifoldco/promptui v0.9.0
-	github.com/onflow/cadence v1.6.2
+	github.com/onflow/cadence v1.6.3
 	github.com/onflow/cadence-tools/languageserver v1.4.0
 	github.com/onflow/cadence-tools/lint v1.3.1
 	github.com/onflow/cadence-tools/test v1.4.0
@@ -24,7 +24,7 @@ require (
 	github.com/onflow/flow-emulator v1.5.1
 	github.com/onflow/flow-evm-gateway v1.1.2-0.20250611145322-595a1b2e4ec9
 	github.com/onflow/flow-go v0.41.0-rc.1.0.20250618213905-cfbf84027792
-	github.com/onflow/flow-go-sdk v1.6.1
+	github.com/onflow/flow-go-sdk v1.6.2
 	github.com/onflow/flowkit/v2 v2.4.1
 	github.com/onflow/go-ethereum v1.15.10
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
