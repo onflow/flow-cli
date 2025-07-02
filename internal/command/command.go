@@ -375,7 +375,7 @@ func UsageMetrics(command *cobra.Command, wg *sync.WaitGroup) {
 
 	// calculates a user ID that doesn't leak any personal information
 	usr, _ := user.Current() // ignore err, just use empty string
-	hash := sha256.Sum256([]byte(fmt.Sprintf("%s%s", usr.Username, usr.Uid)))
+	hash := sha256.Sum256(fmt.Appendf(nil, "%s%s", usr.Username, usr.Uid))
 	userID := base64.StdEncoding.EncodeToString(hash[:])
 
 	_ = client.Track(userID, "cli-command", &mixpanel.Event{

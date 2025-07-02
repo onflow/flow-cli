@@ -112,7 +112,7 @@ func trackRequestMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Generate a unique user ID
 		usr, _ := user.Current() // ignore err, just use empty string
-		hash := sha256.Sum256([]byte(fmt.Sprintf("%s%s", usr.Username, usr.Uid)))
+		hash := sha256.Sum256(fmt.Appendf(nil, "%s%s", usr.Username, usr.Uid))
 		userID := base64.StdEncoding.EncodeToString(hash[:])
 
 		// Track the request in Mixpanel

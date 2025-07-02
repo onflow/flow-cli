@@ -65,7 +65,7 @@ func AddToGitIgnore(filename string, loader flowkit.ReaderWriter) error {
 	}
 	return loader.WriteFile(
 		gitIgnorePath,
-		[]byte(fmt.Sprintf("%s\n%s", gitIgnoreFiles, filename)),
+		fmt.Appendf(nil, "%s\n%s", gitIgnoreFiles, filename),
 		filePermissions,
 	)
 }
