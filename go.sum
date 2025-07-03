@@ -816,8 +816,8 @@ github.com/olekukonko/tablewriter v0.0.5 h1:P2Ga83D34wi1o9J6Wh1mRuqd4mF/x/lgBS7N
 github.com/olekukonko/tablewriter v0.0.5/go.mod h1:hPp6KlRPjbx+hW8ykQs1w3UBbZlj6HuIJcUGPhkA7kY=
 github.com/onflow/atree v0.10.0 h1:LFYlRgb0fjs8vezBW/N/tzi+ijLMssjHwIwoV4RwYaA=
 github.com/onflow/atree v0.10.0/go.mod h1:aqnnE8Os77JiBIeC7UcbeM7N1V3Ys5XWH0CykeMpym0=
-github.com/onflow/cadence v1.6.2 h1:bzJmfAzEv+8dggmm3HwyH6PhsYLrXqfx6GcI+nPYJCU=
-github.com/onflow/cadence v1.6.2/go.mod h1:MBHOSmj81EtNEGjvYK3UEaFMMrN6jo5wt9U7jvDVLUw=
+github.com/onflow/cadence v1.6.3 h1:HunJNh3FrHx+DyM9d6LOkYpXrzSH5bLKYk/uv5LaT1c=
+github.com/onflow/cadence v1.6.3/go.mod h1:MBHOSmj81EtNEGjvYK3UEaFMMrN6jo5wt9U7jvDVLUw=
 github.com/onflow/cadence-tools/languageserver v1.4.0 h1:BtUqzp713jEwfrC1EaEPDpKz5rpJAb6M3Duv5VTtmP8=
 github.com/onflow/cadence-tools/languageserver v1.4.0/go.mod h1:OJjSVuJ0+36hGCkjdctOpjKte2djOwmGOqEhnlwBJQg=
 github.com/onflow/cadence-tools/lint v1.3.1 h1:6dehx8WYRbGsMm8o8lJx7cNmW3tTFhC+BINMfcsit94=
@@ -846,8 +846,8 @@ github.com/onflow/flow-ft/lib/go/templates v1.0.1 h1:FDYKAiGowABtoMNusLuRCILIZDt
 github.com/onflow/flow-ft/lib/go/templates v1.0.1/go.mod h1:uQ8XFqmMK2jxyBSVrmyuwdWjTEb+6zGjRYotfDJ5pAE=
 github.com/onflow/flow-go v0.41.0-rc.1.0.20250618213905-cfbf84027792 h1:/uQrnD16PMPqYiMTqYNRKnmxw83S0Ejd6zhLtXzixFY=
 github.com/onflow/flow-go v0.41.0-rc.1.0.20250618213905-cfbf84027792/go.mod h1:vEpa6y5ef8QniyjpqXp0o1ohmTI3fYGwE7oGasivpa4=
-github.com/onflow/flow-go-sdk v1.6.1 h1:Gf+4fV2rvKN8jyubtcQfuJPpbeHmhPWbUv8YvhWnUqg=
-github.com/onflow/flow-go-sdk v1.6.1/go.mod h1:Ssf06IM5qZ2ctFe7NCBPQOxUashwm57N9AywghGyqfU=
+github.com/onflow/flow-go-sdk v1.6.2 h1:KoaSrmjyxHWVrEATUfyiZvVNDjak+LrdEMF8Hx9Jfy0=
+github.com/onflow/flow-go-sdk v1.6.2/go.mod h1:F2OXnmStC/gIYt3l5tojtuKLsIwcdSqWUPgzzBD/YRw=
 github.com/onflow/flow-nft/lib/go/contracts v1.2.4 h1:gWJgSSgIGo0qWOqr90+khQ69VoYF9vNlqzF+Yh6YYy4=
 github.com/onflow/flow-nft/lib/go/contracts v1.2.4/go.mod h1:eZ9VMMNfCq0ho6kV25xJn1kXeCfxnkhj3MwF3ed08gY=
 github.com/onflow/flow-nft/lib/go/templates v1.2.1 h1:SAALMZPDw9Eb9p5kSLnmnFxjyig1MLiT4JUlLp0/bSE=
