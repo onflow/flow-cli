@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"text/tabwriter"
 
@@ -108,7 +109,7 @@ func ValidateECDSAP256Pub(key string) error {
 func removeFromStringArray(s []string, el string) []string {
 	for i, v := range s {
 		if v == el {
-			s = append(s[:i], s[i+1:]...)
+			s = slices.Delete(s, i, i+1)
 			break
 		}
 	}
