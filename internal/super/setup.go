@@ -162,7 +162,7 @@ func createConfigOnly(targetDir string, readerWriter flowkit.ReaderWriter) error
 		return err
 	}
 
-	err = updateCursorignore(targetDir)
+	err = updateCursorIgnore(targetDir)
 	if err != nil {
 		return err
 	}
