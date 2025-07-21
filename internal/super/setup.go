@@ -123,7 +123,7 @@ func updateGitignore(targetDir string) error {
 	return nil
 }
 
-func updateCursorignore(targetDir string) error {
+func updateCursorIgnore(targetDir string) error {
 	cursorignorePath := filepath.Join(targetDir, ".cursorignore")
 	f, err := os.OpenFile(cursorignorePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
