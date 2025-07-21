@@ -158,6 +158,11 @@ func createNetworkAccount(
 		return nil, err
 	}
 
+	err = util.AddToCursorIgnore(privateFile, state.ReaderWriter())
+	if err != nil {
+		return nil, err
+	}
+
 	err = state.ReaderWriter().WriteFile(privateFile, []byte(key.String()), os.FileMode(0644))
 	if err != nil {
 		return nil, fmt.Errorf("failed saving private key: %w", err)
