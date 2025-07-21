@@ -82,7 +82,7 @@ func AddToCursorIgnore(filename string, loader flowkit.ReaderWriter) error {
 	filePermissions := os.FileMode(0644)
 
 	fileStat, err := os.Stat(cursorIgnorePath)
-	if !os.IsNotExist(err) { // if cursorignore exists
+	if !os.IsNotExist(err) {
 		cursorIgnoreFilesRaw, err := loader.ReadFile(cursorIgnorePath)
 		if err != nil {
 			return err
