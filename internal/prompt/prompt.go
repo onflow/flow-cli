@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -36,7 +37,6 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 
 	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/output"
@@ -479,7 +479,7 @@ func NewDeploymentPrompt(
 func removeFromStringArray(s []string, el string) []string {
 	for i, v := range s {
 		if v == el {
-			s = append(s[:i], s[i+1:]...)
+			s = slices.Delete(s, i, i+1)
 			break
 		}
 	}
