@@ -71,6 +71,32 @@ func AddToGitIgnore(filename string, loader flowkit.ReaderWriter) error {
 	)
 }
 
+// AddToCursorIgnore adds a new line to the .cursorignore if one doesn't exist it creates it.
+func AddToCursorIgnore(filename string, loader flowkit.ReaderWriter) error {
+	currentWd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	cursorIgnorePath := filepath.Join(currentWd, ".cursorignore")
+	cursorIgnoreFiles := ""
+	filePermissions := os.FileMode(0644)
+
+	fileStat, err := os.Stat(cursorIgnorePath)
+	if !os.IsNotExist(err) {
+		cursorIgnoreFilesRaw, err := loader.ReadFile(cursorIgnorePath)
+		if err != nil {
+			return err
+		}
+		cursorIgnoreFiles = string(cursorIgnoreFilesRaw)
+		filePermissions = fileStat.Mode().Perm()
+	}
+	return loader.WriteFile(
+		cursorIgnorePath,
+		fmt.Appendf(nil, "%s\n%s", cursorIgnoreFiles, filename),
+		filePermissions,
+	)
+}
+
 // GetAddressNetwork returns the chain ID for an address.
 func GetAddressNetwork(address flow.Address) (flow.ChainID, error) {
 	networks := []flow.ChainID{

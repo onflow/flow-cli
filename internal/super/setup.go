@@ -123,6 +123,22 @@ func updateGitignore(targetDir string) error {
 	return nil
 }
 
+func updateCursorIgnore(targetDir string) error {
+	cursorignorePath := filepath.Join(targetDir, ".cursorignore")
+	f, err := os.OpenFile(cursorignorePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	_, err = f.WriteString("\n# flow\nemulator-account.pkey\n.env\n\n# Pay attention to imports directory\n!imports/**\n")
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func createConfigOnly(targetDir string, readerWriter flowkit.ReaderWriter) error {
 	params := config.InitConfigParameters{
 		ServiceKeySigAlgo:  "ECDSA_P256",
@@ -142,6 +158,11 @@ func createConfigOnly(targetDir string, readerWriter flowkit.ReaderWriter) error
 	}
 
 	err = updateGitignore(targetDir)
+	if err != nil {
+		return err
+	}
+
+	err = updateCursorIgnore(targetDir)
 	if err != nil {
 		return err
 	}
@@ -273,6 +294,11 @@ func startInteractiveSetup(
 	}
 
 	err = updateGitignore(tempDir)
+	if err != nil {
+		return "", err
+	}
+
+	err = updateCursorIgnore(tempDir)
 	if err != nil {
 		return "", err
 	}
