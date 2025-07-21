@@ -298,7 +298,7 @@ func startInteractiveSetup(
 		return "", err
 	}
 
-	err = updateCursorignore(tempDir)
+	err = updateCursorIgnore(tempDir)
 	if err != nil {
 		return "", err
 	}
