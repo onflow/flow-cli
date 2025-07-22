@@ -108,35 +108,17 @@ func create(
 }
 
 func updateGitignore(targetDir string) error {
-	gitignorePath := filepath.Join(targetDir, ".gitignore")
-	f, err := os.OpenFile(gitignorePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return err
+	rw := afero.Afero{
+		Fs: afero.NewOsFs(),
 	}
-	defer f.Close()
-
-	_, err = f.WriteString("\n# flow\nemulator-account.pkey\nimports\n.env\n")
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return util.AddFlowEntriesToGitIgnore(targetDir, rw)
 }
 
 func updateCursorIgnore(targetDir string) error {
-	cursorignorePath := filepath.Join(targetDir, ".cursorignore")
-	f, err := os.OpenFile(cursorignorePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return err
+	rw := afero.Afero{
+		Fs: afero.NewOsFs(),
 	}
-	defer f.Close()
-
-	_, err = f.WriteString("\n# flow\nemulator-account.pkey\n.env\n\n# Pay attention to imports directory\n!imports/**\n")
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return util.AddFlowEntriesToCursorIgnore(targetDir, rw)
 }
 
 func createConfigOnly(targetDir string, readerWriter flowkit.ReaderWriter) error {
