@@ -107,36 +107,12 @@ func create(
 	return &setupResult{targetDir: targetDir}, nil
 }
 
-func updateGitignore(targetDir string) error {
-	gitignorePath := filepath.Join(targetDir, ".gitignore")
-	f, err := os.OpenFile(gitignorePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	_, err = f.WriteString("\n# flow\nemulator-account.pkey\nimports\n.env\n")
-	if err != nil {
-		return err
-	}
-
-	return nil
+func updateGitignore(targetDir string, readerWriter flowkit.ReaderWriter) error {
+	return util.AddFlowEntriesToGitIgnore(targetDir, readerWriter)
 }
 
-func updateCursorIgnore(targetDir string) error {
-	cursorignorePath := filepath.Join(targetDir, ".cursorignore")
-	f, err := os.OpenFile(cursorignorePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	_, err = f.WriteString("\n# flow\nemulator-account.pkey\n.env\n\n# Pay attention to imports directory\n!imports/**\n")
-	if err != nil {
-		return err
-	}
-
-	return nil
+func updateCursorIgnore(targetDir string, readerWriter flowkit.ReaderWriter) error {
+	return util.AddFlowEntriesToCursorIgnore(targetDir, readerWriter)
 }
 
 func createConfigOnly(targetDir string, readerWriter flowkit.ReaderWriter) error {
@@ -157,12 +133,12 @@ func createConfigOnly(targetDir string, readerWriter flowkit.ReaderWriter) error
 		return err
 	}
 
-	err = updateGitignore(targetDir)
+	err = updateGitignore(targetDir, readerWriter)
 	if err != nil {
 		return err
 	}
 
-	err = updateCursorIgnore(targetDir)
+	err = updateCursorIgnore(targetDir, readerWriter)
 	if err != nil {
 		return err
 	}
@@ -293,12 +269,12 @@ func startInteractiveSetup(
 		return "", err
 	}
 
-	err = updateGitignore(tempDir)
+	err = updateGitignore(tempDir, state.ReaderWriter())
 	if err != nil {
 		return "", err
 	}
 
-	err = updateCursorIgnore(tempDir)
+	err = updateCursorIgnore(tempDir, state.ReaderWriter())
 	if err != nil {
 		return "", err
 	}
