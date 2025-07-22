@@ -45,6 +45,17 @@ func Exit(code int, msg string) {
 	os.Exit(code)
 }
 
+// entryExists checks if an entry already exists in the content
+func entryExists(content, entry string) bool {
+	lines := strings.Split(strings.TrimSpace(content), "\n")
+	for _, line := range lines {
+		if strings.TrimSpace(line) == strings.TrimSpace(entry) {
+			return true
+		}
+	}
+	return false
+}
+
 // AddToGitIgnore adds a new line to the .gitignore if one doesn't exist it creates it.
 func AddToGitIgnore(filename string, loader flowkit.ReaderWriter) error {
 	currentWd, err := os.Getwd()
@@ -65,12 +76,8 @@ func AddToGitIgnore(filename string, loader flowkit.ReaderWriter) error {
 		filePermissions = fileStat.Mode().Perm()
 	}
 
-	// Check if the filename already exists in the content
-	lines := strings.Split(strings.TrimSpace(gitIgnoreFiles), "\n")
-	for _, line := range lines {
-		if strings.TrimSpace(line) == strings.TrimSpace(filename) {
-			return nil // Entry already exists, no need to add
-		}
+	if entryExists(gitIgnoreFiles, filename) {
+		return nil // Entry already exists, no need to add
 	}
 
 	return loader.WriteFile(
@@ -100,12 +107,8 @@ func AddToCursorIgnore(filename string, loader flowkit.ReaderWriter) error {
 		filePermissions = fileStat.Mode().Perm()
 	}
 
-	// Check if the filename already exists in the content
-	lines := strings.Split(strings.TrimSpace(cursorIgnoreFiles), "\n")
-	for _, line := range lines {
-		if strings.TrimSpace(line) == strings.TrimSpace(filename) {
-			return nil // Entry already exists, no need to add
-		}
+	if entryExists(cursorIgnoreFiles, filename) {
+		return nil // Entry already exists, no need to add
 	}
 
 	return loader.WriteFile(
