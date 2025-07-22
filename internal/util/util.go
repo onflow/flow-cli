@@ -115,31 +115,23 @@ func AddToCursorIgnore(filename string, loader flowkit.ReaderWriter) error {
 	)
 }
 
-// AddFlowEntriesToGitIgnore adds the standard Flow entries to .gitignore without duplicates
-func AddFlowEntriesToGitIgnore(targetDir string, loader flowkit.ReaderWriter) error {
-	flowEntries := []string{
-		"# flow",
-		"emulator-account.pkey",
-		"imports",
-		".env",
-	}
-
-	gitIgnorePath := filepath.Join(targetDir, ".gitignore")
-	gitIgnoreFiles := ""
+// addEntriesToIgnoreFile is a helper function that adds entries to an ignore file without duplicates
+func addEntriesToIgnoreFile(filePath string, entries []string, loader flowkit.ReaderWriter) error {
+	existingContent := ""
 	filePermissions := os.FileMode(0644)
 
-	fileStat, err := os.Stat(gitIgnorePath)
+	fileStat, err := os.Stat(filePath)
 	if !os.IsNotExist(err) {
-		gitIgnoreFilesRaw, err := loader.ReadFile(gitIgnorePath)
+		existingContentRaw, err := loader.ReadFile(filePath)
 		if err != nil {
 			return err
 		}
-		gitIgnoreFiles = string(gitIgnoreFilesRaw)
+		existingContent = string(existingContentRaw)
 		filePermissions = fileStat.Mode().Perm()
 	}
 
 	// Split existing content into lines
-	existingLines := strings.Split(strings.TrimSpace(gitIgnoreFiles), "\n")
+	existingLines := strings.Split(strings.TrimSpace(existingContent), "\n")
 	existingSet := make(map[string]bool)
 	for _, line := range existingLines {
 		if strings.TrimSpace(line) != "" {
@@ -149,7 +141,7 @@ func AddFlowEntriesToGitIgnore(targetDir string, loader flowkit.ReaderWriter) er
 
 	// Add new entries that don't already exist
 	var newEntries []string
-	for _, entry := range flowEntries {
+	for _, entry := range entries {
 		if !existingSet[strings.TrimSpace(entry)] {
 			newEntries = append(newEntries, entry)
 		}
@@ -160,13 +152,26 @@ func AddFlowEntriesToGitIgnore(targetDir string, loader flowkit.ReaderWriter) er
 	}
 
 	// Combine existing content with new entries
-	content := gitIgnoreFiles
+	content := existingContent
 	if content != "" && !strings.HasSuffix(content, "\n") {
 		content += "\n"
 	}
 	content += strings.Join(newEntries, "\n")
 
-	return loader.WriteFile(gitIgnorePath, []byte(content), filePermissions)
+	return loader.WriteFile(filePath, []byte(content), filePermissions)
+}
+
+// AddFlowEntriesToGitIgnore adds the standard Flow entries to .gitignore without duplicates
+func AddFlowEntriesToGitIgnore(targetDir string, loader flowkit.ReaderWriter) error {
+	flowEntries := []string{
+		"# flow",
+		"emulator-account.pkey",
+		"imports",
+		".env",
+	}
+
+	gitIgnorePath := filepath.Join(targetDir, ".gitignore")
+	return addEntriesToIgnoreFile(gitIgnorePath, flowEntries, loader)
 }
 
 // AddFlowEntriesToCursorIgnore adds the standard Flow entries to .cursorignore without duplicates
@@ -181,48 +186,7 @@ func AddFlowEntriesToCursorIgnore(targetDir string, loader flowkit.ReaderWriter)
 	}
 
 	cursorIgnorePath := filepath.Join(targetDir, ".cursorignore")
-	cursorIgnoreFiles := ""
-	filePermissions := os.FileMode(0644)
-
-	fileStat, err := os.Stat(cursorIgnorePath)
-	if !os.IsNotExist(err) {
-		cursorIgnoreFilesRaw, err := loader.ReadFile(cursorIgnorePath)
-		if err != nil {
-			return err
-		}
-		cursorIgnoreFiles = string(cursorIgnoreFilesRaw)
-		filePermissions = fileStat.Mode().Perm()
-	}
-
-	// Split existing content into lines
-	existingLines := strings.Split(strings.TrimSpace(cursorIgnoreFiles), "\n")
-	existingSet := make(map[string]bool)
-	for _, line := range existingLines {
-		if strings.TrimSpace(line) != "" {
-			existingSet[strings.TrimSpace(line)] = true
-		}
-	}
-
-	// Add new entries that don't already exist
-	var newEntries []string
-	for _, entry := range flowEntries {
-		if !existingSet[strings.TrimSpace(entry)] {
-			newEntries = append(newEntries, entry)
-		}
-	}
-
-	if len(newEntries) == 0 {
-		return nil // All entries already exist
-	}
-
-	// Combine existing content with new entries
-	content := cursorIgnoreFiles
-	if content != "" && !strings.HasSuffix(content, "\n") {
-		content += "\n"
-	}
-	content += strings.Join(newEntries, "\n")
-
-	return loader.WriteFile(cursorIgnorePath, []byte(content), filePermissions)
+	return addEntriesToIgnoreFile(cursorIgnorePath, flowEntries, loader)
 }
 
 // GetAddressNetwork returns the chain ID for an address.
