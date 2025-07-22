@@ -120,14 +120,14 @@ func addEntriesToIgnoreFile(filePath string, entries []string, loader flowkit.Re
 	existingContent := ""
 	filePermissions := os.FileMode(0644)
 
-	fileStat, err := os.Stat(filePath)
-	if !os.IsNotExist(err) {
-		existingContentRaw, err := loader.ReadFile(filePath)
-		if err != nil {
-			return err
-		}
+	// Try to read existing content using the loader
+	existingContentRaw, err := loader.ReadFile(filePath)
+	if err == nil {
 		existingContent = string(existingContentRaw)
-		filePermissions = fileStat.Mode().Perm()
+		// Try to get file permissions, but don't fail if we can't
+		if stat, err := os.Stat(filePath); err == nil {
+			filePermissions = stat.Mode().Perm()
+		}
 	}
 
 	// Split existing content into lines
