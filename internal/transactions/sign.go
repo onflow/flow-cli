@@ -141,6 +141,7 @@ func sign(
 	return &transactionResult{
 		tx:      signed.FlowTransaction(),
 		include: signFlags.Include,
+		network: flow.Network().Name,
 	}, nil
 }
 

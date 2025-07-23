@@ -58,13 +58,37 @@ type transactionResult struct {
 	tx      *flow.Transaction
 	include []string
 	exclude []string
+	network string
 }
 
 func NewTransactionResult(tx *flow.Transaction, result *flow.TransactionResult) *transactionResult {
 	return &transactionResult{
-		result: result,
-		tx:     tx,
+		result:  result,
+		tx:      tx,
+		network: "", // Default to empty, should be set by caller
 	}
+}
+
+// getBlockExplorerLink returns the block explorer link for the transaction if it's on mainnet or testnet
+func (r *transactionResult) getBlockExplorerLink() string {
+	if r.network == "" {
+		return ""
+	}
+
+	// Only show block explorer links for mainnet and testnet
+	if r.network != "mainnet" && r.network != "testnet" {
+		return ""
+	}
+
+	txID := r.tx.ID().String()
+
+	if r.network == "mainnet" {
+		return fmt.Sprintf("https://www.flowscan.io/tx/%s", txID)
+	} else if r.network == "testnet" {
+		return fmt.Sprintf("https://testnet.flowscan.io/tx/%s", txID)
+	}
+
+	return ""
 }
 
 func (r *transactionResult) JSON() any {
@@ -73,6 +97,11 @@ func (r *transactionResult) JSON() any {
 	result["payload"] = fmt.Sprintf("%x", r.tx.Encode())
 	result["authorizers"] = fmt.Sprintf("%s", r.tx.Authorizers)
 	result["payer"] = r.tx.Payer.String()
+
+	// Add block explorer link for mainnet and testnet
+	if blockExplorerLink := r.getBlockExplorerLink(); blockExplorerLink != "" {
+		result["view_on_block_explorer"] = blockExplorerLink
+	}
 
 	if r.result != nil {
 		result["block_id"] = r.result.BlockID.String()
@@ -120,6 +149,12 @@ func (r *transactionResult) String() string {
 	}
 
 	_, _ = fmt.Fprintf(writer, "ID\t%s\n", r.tx.ID())
+
+	// Add block explorer link for mainnet and testnet
+	if blockExplorerLink := r.getBlockExplorerLink(); blockExplorerLink != "" {
+		_, _ = fmt.Fprintf(writer, "🔗 View on Block Explorer\t%s\n", blockExplorerLink)
+	}
+
 	_, _ = fmt.Fprintf(writer, "Payer\t%s\n", r.tx.Payer.Hex())
 	_, _ = fmt.Fprintf(writer, "Authorizers\t%s\n", r.tx.Authorizers)
 
