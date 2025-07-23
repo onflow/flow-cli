@@ -98,7 +98,6 @@ func (r *transactionResult) JSON() any {
 	result["authorizers"] = fmt.Sprintf("%s", r.tx.Authorizers)
 	result["payer"] = r.tx.Payer.String()
 
-	// Add block explorer link for mainnet and testnet
 	if blockExplorerLink := r.getBlockExplorerLink(); blockExplorerLink != "" {
 		result["view_on_block_explorer"] = blockExplorerLink
 	}
@@ -150,9 +149,8 @@ func (r *transactionResult) String() string {
 
 	_, _ = fmt.Fprintf(writer, "ID\t%s\n", r.tx.ID())
 
-	// Add block explorer link for mainnet and testnet
 	if blockExplorerLink := r.getBlockExplorerLink(); blockExplorerLink != "" {
-		_, _ = fmt.Fprintf(writer, "🔗 View on Block Explorer\t%s\n", blockExplorerLink)
+		_, _ = fmt.Fprintf(writer, "View on Block Explorer\t%s\n", blockExplorerLink)
 	}
 
 	_, _ = fmt.Fprintf(writer, "Payer\t%s\n", r.tx.Payer.Hex())
