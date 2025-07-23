@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/onflow/flow-go-sdk"
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
@@ -288,5 +289,81 @@ func TestDependencyInstallerAddMany(t *testing.T) {
 			_, err := state.ReaderWriter().ReadFile(filePath)
 			assert.NoError(t, err, fmt.Sprintf("Failed to read generated file for %s", dep.Name))
 		}
+	})
+}
+
+func TestDependencyInstallerAliasTracking(t *testing.T) {
+	logger := output.NewStdoutLogger(output.NoneLog)
+	_, state, _ := util.TestMocks(t)
+
+	serviceAcc, _ := state.EmulatorServiceAccount()
+	serviceAddress := serviceAcc.Address
+
+	t.Run("AutoApplyAliasForSameAccount", func(t *testing.T) {
+		gw := mocks.DefaultMockGateway()
+
+		// Mock the same account for both contracts
+		gw.GetAccount.Run(func(args mock.Arguments) {
+			addr := args.Get(1).(flow.Address)
+			assert.Equal(t, addr.String(), serviceAcc.Address.String())
+			acc := tests.NewAccountWithAddress(addr.String())
+			acc.Contracts = map[string][]byte{
+				"ContractOne": []byte("access(all) contract ContractOne {}"),
+				"ContractTwo": []byte("access(all) contract ContractTwo {}"),
+			}
+
+			gw.GetAccount.Return(acc, nil)
+		})
+
+		di := &DependencyInstaller{
+			Gateways: map[string]gateway.Gateway{
+				config.EmulatorNetwork.Name: gw.Mock,
+				config.TestnetNetwork.Name:  gw.Mock,
+				config.MainnetNetwork.Name:  gw.Mock,
+			},
+			Logger:          logger,
+			State:           state,
+			SaveState:       true,
+			TargetDir:       "",
+			SkipDeployments: true,
+			SkipAlias:       false,
+			dependencies:    make(map[string]config.Dependency),
+			accountAliases:  make(map[string]map[string]flowsdk.Address),
+		}
+
+		// Add first contract - this should prompt for alias
+		dep1 := config.Dependency{
+			Name: "ContractOne",
+			Source: config.Source{
+				NetworkName:  "mainnet",
+				Address:      flow.HexToAddress(serviceAddress.String()),
+				ContractName: "ContractOne",
+			},
+		}
+		di.dependencies["mainnet://"+serviceAddress.String()+".ContractOne"] = dep1
+
+		// Simulate user providing an alias for the first contract
+		aliasAddress := flowsdk.HexToAddress("0x1234567890abcdef")
+		di.setAccountAlias(serviceAddress.String(), "testnet", aliasAddress)
+
+		// Add second contract - this should automatically use the same alias
+		dep2 := config.Dependency{
+			Name: "ContractTwo",
+			Source: config.Source{
+				NetworkName:  "mainnet",
+				Address:      flow.HexToAddress(serviceAddress.String()),
+				ContractName: "ContractTwo",
+			},
+		}
+		di.dependencies["mainnet://"+serviceAddress.String()+".ContractTwo"] = dep2
+
+		// Verify that the alias is automatically applied
+		existingAlias, exists := di.getAccountAlias(serviceAddress.String(), "testnet")
+		assert.True(t, exists, "Alias should exist for the account")
+		assert.Equal(t, aliasAddress, existingAlias, "Alias should match the stored value")
+
+		// Test that getCurrentContractAccountAddress works correctly
+		accountAddr := di.getCurrentContractAccountAddress("ContractOne", "mainnet")
+		assert.Equal(t, serviceAddress.String(), accountAddr, "Should return correct account address")
 	})
 }
