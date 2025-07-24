@@ -149,10 +149,6 @@ func (r *transactionResult) String() string {
 
 	_, _ = fmt.Fprintf(writer, "ID\t%s\n", r.tx.ID())
 
-	if blockExplorerLink := r.getBlockExplorerLink(); blockExplorerLink != "" {
-		_, _ = fmt.Fprintf(writer, "View on Block Explorer\t%s\n", blockExplorerLink)
-	}
-
 	_, _ = fmt.Fprintf(writer, "Payer\t%s\n", r.tx.Payer.Hex())
 	_, _ = fmt.Fprintf(writer, "Authorizers\t%s\n", r.tx.Authorizers)
 
@@ -243,6 +239,10 @@ func (r *transactionResult) String() string {
 
 	if !command.ContainsFlag(r.include, "fee-events") && !command.ContainsFlag(r.exclude, "events") {
 		_, _ = fmt.Fprint(writer, "\n\nFee Events (hidden, use --include fee-events)")
+	}
+
+	if blockExplorerLink := r.getBlockExplorerLink(); blockExplorerLink != "" {
+		_, _ = fmt.Fprintf(writer, "\n\n🔗 View on Block Explorer:\n%s", blockExplorerLink)
 	}
 
 	_ = writer.Flush()
