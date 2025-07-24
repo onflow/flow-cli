@@ -76,5 +76,6 @@ func getSystemTransaction(
 		tx:      tx,
 		include: getSystemFlags.Include,
 		exclude: getSystemFlags.Exclude,
+		network: flow.Network().Name,
 	}, nil
 }

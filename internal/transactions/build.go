@@ -127,6 +127,7 @@ func build(
 	return &transactionResult{
 		tx:      tx.FlowTransaction(),
 		include: []string{"code", "payload", "signatures"},
+		network: flow.Network().Name,
 	}, nil
 }
 

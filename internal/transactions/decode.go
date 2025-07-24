@@ -69,5 +69,6 @@ func decode(
 	return &transactionResult{
 		tx:      tx.FlowTransaction(),
 		include: decodeFlags.Include,
+		network: "", // decode doesn't have network context
 	}, nil
 }

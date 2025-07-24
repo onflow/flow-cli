@@ -591,4 +591,56 @@ Code (hidden, use --include code)
 
 Payload (hidden, use --include payload)`, output.OkEmoji()), "\n"), result.String())
 	})
+
+	t.Run("Block explorer link for mainnet", func(t *testing.T) {
+		result := transactionResult{tx: tx, result: txResult, network: "mainnet"}
+
+		output := result.String()
+		assert.Contains(t, output, "🔗 View on Block Explorer:")
+		assert.Contains(t, output, "https://www.flowscan.io/tx/e913d1f3e431c7df49c99845bea9ebff9db11bbf25d507b9ad0fad45652d515f")
+
+		jsonResult := result.JSON()
+		jsonMap, ok := jsonResult.(map[string]any)
+		assert.True(t, ok)
+		assert.Contains(t, jsonMap, "view_on_block_explorer")
+		assert.Equal(t, "https://www.flowscan.io/tx/e913d1f3e431c7df49c99845bea9ebff9db11bbf25d507b9ad0fad45652d515f", jsonMap["view_on_block_explorer"])
+	})
+
+	t.Run("Block explorer link for testnet", func(t *testing.T) {
+		result := transactionResult{tx: tx, result: txResult, network: "testnet"}
+
+		output := result.String()
+		assert.Contains(t, output, "🔗 View on Block Explorer:")
+		assert.Contains(t, output, "https://testnet.flowscan.io/tx/e913d1f3e431c7df49c99845bea9ebff9db11bbf25d507b9ad0fad45652d515f")
+
+		jsonResult := result.JSON()
+		jsonMap, ok := jsonResult.(map[string]any)
+		assert.True(t, ok)
+		assert.Contains(t, jsonMap, "view_on_block_explorer")
+		assert.Equal(t, "https://testnet.flowscan.io/tx/e913d1f3e431c7df49c99845bea9ebff9db11bbf25d507b9ad0fad45652d515f", jsonMap["view_on_block_explorer"])
+	})
+
+	t.Run("No block explorer link for emulator", func(t *testing.T) {
+		result := transactionResult{tx: tx, result: txResult, network: "emulator"}
+
+		output := result.String()
+		assert.NotContains(t, output, "🔗 View on Block Explorer:")
+
+		jsonResult := result.JSON()
+		jsonMap, ok := jsonResult.(map[string]any)
+		assert.True(t, ok)
+		assert.NotContains(t, jsonMap, "view_on_block_explorer")
+	})
+
+	t.Run("No block explorer link for empty network", func(t *testing.T) {
+		result := transactionResult{tx: tx, result: txResult, network: ""}
+
+		output := result.String()
+		assert.NotContains(t, output, "🔗 View on Block Explorer:")
+
+		jsonResult := result.JSON()
+		jsonMap, ok := jsonResult.(map[string]any)
+		assert.True(t, ok)
+		assert.NotContains(t, jsonMap, "view_on_block_explorer")
+	})
 }
