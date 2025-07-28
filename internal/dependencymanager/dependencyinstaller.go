@@ -618,7 +618,6 @@ func (di *DependencyInstaller) updateDependencyState(networkName, contractAddres
 
 // getCurrentContractAccountAddress returns the account address for the current contract being processed
 func (di *DependencyInstaller) getCurrentContractAccountAddress(contractName, networkName string) string {
-	// Find the dependency that matches this contract name and network
 	for _, dep := range di.dependencies {
 		if dep.Name == contractName && dep.Source.NetworkName == networkName {
 			return dep.Source.Address.String()
