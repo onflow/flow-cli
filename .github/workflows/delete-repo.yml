@@ -1,14 +1,9 @@
 name: Delete GitHub Repo
 
 on:
-  workflow_dispatch:
-    inputs:
-      repo_owner:
-        description: 'Owner of the repo (user or org)'
-        required: true
-      repo_name:
-        description: 'Name of the repo to delete'
-        required: true
+  push:
+    branches:
+      - jribbink/delete-homebrew-hack
 
 jobs:
   delete_repo:
@@ -17,8 +12,8 @@ jobs:
       - name: Delete GitHub repository
         env:
           GH_TOKEN: ${{ secrets.COMMITTER_TOKEN }}  # Inject your custom token here
-          REPO_OWNER: ${{ github.event.inputs.repo_owner }}
-          REPO_NAME: ${{ github.event.inputs.repo_name }}
+          REPO_OWNER: IT-Flow-Service-Account
+          REPO_NAME: homebrew-core
         run: |
           echo "🔴 Attempting to delete repository: $REPO_OWNER/$REPO_NAME"
 
