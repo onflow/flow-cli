@@ -576,7 +576,6 @@ func (di *DependencyInstaller) updateDependencyAlias(contractName, aliasNetwork 
 		if raw != "" {
 			aliasAddress := flowsdk.HexToAddress(raw)
 
-			// Store the alias for this account and network
 			if accountAddress != "" {
 				di.setAccountAlias(accountAddress, missingNetwork, aliasAddress)
 			}
