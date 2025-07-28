@@ -331,7 +331,6 @@ func TestDependencyInstallerAliasTracking(t *testing.T) {
 			accountAliases:  make(map[string]map[string]flowsdk.Address),
 		}
 
-		// Add first contract - this should prompt for alias
 		dep1 := config.Dependency{
 			Name: "ContractOne",
 			Source: config.Source{
@@ -342,7 +341,6 @@ func TestDependencyInstallerAliasTracking(t *testing.T) {
 		}
 		di.dependencies["mainnet://"+serviceAddress.String()+".ContractOne"] = dep1
 
-		// Simulate user providing an alias for the first contract
 		aliasAddress := flowsdk.HexToAddress("0x1234567890abcdef")
 		di.setAccountAlias(serviceAddress.String(), "testnet", aliasAddress)
 
@@ -357,12 +355,10 @@ func TestDependencyInstallerAliasTracking(t *testing.T) {
 		}
 		di.dependencies["mainnet://"+serviceAddress.String()+".ContractTwo"] = dep2
 
-		// Verify that the alias is automatically applied
 		existingAlias, exists := di.getAccountAlias(serviceAddress.String(), "testnet")
 		assert.True(t, exists, "Alias should exist for the account")
 		assert.Equal(t, aliasAddress, existingAlias, "Alias should match the stored value")
 
-		// Test that getCurrentContractAccountAddress works correctly
 		accountAddr := di.getCurrentContractAccountAddress("ContractOne", "mainnet")
 		assert.Equal(t, serviceAddress.String(), accountAddr, "Should return correct account address")
 	})
