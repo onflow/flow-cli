@@ -88,5 +88,6 @@ func sendSigned(
 		tx:      sentTx,
 		include: sendSignedFlags.Include,
 		exclude: sendSignedFlags.Exclude,
+		network: flow.Network().Name,
 	}, nil
 }

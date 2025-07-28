@@ -70,5 +70,6 @@ func get(
 		tx:      tx,
 		include: getFlags.Include,
 		exclude: getFlags.Exclude,
+		network: flow.Network().Name,
 	}, nil
 }

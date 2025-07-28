@@ -157,5 +157,6 @@ func SendTransaction(code []byte, args []string, location string, flow flowkit.S
 		tx:      tx,
 		include: sendFlags.Include,
 		exclude: sendFlags.Exclude,
+		network: flow.Network().Name,
 	}, nil
 }
