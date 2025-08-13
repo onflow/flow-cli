@@ -47,8 +47,8 @@ func Exit(code int, msg string) {
 
 // entryExists checks if an entry already exists in the content
 func entryExists(content, entry string) bool {
-	lines := strings.Split(strings.TrimSpace(content), "\n")
-	for _, line := range lines {
+	lines := strings.SplitSeq(strings.TrimSpace(content), "\n")
+	for line := range lines {
 		if strings.TrimSpace(line) == strings.TrimSpace(entry) {
 			return true
 		}
