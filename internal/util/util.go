@@ -185,7 +185,7 @@ func AddFlowEntriesToCursorIgnore(targetDir string, loader flowkit.ReaderWriter)
 		".env",
 		"",
 		"# Pay attention to imports directory",
-		"!imports/**",
+		"!imports",
 	}
 
 	cursorIgnorePath := filepath.Join(targetDir, ".cursorignore")
