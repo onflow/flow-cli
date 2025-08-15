@@ -61,7 +61,7 @@ func TestAddFlowEntriesToCursorIgnore_NoDuplicates(t *testing.T) {
 	content, err := state.ReaderWriter().ReadFile(".cursorignore")
 	require.NoError(t, err, "Failed to read cursorignore file")
 
-	expectedEntries := []string{"# flow", "emulator-account.pkey", ".env", "# Pay attention to imports directory", "!imports/**"}
+	expectedEntries := []string{"# flow", "emulator-account.pkey", ".env", "# Pay attention to imports directory", "!imports"}
 	for _, entry := range expectedEntries {
 		assert.Contains(t, string(content), entry, "Expected cursorignore to contain %s", entry)
 	}
@@ -114,7 +114,7 @@ func TestAddFlowEntriesToCursorIgnore_WithExistingContent(t *testing.T) {
 
 	assert.Contains(t, string(content), existingContent, "Expected existing content to be preserved")
 
-	flowEntries := []string{"# flow", "emulator-account.pkey", ".env", "# Pay attention to imports directory", "!imports/**"}
+	flowEntries := []string{"# flow", "emulator-account.pkey", ".env", "# Pay attention to imports directory", "!imports"}
 	for _, entry := range flowEntries {
 		assert.Contains(t, string(content), entry, "Expected cursorignore to contain %s", entry)
 	}
