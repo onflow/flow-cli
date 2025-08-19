@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/onflow/cadence/runtime/parser"
+	"github.com/onflow/cadence/parser"
 	"github.com/onflow/flixkit-go/v2/flixkit"
 
 	"github.com/spf13/cobra"

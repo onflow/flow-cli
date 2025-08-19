@@ -20,11 +20,15 @@ package evm
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/big"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/onflow/flow-evm-gateway/bootstrap"
 	"github.com/onflow/flow-evm-gateway/config"
@@ -81,13 +85,12 @@ var gatewayCommand = &command.Command{
 		readerWriter flowkit.ReaderWriter,
 		flow flowkit.Services,
 	) (command.Result, error) {
-		cfg := &config.Config{
+		cfg := config.Config{
 			DatabaseDir:       flagGateway.DatabaseDir,
 			AccessNodeHost:    flagGateway.AccessNodeHost,
 			RPCPort:           flagGateway.RPCPort,
 			RPCHost:           flagGateway.RPCHost,
 			InitCadenceHeight: flagGateway.InitCadenceHeight,
-			CreateCOAResource: flagGateway.CreateCOAResource,
 		}
 
 		if flagGateway.Coinbase == "" {
@@ -130,12 +133,28 @@ var gatewayCommand = &command.Command{
 		}
 
 		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
 
+		done := make(chan struct{})
 		ready := make(chan struct{})
+		once := sync.Once{}
+		closeReady := func() {
+			once.Do(func() {
+				close(ready)
+			})
+		}
 		go func() {
-			err = bootstrap.Run(ctx, cfg, ready)
-			if err != nil {
-				panic(err)
+			defer close(done)
+			// In case an error happens before ready is called we need to close the ready channel
+			defer closeReady()
+
+			err := bootstrap.Run(
+				ctx,
+				cfg,
+				closeReady,
+			)
+			if err != nil && !errors.Is(err, context.Canceled) {
+				log.Err(err).Msg("Gateway runtime error")
 			}
 		}()
 
@@ -144,9 +163,17 @@ var gatewayCommand = &command.Command{
 		osSig := make(chan os.Signal, 1)
 		signal.Notify(osSig, syscall.SIGINT, syscall.SIGTERM)
 
-		<-osSig
-		fmt.Println("OS Signal to shutdown received, shutting down")
-		cancel()
+		// wait for gateway to exit or for a shutdown signal
+		select {
+		case <-osSig:
+			log.Info().Msg("OS Signal to shutdown received, shutting down")
+			cancel()
+		case <-done:
+			log.Info().Msg("done, shutting down")
+		}
+
+		// Wait for the gateway to completely stop
+		<-done
 
 		return nil, nil
 	},

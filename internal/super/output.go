@@ -112,7 +112,7 @@ func failureDeployment(err error, contractPathNames map[string]string) string {
 	// handle cadence runtime errors
 	var deployErr *flowkit.ProjectDeploymentError
 	if errors.As(err, &deployErr) {
-		out.WriteString(output.ErrorEmoji() + " Error deploying your project. Runtime error encountered which means your code is incorrect, check details bellow. \n\n")
+		out.WriteString(output.ErrorEmoji() + " Error deploying your project. Runtime error encountered which means your code is incorrect, check details below. \n\n")
 
 		for name, err := range deployErr.Contracts() {
 			out.WriteString(output.Bold(fmt.Sprintf("%s Errors:\n", name)))

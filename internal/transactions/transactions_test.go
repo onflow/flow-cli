@@ -138,6 +138,44 @@ func Test_Get(t *testing.T) {
 	})
 }
 
+func Test_GetSystem(t *testing.T) {
+	srv, _, rw := util.TestMocks(t)
+
+	t.Run("Success", func(t *testing.T) {
+		inArgs := []string{"100"}
+
+		returnBlock := tests.NewBlock()
+		returnBlock.Height = uint64(100)
+
+		srv.GetBlock.Run(func(args mock.Arguments) {
+			assert.Equal(t, uint64(100), args.Get(1).(flowkit.BlockQuery).Height)
+		}).Return(returnBlock, nil)
+
+		srv.GetSystemTransaction.Return(nil, nil, nil)
+
+		res, err := getSystemTransaction(inArgs, command.GlobalFlags{}, util.NoLogger, rw, srv.Mock)
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
+	})
+
+	t.Run("Fail invalid block ID", func(t *testing.T) {
+		inArgs := []string{""}
+
+		returnBlock := tests.NewBlock()
+		returnBlock.Height = uint64(100)
+
+		srv.GetBlock.Run(func(args mock.Arguments) {
+			assert.Equal(t, uint64(100), args.Get(1).(flowkit.BlockQuery).Height)
+		}).Return(returnBlock, nil)
+
+		srv.GetSystemTransaction.Return(nil, nil, fmt.Errorf("block not found"))
+
+		res, err := getSystemTransaction(inArgs, command.GlobalFlags{}, util.NoLogger, rw, srv.Mock)
+		assert.Error(t, err)
+		assert.Nil(t, res)
+	})
+}
+
 func Test_Send(t *testing.T) {
 	srv, state, _ := util.TestMocks(t)
 
@@ -552,5 +590,57 @@ Events:
 Code (hidden, use --include code)
 
 Payload (hidden, use --include payload)`, output.OkEmoji()), "\n"), result.String())
+	})
+
+	t.Run("Block explorer link for mainnet", func(t *testing.T) {
+		result := transactionResult{tx: tx, result: txResult, network: "mainnet"}
+
+		output := result.String()
+		assert.Contains(t, output, "🔗 View on Block Explorer:")
+		assert.Contains(t, output, "https://www.flowscan.io/tx/e913d1f3e431c7df49c99845bea9ebff9db11bbf25d507b9ad0fad45652d515f")
+
+		jsonResult := result.JSON()
+		jsonMap, ok := jsonResult.(map[string]any)
+		assert.True(t, ok)
+		assert.Contains(t, jsonMap, "view_on_block_explorer")
+		assert.Equal(t, "https://www.flowscan.io/tx/e913d1f3e431c7df49c99845bea9ebff9db11bbf25d507b9ad0fad45652d515f", jsonMap["view_on_block_explorer"])
+	})
+
+	t.Run("Block explorer link for testnet", func(t *testing.T) {
+		result := transactionResult{tx: tx, result: txResult, network: "testnet"}
+
+		output := result.String()
+		assert.Contains(t, output, "🔗 View on Block Explorer:")
+		assert.Contains(t, output, "https://testnet.flowscan.io/tx/e913d1f3e431c7df49c99845bea9ebff9db11bbf25d507b9ad0fad45652d515f")
+
+		jsonResult := result.JSON()
+		jsonMap, ok := jsonResult.(map[string]any)
+		assert.True(t, ok)
+		assert.Contains(t, jsonMap, "view_on_block_explorer")
+		assert.Equal(t, "https://testnet.flowscan.io/tx/e913d1f3e431c7df49c99845bea9ebff9db11bbf25d507b9ad0fad45652d515f", jsonMap["view_on_block_explorer"])
+	})
+
+	t.Run("No block explorer link for emulator", func(t *testing.T) {
+		result := transactionResult{tx: tx, result: txResult, network: "emulator"}
+
+		output := result.String()
+		assert.NotContains(t, output, "🔗 View on Block Explorer:")
+
+		jsonResult := result.JSON()
+		jsonMap, ok := jsonResult.(map[string]any)
+		assert.True(t, ok)
+		assert.NotContains(t, jsonMap, "view_on_block_explorer")
+	})
+
+	t.Run("No block explorer link for empty network", func(t *testing.T) {
+		result := transactionResult{tx: tx, result: txResult, network: ""}
+
+		output := result.String()
+		assert.NotContains(t, output, "🔗 View on Block Explorer:")
+
+		jsonResult := result.JSON()
+		jsonMap, ok := jsonResult.(map[string]any)
+		assert.True(t, ok)
+		assert.NotContains(t, jsonMap, "view_on_block_explorer")
 	})
 }

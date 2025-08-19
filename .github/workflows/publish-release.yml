@@ -12,5 +12,6 @@ jobs:
       - uses: mislav/bump-homebrew-formula-action@v3
         with:
           formula-name: flow-cli
+          base-branch: main
         env:
           COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}

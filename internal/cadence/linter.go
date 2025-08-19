@@ -19,22 +19,21 @@
 package cadence
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
-
-	"errors"
 
 	"github.com/onflow/flow-cli/internal/util"
 
 	cdclint "github.com/onflow/cadence-tools/lint"
 	cdctests "github.com/onflow/cadence-tools/test/helpers"
-	"github.com/onflow/cadence/runtime/ast"
-	"github.com/onflow/cadence/runtime/common"
-	cdcerrors "github.com/onflow/cadence/runtime/errors"
-	"github.com/onflow/cadence/runtime/parser"
-	"github.com/onflow/cadence/runtime/sema"
-	"github.com/onflow/cadence/runtime/stdlib"
+	"github.com/onflow/cadence/ast"
+	"github.com/onflow/cadence/common"
+	cdcerrors "github.com/onflow/cadence/errors"
+	"github.com/onflow/cadence/parser"
+	"github.com/onflow/cadence/sema"
+	"github.com/onflow/cadence/stdlib"
 	"github.com/onflow/cadence/tools/analysis"
 	"github.com/onflow/flowkit/v2"
 	"golang.org/x/exp/maps"
@@ -69,8 +68,8 @@ func newLinter(state *flowkit.State) *linter {
 
 	// Create checker configs for both standard and script
 	// Scripts have a different stdlib than contracts and transactions
-	l.checkerStandardConfig = l.newCheckerConfig(util.NewCheckerEnvironment())
-	l.checkerScriptConfig = l.newCheckerConfig(util.NewScriptCheckerEnvironment())
+	l.checkerStandardConfig = l.newCheckerConfig(util.NewStandardLibrary())
+	l.checkerScriptConfig = l.newCheckerConfig(util.NewScriptStandardLibrary())
 
 	return l
 }
@@ -154,20 +153,16 @@ func (l *linter) lintFile(
 }
 
 // Create a new checker config with the given standard library
-func (l *linter) newCheckerConfig(env *util.CheckerEnvironment) *sema.Config {
+func (l *linter) newCheckerConfig(standardLibrary *util.StandardLibrary) *sema.Config {
 	return &sema.Config{
 		BaseValueActivationHandler: func(location common.Location) *sema.VariableActivation {
-			return env.GetBaseValueActivation(location)
-		},
-		BaseTypeActivationHandler: func(location common.Location) *sema.VariableActivation {
-			return env.GetBaseTypeActivation(location)
+			return standardLibrary.BaseValueActivation
 		},
 		AccessCheckMode:            sema.AccessCheckModeStrict,
 		PositionInfoEnabled:        true, // Must be enabled for linters
 		ExtendedElaborationEnabled: true, // Must be enabled for linters
 		ImportHandler:              l.handleImport,
 		SuggestionsEnabled:         true, // Must be enabled to offer semantic suggestions
-		AttachmentsEnabled:         true,
 	}
 }
 
@@ -190,11 +185,6 @@ func (l *linter) handleImport(
 	error,
 ) {
 	switch importedLocation {
-	case stdlib.CryptoCheckerLocation:
-		cryptoChecker := stdlib.CryptoChecker()
-		return sema.ElaborationImport{
-			Elaboration: cryptoChecker.Elaboration,
-		}, nil
 	case stdlib.TestContractLocation:
 		testChecker := stdlib.GetTestContractType().Checker
 		return sema.ElaborationImport{

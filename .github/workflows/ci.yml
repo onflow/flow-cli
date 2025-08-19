@@ -19,6 +19,9 @@ defaults:
   run:
     shell: bash
 
+env:
+  GO_VERSION: "1.24"
+
 jobs:
   test:
     strategy:
@@ -26,19 +29,17 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: ${{ env.GO_VERSION }}
       - name: Run tests
         run: |
           make ci
           make check-tidy
           make check-headers
       - name: Upload coverage report
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           file: ./coverage.txt
           flags: unittests
@@ -48,15 +49,15 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: ${{ env.GO_VERSION }}
       - name: generate
         run: make generate
-      - uses: golangci/golangci-lint-action@v6.1.1
+      - uses: golangci/golangci-lint-action@v6.5.0
         with:
-          version: v1.59.0
+          version: v1.64.8
           only-new-issues: true
           skip-pkg-cache: true
           args: --timeout=3m
