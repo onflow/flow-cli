@@ -20,9 +20,7 @@ package transactions
 
 import (
 	"context"
-	"strings"
 
-	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flowkit/v2"
@@ -31,36 +29,44 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 )
 
-type flagsGet struct {
-	Sealed  bool     `default:"true" flag:"sealed" info:"Wait for a sealed result"`
+type flagsGetSystem struct {
 	Include []string `default:"" flag:"include" info:"Fields to include in the output. Valid values: signatures, code, payload, fee-events."`
 	Exclude []string `default:"" flag:"exclude" info:"Fields to exclude from the output. Valid values: events."`
 }
 
-var getFlags = flagsGet{}
+var getSystemFlags = flagsGetSystem{}
 
-var getCommand = &command.Command{
+var getSystemCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "get <tx_id>",
-		Aliases: []string{"status"},
-		Short:   "Get the transaction by ID",
-		Example: "flow transactions get 07a8...b433",
+		Use:     "get-system <block_id|latest|block_height>",
+		Short:   "Get the system transaction by block info",
+		Example: "flow transactions get-system a1b2c3...",
 		Args:    cobra.ExactArgs(1),
 	},
-	Flags: &getFlags,
-	Run:   get,
+	Flags: &getSystemFlags,
+	Run:   getSystemTransaction,
 }
 
-func get(
+func getSystemTransaction(
 	args []string,
 	_ command.GlobalFlags,
-	_ output.Logger,
+	logger output.Logger,
 	_ flowkit.ReaderWriter,
 	flow flowkit.Services,
 ) (command.Result, error) {
-	id := flowsdk.HexToID(strings.TrimPrefix(args[0], "0x"))
+	query, err := flowkit.NewBlockQuery(args[0])
+	if err != nil {
+		return nil, err
+	}
 
-	tx, result, err := flow.GetTransactionByID(context.Background(), id, getFlags.Sealed)
+	logger.StartProgress("Fetching Block...")
+	defer logger.StopProgress()
+	block, err := flow.GetBlock(context.Background(), query)
+	if err != nil {
+		return nil, err
+	}
+
+	tx, result, err := flow.GetSystemTransaction(context.Background(), block.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -68,8 +74,8 @@ func get(
 	return &transactionResult{
 		result:  result,
 		tx:      tx,
-		include: getFlags.Include,
-		exclude: getFlags.Exclude,
+		include: getSystemFlags.Include,
+		exclude: getSystemFlags.Exclude,
 		network: flow.Network().Name,
 	}, nil
 }

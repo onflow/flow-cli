@@ -19,7 +19,7 @@
 package cadence
 
 import (
-	"github.com/onflow/cadence/runtime/cmd/execute"
+	"github.com/onflow/cadence/cmd/execute"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/cadence/languageserver"

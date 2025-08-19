@@ -20,6 +20,7 @@ package generator
 
 import (
 	"fmt"
+	"maps"
 	"path/filepath"
 
 	flowsdk "github.com/onflow/flow-go-sdk"
@@ -64,10 +65,7 @@ func (c ContractTemplate) GetData() map[string]interface{} {
 	data := map[string]interface{}{
 		"Name": c.Name,
 	}
-
-	for k, v := range c.Data {
-		data[k] = v
-	}
+	maps.Copy(data, c.Data)
 	return data
 }
 

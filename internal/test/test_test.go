@@ -24,8 +24,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/onflow/cadence/runtime/common"
-	"github.com/onflow/cadence/runtime/stdlib"
+	"github.com/onflow/cadence/common"
+	"github.com/onflow/cadence/stdlib"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -227,7 +227,7 @@ func TestExecutingTests(t *testing.T) {
 		}
 		state.Contracts().AddOrUpdate(c)
 		// fungibleToken has no `testing` alias, but it is not
-		// actually deployed/used, so there is no errror.
+		// actually deployed/used, so there is no error.
 		fungibleToken := config.Contract{
 			Name:     "FungibleToken",
 			Location: "cadence/contracts/FungibleToken.cdc",
@@ -344,11 +344,36 @@ func TestExecutingTests(t *testing.T) {
 				"A.0000000000000002.FungibleTokenSwitchboard",
 				"I.BlockchainHelpers",
 				"A.0000000000000001.Burner",
+				"A.0000000000000002.USDCFlow",
+				"A.0000000000000001.NFTStorefrontV2",
+				"A.0000000000000001.Crypto",
+				"A.0000000000000002.FlowExecutionParameters",
+				"A.0000000000000001.Migration",
+				"A.0000000000000001.CrossVMMetadataViews",
+				"A.0000000000000001.CrossVMNFT",
+				"A.0000000000000001.CrossVMToken",
+				"A.0000000000000001.FlowEVMBridge",
+				"A.0000000000000001.FlowEVMBridgeAccessor",
+				"A.0000000000000001.FlowEVMBridgeConfig",
+				"A.0000000000000001.FlowEVMBridgeHandlerInterfaces",
+				"A.0000000000000001.FlowEVMBridgeHandlers",
+				"A.0000000000000001.FlowEVMBridgeNFTEscrow",
+				"A.0000000000000001.FlowEVMBridgeResolver",
+				"A.0000000000000001.FlowEVMBridgeTemplates",
+				"A.0000000000000001.FlowEVMBridgeTokenEscrow",
+				"A.0000000000000001.FlowEVMBridgeUtils",
+				"A.0000000000000001.IBridgePermissions",
+				"A.0000000000000001.ICrossVM",
+				"A.0000000000000001.ICrossVMAsset",
+				"A.0000000000000001.IEVMBridgeNFTMinter",
+				"A.0000000000000001.IEVMBridgeTokenMinter",
+				"A.0000000000000001.IFlowEVMNFTBridge",
+				"A.0000000000000001.IFlowEVMTokenBridge",
 			},
 			coverageReport.ExcludedLocationIDs(),
 		)
 
-		expected := "Coverage: 93.8% of statements"
+		expected := "Coverage: 93.9% of statements"
 
 		assert.Equal(
 			t,
@@ -446,6 +471,31 @@ func TestExecutingTests(t *testing.T) {
 				"A.0000000000000002.FungibleTokenSwitchboard",
 				"I.BlockchainHelpers",
 				"A.0000000000000001.Burner",
+				"A.0000000000000001.Crypto",
+				"A.0000000000000001.NFTStorefrontV2",
+				"A.0000000000000002.USDCFlow",
+				"A.0000000000000002.FlowExecutionParameters",
+				"A.0000000000000001.Migration",
+				"A.0000000000000001.CrossVMMetadataViews",
+				"A.0000000000000001.CrossVMNFT",
+				"A.0000000000000001.CrossVMToken",
+				"A.0000000000000001.FlowEVMBridge",
+				"A.0000000000000001.FlowEVMBridgeAccessor",
+				"A.0000000000000001.FlowEVMBridgeConfig",
+				"A.0000000000000001.FlowEVMBridgeHandlerInterfaces",
+				"A.0000000000000001.FlowEVMBridgeHandlers",
+				"A.0000000000000001.FlowEVMBridgeNFTEscrow",
+				"A.0000000000000001.FlowEVMBridgeResolver",
+				"A.0000000000000001.FlowEVMBridgeTemplates",
+				"A.0000000000000001.FlowEVMBridgeTokenEscrow",
+				"A.0000000000000001.FlowEVMBridgeUtils",
+				"A.0000000000000001.IBridgePermissions",
+				"A.0000000000000001.ICrossVM",
+				"A.0000000000000001.ICrossVMAsset",
+				"A.0000000000000001.IEVMBridgeNFTMinter",
+				"A.0000000000000001.IEVMBridgeTokenMinter",
+				"A.0000000000000001.IFlowEVMNFTBridge",
+				"A.0000000000000001.IFlowEVMTokenBridge",
 			},
 			coverageReport.ExcludedLocationIDs(),
 		)

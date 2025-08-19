@@ -105,12 +105,12 @@ func (f *projectFiles) deployments() (map[string][]string, error) {
 	return deployments, nil
 }
 
-// contracts returns a list of scripts in project.
+// scripts returns a list of scripts in project.
 func (f *projectFiles) scripts() ([]string, error) {
 	return f.getCadenceFilepaths(scriptDir)
 }
 
-// contracts returns a list of transactions in project.
+// transactions returns a list of transactions in project.
 func (f *projectFiles) transactions() ([]string, error) {
 	return f.getCadenceFilepaths(transactionDir)
 }
@@ -190,7 +190,7 @@ func (f *projectFiles) watch() (<-chan accountChange, <-chan contractChange, err
 	return accounts, contracts, nil
 }
 
-// getFilePaths returns a list of only Cadence files that are inside the provided directory.
+// getCadenceFilepaths returns a list of only Cadence files that are inside the provided directory.
 func (f *projectFiles) getCadenceFilepaths(dir string) ([]string, error) {
 	dir = filepath.Join(f.cadencePath, dir)
 	paths := make([]string, 0)

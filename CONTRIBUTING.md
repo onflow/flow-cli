@@ -205,7 +205,7 @@ equal (=) sign (ex: `--username test` or `--username=test`)
 flow accounts get --filter "address"
 ```
 
-Use common naming for default falgs such as:
+Use common naming for default flags such as:
 
 `--log`: Logging level.
 
@@ -329,7 +329,7 @@ Main help screen must contain a list of all commands with their own description,
 it must also include examples for commands. Help screen should include link to the documentation website.
 
 Commands should have a description that is not too long (less than 100 characters).
-Help should be outputed if command is ran without any arguments. Help outline should be:
+Help should be outputted if command is ran without any arguments. Help outline should be:
 
 ```Description:
     <description>

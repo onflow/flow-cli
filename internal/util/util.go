@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"text/tabwriter"
 
@@ -42,6 +43,17 @@ const EnvPrefix = "FLOW"
 func Exit(code int, msg string) {
 	fmt.Fprintln(os.Stderr, msg)
 	os.Exit(code)
+}
+
+// entryExists checks if an entry already exists in the content
+func entryExists(content, entry string) bool {
+	lines := strings.SplitSeq(strings.TrimSpace(content), "\n")
+	for line := range lines {
+		if strings.TrimSpace(line) == strings.TrimSpace(entry) {
+			return true
+		}
+	}
+	return false
 }
 
 // AddToGitIgnore adds a new line to the .gitignore if one doesn't exist it creates it.
@@ -63,11 +75,121 @@ func AddToGitIgnore(filename string, loader flowkit.ReaderWriter) error {
 		gitIgnoreFiles = string(gitIgnoreFilesRaw)
 		filePermissions = fileStat.Mode().Perm()
 	}
+
+	if entryExists(gitIgnoreFiles, filename) {
+		return nil // Entry already exists, no need to add
+	}
+
 	return loader.WriteFile(
 		gitIgnorePath,
-		[]byte(fmt.Sprintf("%s\n%s", gitIgnoreFiles, filename)),
+		fmt.Appendf(nil, "%s\n%s", gitIgnoreFiles, filename),
 		filePermissions,
 	)
+}
+
+// AddToCursorIgnore adds a new line to the .cursorignore if one doesn't exist it creates it.
+func AddToCursorIgnore(filename string, loader flowkit.ReaderWriter) error {
+	currentWd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	cursorIgnorePath := filepath.Join(currentWd, ".cursorignore")
+	cursorIgnoreFiles := ""
+	filePermissions := os.FileMode(0644)
+
+	fileStat, err := os.Stat(cursorIgnorePath)
+	if !os.IsNotExist(err) {
+		cursorIgnoreFilesRaw, err := loader.ReadFile(cursorIgnorePath)
+		if err != nil {
+			return err
+		}
+		cursorIgnoreFiles = string(cursorIgnoreFilesRaw)
+		filePermissions = fileStat.Mode().Perm()
+	}
+
+	if entryExists(cursorIgnoreFiles, filename) {
+		return nil // Entry already exists, no need to add
+	}
+
+	return loader.WriteFile(
+		cursorIgnorePath,
+		fmt.Appendf(nil, "%s\n%s", cursorIgnoreFiles, filename),
+		filePermissions,
+	)
+}
+
+// addEntriesToIgnoreFile is a helper function that adds entries to an ignore file without duplicates
+func addEntriesToIgnoreFile(filePath string, entries []string, loader flowkit.ReaderWriter) error {
+	existingContent := ""
+	filePermissions := os.FileMode(0644)
+
+	// Try to read existing content using the loader
+	existingContentRaw, err := loader.ReadFile(filePath)
+	if err == nil {
+		existingContent = string(existingContentRaw)
+		// Try to get file permissions, but don't fail if we can't
+		if stat, err := os.Stat(filePath); err == nil {
+			filePermissions = stat.Mode().Perm()
+		}
+	}
+
+	// Split existing content into lines
+	existingLines := strings.Split(strings.TrimSpace(existingContent), "\n")
+	existingSet := make(map[string]bool)
+	for _, line := range existingLines {
+		if strings.TrimSpace(line) != "" {
+			existingSet[strings.TrimSpace(line)] = true
+		}
+	}
+
+	// Add new entries that don't already exist
+	var newEntries []string
+	for _, entry := range entries {
+		if !existingSet[strings.TrimSpace(entry)] {
+			newEntries = append(newEntries, entry)
+		}
+	}
+
+	if len(newEntries) == 0 {
+		return nil // All entries already exist
+	}
+
+	// Combine existing content with new entries
+	content := existingContent
+	if content != "" && !strings.HasSuffix(content, "\n") {
+		content += "\n"
+	}
+	content += strings.Join(newEntries, "\n")
+
+	return loader.WriteFile(filePath, []byte(content), filePermissions)
+}
+
+// AddFlowEntriesToGitIgnore adds the standard Flow entries to .gitignore without duplicates
+func AddFlowEntriesToGitIgnore(targetDir string, loader flowkit.ReaderWriter) error {
+	flowEntries := []string{
+		"# flow",
+		"emulator-account.pkey",
+		"imports",
+		".env",
+	}
+
+	gitIgnorePath := filepath.Join(targetDir, ".gitignore")
+	return addEntriesToIgnoreFile(gitIgnorePath, flowEntries, loader)
+}
+
+// AddFlowEntriesToCursorIgnore adds the standard Flow entries to .cursorignore without duplicates
+func AddFlowEntriesToCursorIgnore(targetDir string, loader flowkit.ReaderWriter) error {
+	flowEntries := []string{
+		"# flow",
+		"emulator-account.pkey",
+		".env",
+		"",
+		"# Pay attention to imports directory",
+		"!imports",
+	}
+
+	cursorIgnorePath := filepath.Join(targetDir, ".cursorignore")
+	return addEntriesToIgnoreFile(cursorIgnorePath, flowEntries, loader)
 }
 
 // GetAddressNetwork returns the chain ID for an address.
@@ -108,7 +230,7 @@ func ValidateECDSAP256Pub(key string) error {
 func removeFromStringArray(s []string, el string) []string {
 	for i, v := range s {
 		if v == el {
-			s = append(s[:i], s[i+1:]...)
+			s = slices.Delete(s, i, i+1)
 			break
 		}
 	}
