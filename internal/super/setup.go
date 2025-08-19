@@ -44,8 +44,6 @@ import (
 
 type flagsSetup struct {
 	ConfigOnly bool `default:"false" flag:"config-only" info:"Only create a flow.json default config"`
-	Scaffold   bool `default:"" flag:"scaffold" info:"Interactively select a provided scaffold for project creation"`
-	ScaffoldID int  `default:"" flag:"scaffold-id" info:"Use provided scaffold ID for project creation"`
 }
 
 var setupFlags = flagsSetup{}
@@ -73,18 +71,7 @@ func create(
 	var targetDir string
 	var err error
 
-	if setupFlags.Scaffold || setupFlags.ScaffoldID != 0 {
-		fmt.Println("`scaffold` and `scaffold-id` are deprecated, and will be removed in a future release.")
-		// Error if no project name is given
-		if len(args) < 1 || args[0] == "" {
-			return nil, fmt.Errorf("no project name provided")
-		}
-
-		targetDir, err = handleScaffold(args[0], logger)
-		if err != nil {
-			return nil, err
-		}
-	} else if setupFlags.ConfigOnly {
+	if setupFlags.ConfigOnly {
 		if len(args) > 0 {
 			return nil, fmt.Errorf("project name not required when using --config-only flag")
 		}
