@@ -9,6 +9,7 @@ require (
 	github.com/charmbracelet/bubbletea v1.3.6
 	github.com/coreos/go-semver v0.3.1
 	github.com/dukex/mixpanel v1.0.1
+	github.com/ethereum/go-ethereum v1.16.2
 	github.com/getsentry/sentry-go v0.35.1
 	github.com/gosuri/uilive v0.0.4
 	github.com/logrusorgru/aurora/v4 v4.0.0
@@ -25,7 +26,6 @@ require (
 	github.com/onflow/flow-go v0.42.3-util-fix.0.20250819165158-ea886bab7c19
 	github.com/onflow/flow-go-sdk v1.7.0
 	github.com/onflow/flowkit/v2 v2.5.0-preview.1
-	github.com/onflow/go-ethereum v1.15.10
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/pkg/errors v0.9.1
@@ -102,7 +102,6 @@ require (
 	github.com/emicklei/dot v1.6.2 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
 	github.com/ethereum/c-kzg-4844/v2 v2.1.0 // indirect
-	github.com/ethereum/go-ethereum v1.16.2 // indirect
 	github.com/ethereum/go-verkle v0.2.2 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/ferranbt/fastssz v0.1.4 // indirect
@@ -209,6 +208,7 @@ require (
 	github.com/onflow/flow-nft/lib/go/contracts v1.2.4 // indirect
 	github.com/onflow/flow-nft/lib/go/templates v1.2.1 // indirect
 	github.com/onflow/flow/protobuf/go/flow v0.4.11 // indirect
+	github.com/onflow/go-ethereum v1.15.10 // indirect
 	github.com/onflow/nft-storefront/lib/go/contracts v1.0.0 // indirect
 	github.com/onflow/sdks v0.6.0-preview.1 // indirect
 	github.com/onflow/wal v1.0.2 // indirect

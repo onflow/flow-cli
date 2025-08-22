@@ -30,6 +30,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 
+	gethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/onflow/flow-evm-gateway/bootstrap"
 	"github.com/onflow/flow-evm-gateway/config"
 	flowsdk "github.com/onflow/flow-go-sdk"
@@ -38,7 +39,6 @@ import (
 	flowGo "github.com/onflow/flow-go/model/flow"
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/output"
-	gethCommon "github.com/onflow/go-ethereum/common"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
