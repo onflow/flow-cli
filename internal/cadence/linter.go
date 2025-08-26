@@ -308,14 +308,11 @@ func convertPositionedErrorToDiagnostic(
 
 	var category string
 	var semanticErr sema.SemanticError
-	var syntaxErr *parser.SyntaxError
-	var syntaxErrWithSuggestedReplacement *parser.SyntaxErrorWithSuggestedReplacement
+	var parseError parser.ParseError
 	switch {
 	case errors.As(err, &semanticErr):
 		category = SemanticErrorCategory
-	case errors.As(err, &syntaxErr):
-		category = SyntaxErrorCategory
-	case errors.As(err, &syntaxErrWithSuggestedReplacement):
+	case errors.As(err, &parseError):
 		category = SyntaxErrorCategory
 	default:
 		category = ErrorCategory
