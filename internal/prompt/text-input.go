@@ -20,6 +20,7 @@ package prompt
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -27,22 +28,30 @@ import (
 
 // textInputModel is now private, only accessible within the 'prompt' package.
 type textInputModel struct {
-	textInput textinput.Model
-	err       error
-	customMsg string
+	textInput    textinput.Model
+	err          error
+	customMsg    string
+	validate     func(string) error
+	defaultValue string
+	cancelled    bool
 }
 
 // newTextInput is a private function that initializes a new text input model.
-func newTextInput(customMsg, placeholder string) textInputModel {
+func newTextInput(customMsg, placeholder, defaultValue string, validate func(string) error) textInputModel {
 	ti := textinput.New()
 	ti.Placeholder = placeholder
 	ti.Focus()
 	ti.CharLimit = 256
 	ti.Width = 30
+	if defaultValue != "" {
+		ti.SetValue(defaultValue)
+	}
 
 	return textInputModel{
-		textInput: ti,
-		customMsg: customMsg,
+		textInput:    ti,
+		customMsg:    customMsg,
+		validate:     validate,
+		defaultValue: defaultValue,
 	}
 }
 
@@ -54,11 +63,26 @@ func (m textInputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.Type {
-		case tea.KeyEnter, tea.KeyCtrlC, tea.KeyEsc:
+		case tea.KeyEnter:
+			// Validate input before quitting
+			if m.validate != nil {
+				if err := m.validate(m.textInput.Value()); err != nil {
+					m.err = err
+					return m, nil
+				}
+			}
+			m.err = nil
+			return m, tea.Quit
+		case tea.KeyCtrlC, tea.KeyEsc:
+			m.cancelled = true
 			return m, tea.Quit
 		}
 		var cmd tea.Cmd
 		m.textInput, cmd = m.textInput.Update(msg)
+		// Clear error when user types
+		if m.err != nil {
+			m.err = nil
+		}
 		return m, cmd
 	}
 
@@ -66,18 +90,32 @@ func (m textInputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m textInputModel) View() string {
-	return fmt.Sprintf("%s\n\n%s\n\n%s", m.customMsg, m.textInput.View(), "(Enter to submit, Esc to quit)")
+	view := fmt.Sprintf("%s\n\n%s\n\n%s", m.customMsg, m.textInput.View(), "(Enter to submit, Esc to quit)")
+	
+	if m.err != nil {
+		view = fmt.Sprintf("%s\n\n❌ %s", view, m.err.Error())
+	}
+	
+	return view
 }
 
 // RunTextInput remains public. It's the entry point for external usage.
 func RunTextInput(customMsg, placeholder string) (string, error) {
-	model := newTextInput(customMsg, placeholder)
+	return RunTextInputWithValidation(customMsg, placeholder, "", nil)
+}
+
+// RunTextInputWithValidation runs a text input with validation and optional default value
+func RunTextInputWithValidation(customMsg, placeholder, defaultValue string, validate func(string) error) (string, error) {
+	model := newTextInput(customMsg, placeholder, defaultValue, validate)
 	p := tea.NewProgram(model)
 
 	if finalModel, err := p.Run(); err != nil {
 		return "", err
 	} else {
 		final := finalModel.(textInputModel)
+		if final.cancelled {
+			os.Exit(-1)
+		}
 		return final.textInput.Value(), nil
 	}
 }
