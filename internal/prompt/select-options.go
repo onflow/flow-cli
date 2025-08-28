@@ -116,3 +116,90 @@ func RunSelectOptions(options []string, message string) ([]string, error) {
 	}
 	return selectedChoices, nil
 }
+
+// singleSelectModel represents a single-choice prompt
+type singleSelectModel struct {
+	message   string   // message to display
+	cursor    int      // position of the cursor
+	choices   []string // items on the list
+	selected  int      // which item is selected (-1 for none)
+	cancelled bool     // whether the user cancelled
+}
+
+// newSingleSelect creates a single-select prompt
+func newSingleSelect(options []string, message string) singleSelectModel {
+	return singleSelectModel{
+		message:  message,
+		choices:  options,
+		selected: -1,
+	}
+}
+
+func (m singleSelectModel) Init() tea.Cmd {
+	return nil
+}
+
+func (m singleSelectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.Type {
+		case tea.KeyCtrlC, tea.KeyEsc:
+			m.cancelled = true
+			return m, tea.Quit
+
+		case tea.KeyUp:
+			if m.cursor > 0 {
+				m.cursor--
+			}
+
+		case tea.KeyDown:
+			if m.cursor < len(m.choices)-1 {
+				m.cursor++
+			}
+
+		case tea.KeyEnter:
+			m.selected = m.cursor
+			return m, tea.Quit
+		}
+	}
+
+	return m, nil
+}
+
+func (m singleSelectModel) View() string {
+	var b strings.Builder
+	b.WriteString(fmt.Sprintf("%s\n\n", m.message))
+
+	for i, choice := range m.choices {
+		if m.cursor == i {
+			b.WriteString("> ")
+		} else {
+			b.WriteString("  ")
+		}
+		b.WriteString(choice + "\n")
+	}
+	
+	b.WriteString("\nUse arrow keys to navigate, enter to select, esc to cancel")
+	return b.String()
+}
+
+// RunSingleSelect runs a single-choice selection prompt
+func RunSingleSelect(options []string, message string) (string, error) {
+	model := newSingleSelect(options, message)
+	p := tea.NewProgram(model)
+	finalModel, err := p.Run()
+	if err != nil {
+		return "", err
+	}
+
+	final := finalModel.(singleSelectModel)
+	if final.cancelled {
+		return "", fmt.Errorf("selection cancelled")
+	}
+	
+	if final.selected >= 0 && final.selected < len(final.choices) {
+		return final.choices[final.selected], nil
+	}
+	
+	return "", fmt.Errorf("no selection made")
+}

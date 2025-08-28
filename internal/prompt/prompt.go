@@ -25,7 +25,6 @@ import (
 	"path/filepath"
 	"slices"
 	"strconv"
-	"strings"
 
 	"github.com/onflow/flow-cli/internal/util"
 
@@ -263,17 +262,15 @@ func ShowContractDiffPrompt(logger output.Logger) func([]byte, []byte) bool {
 		diffString := dmp.DiffPrettyText(diffs)
 		logger.Info(diffString)
 
-		deployPrompt := promptui.Prompt{
-			Label:     "Do you wish to deploy this contract?",
-			IsConfirm: true,
-		}
-
-		deploy, err := deployPrompt.Run()
-		if err == promptui.ErrInterrupt {
+		deploy, err := RunSingleSelect(
+			[]string{"Yes", "No"}, 
+			"Do you wish to deploy this contract?",
+		)
+		if err != nil {
 			os.Exit(-1)
 		}
 
-		return strings.ToLower(deploy) == "y"
+		return deploy == "Yes"
 	}
 }
 
