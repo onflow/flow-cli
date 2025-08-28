@@ -13,7 +13,6 @@ require (
 	github.com/getsentry/sentry-go v0.35.1
 	github.com/gosuri/uilive v0.0.4
 	github.com/logrusorgru/aurora/v4 v4.0.0
-	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v1.7.0-preview.1
 	github.com/onflow/cadence-tools/languageserver v1.5.0-preview.1
 	github.com/onflow/cadence-tools/lint v1.4.0-preview.1
@@ -72,7 +71,6 @@ require (
 	github.com/charmbracelet/x/ansi v0.9.3 // indirect
 	github.com/charmbracelet/x/cellbuf v0.0.13-0.20250311204145-2c3ea96c31dd // indirect
 	github.com/charmbracelet/x/term v0.2.1 // indirect
-	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/cockroachdb/crlib v0.0.0-20241015224233-894974b3ad94 // indirect
 	github.com/cockroachdb/errors v1.11.3 // indirect
 	github.com/cockroachdb/fifo v0.0.0-20240606204812-0bbfbd93a7ce // indirect
