@@ -178,7 +178,7 @@ func (m singleSelectModel) View() string {
 		}
 		b.WriteString(choice + "\n")
 	}
-	
+
 	b.WriteString("\nUse arrow keys to navigate, enter to select, esc to cancel")
 	return b.String()
 }
@@ -196,10 +196,10 @@ func RunSingleSelect(options []string, message string) (string, error) {
 	if final.cancelled {
 		return "", fmt.Errorf("selection cancelled")
 	}
-	
+
 	if final.selected >= 0 && final.selected < len(final.choices) {
 		return final.choices[final.selected], nil
 	}
-	
+
 	return "", fmt.Errorf("no selection made")
 }

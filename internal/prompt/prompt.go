@@ -252,7 +252,7 @@ func ShowContractDiffPrompt(logger output.Logger) func([]byte, []byte) bool {
 		logger.Info(diffString)
 
 		deploy, err := RunSingleSelect(
-			[]string{"Yes", "No"}, 
+			[]string{"Yes", "No"},
 			"Do you wish to deploy this contract?",
 		)
 		if err != nil {

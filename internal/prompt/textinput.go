@@ -91,11 +91,11 @@ func (m textInputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m textInputModel) View() string {
 	view := fmt.Sprintf("%s\n\n%s\n\n%s", m.customMsg, m.textInput.View(), "(Enter to submit, Esc to quit)")
-	
+
 	if m.err != nil {
 		view = fmt.Sprintf("%s\n\n❌ %s", view, m.err.Error())
 	}
-	
+
 	return view
 }
 
