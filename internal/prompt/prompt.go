@@ -104,12 +104,7 @@ func ApproveTransactionPrompt(tx *flow.Transaction, promptMsg string) bool {
 	_, _ = fmt.Fprintf(writer, "\n\n")
 	_ = writer.Flush()
 
-	prompt := promptui.Select{
-		Label: promptMsg,
-		Items: []string{"No", "Yes"},
-	}
-
-	_, result, _ := prompt.Run()
+	result, _ := RunSingleSelect([]string{"No", "Yes"}, promptMsg)
 
 	_, _ = fmt.Fprintf(writer, "\r\r")
 	_ = writer.Flush()
@@ -240,12 +235,11 @@ func contractPrompt(contractNames []string) string {
 }
 
 func addAnotherContractToDeploymentPrompt() bool {
-	addContractPrompt := promptui.Select{
-		Label: "Do you wish to add another contract for deployment?",
-		Items: []string{"No", "Yes"},
-	}
-	_, addMore, err := addContractPrompt.Run()
-	if err == promptui.ErrInterrupt {
+	addMore, err := RunSingleSelect(
+		[]string{"No", "Yes"},
+		"Do you wish to add another contract for deployment?",
+	)
+	if err != nil {
 		os.Exit(-1)
 	}
 
@@ -573,13 +567,12 @@ func RemoveContractPrompt(contracts config.Contracts) string {
 }
 
 func RemoveContractFromFlowJSONPrompt(contractName string) bool {
-	prompt := promptui.Select{
-		Label: fmt.Sprintf("Do you want to remove %s from your flow.json deployments?", contractName),
-		Items: []string{"Yes", "No"},
-	}
-	chosen, _, _ := prompt.Run()
+	chosen, _ := RunSingleSelect(
+		[]string{"Yes", "No"},
+		fmt.Sprintf("Do you want to remove %s from your flow.json deployments?", contractName),
+	)
 
-	return chosen == 0
+	return chosen == "Yes"
 }
 
 func RemoveNetworkPrompt(networks config.Networks) string {
@@ -603,13 +596,12 @@ func RemoveNetworkPrompt(networks config.Networks) string {
 }
 
 func ReportCrash() bool {
-	prompt := promptui.Select{
-		Label: "🙏 Please report the crash so we can improve the CLI. Do you want to report it?",
-		Items: []string{"Yes, report the crash", "No"},
-	}
-	chosen, _, _ := prompt.Run()
+	chosen, _ := RunSingleSelect(
+		[]string{"Yes, report the crash", "No"},
+		"🙏 Please report the crash so we can improve the CLI. Do you want to report it?",
+	)
 
-	return chosen == 0
+	return chosen == "Yes, report the crash"
 }
 
 func CreateAccountNetworkPrompt() (string, config.Network) {
@@ -634,12 +626,11 @@ func CreateAccountNetworkPrompt() (string, config.Network) {
 }
 
 func WantToUseMainnetVersionPrompt() bool {
-	useMainnetVersionPrompt := promptui.Select{
-		Label: "Do you wish to use Mainnet version instead? (y/n)",
-		Items: []string{"Yes", "No"},
-	}
-	_, useMainnetVersion, err := useMainnetVersionPrompt.Run()
-	if err == promptui.ErrInterrupt {
+	useMainnetVersion, err := RunSingleSelect(
+		[]string{"Yes", "No"},
+		"Do you wish to use Mainnet version instead? (y/n)",
+	)
+	if err != nil {
 		os.Exit(-1)
 	}
 
@@ -688,11 +679,7 @@ func InstallPathPrompt(defaultPath string) string {
 }
 
 func GenericBoolPrompt(msg string) bool {
-	prompt := promptui.Select{
-		Label: msg,
-		Items: []string{"Yes", "No"},
-	}
-	_, result, _ := prompt.Run()
+	result, _ := RunSingleSelect([]string{"Yes", "No"}, msg)
 
 	return result == "Yes"
 }
