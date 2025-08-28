@@ -148,28 +148,27 @@ PS> flow config setup-completions powershell > flow.ps1
 }
 
 func NamePrompt() string {
-	namePrompt := promptui.Prompt{
-		Label: "Enter name",
-		Validate: func(s string) error {
+	name, _ := RunTextInputWithValidation(
+		"Enter name",
+		"Type name here...",
+		"",
+		func(s string) error {
 			if len(s) < 1 {
 				return fmt.Errorf("invalid name")
 			}
 			return nil
 		},
-	}
-
-	name, err := namePrompt.Run()
-	if err == promptui.ErrInterrupt {
-		os.Exit(-1)
-	}
+	)
 
 	return name
 }
 
 func AccountNamePrompt(accountNames []string) string {
-	namePrompt := promptui.Prompt{
-		Label: "Enter an account name",
-		Validate: func(s string) error {
+	name, _ := RunTextInputWithValidation(
+		"Enter an account name",
+		"Type account name here...",
+		"",
+		func(s string) error {
 			if slices.Contains(accountNames, s) {
 				return fmt.Errorf("name already exists")
 			}
@@ -178,39 +177,39 @@ func AccountNamePrompt(accountNames []string) string {
 			}
 			return nil
 		},
-	}
-
-	name, err := namePrompt.Run()
-	if err == promptui.ErrInterrupt {
-		os.Exit(-1)
-	}
+	)
 
 	return name
 }
 
 func secureNetworkKeyPrompt() string {
-	networkKeyPrompt := promptui.Prompt{
-		Label: "Enter a valid host network key or leave blank",
-		Validate: func(s string) error {
+	networkKey, _ := RunTextInputWithValidation(
+		"Enter a valid host network key or leave blank",
+		"Leave blank for default or enter network key...",
+		"",
+		func(s string) error {
 			if s == "" {
 				return nil
 			}
 
 			return util.ValidateECDSAP256Pub(s)
 		},
-	}
-	networkKey, err := networkKeyPrompt.Run()
-	if err == promptui.ErrInterrupt {
-		os.Exit(-1)
-	}
+	)
 
 	return networkKey
 }
 
 func addressPrompt(label, errorMessage string, allowEmpty bool) string {
-	addressPrompt := promptui.Prompt{
-		Label: label,
-		Validate: func(s string) error {
+	placeholder := "Enter address..."
+	if allowEmpty {
+		placeholder = "Enter address or leave blank..."
+	}
+
+	address, _ := RunTextInputWithValidation(
+		label,
+		placeholder,
+		"",
+		func(s string) error {
 			if allowEmpty && s == "" {
 				return nil
 			}
@@ -219,12 +218,7 @@ func addressPrompt(label, errorMessage string, allowEmpty bool) string {
 			}
 			return nil
 		},
-	}
-
-	address, err := addressPrompt.Run()
-	if err == promptui.ErrInterrupt {
-		os.Exit(-1)
-	}
+	)
 
 	return address
 }
@@ -317,22 +311,21 @@ func NewAccountPrompt() *AccountData {
 		os.Exit(-1)
 	}
 
-	keyPrompt := promptui.Prompt{
-		Label: "Enter private key",
-		Validate: func(s string) error {
+	account.Key, _ = RunTextInputWithValidation(
+		"Enter private key",
+		"Enter private key in hex format...",
+		"",
+		func(s string) error {
 			_, err := crypto.DecodePrivateKeyHex(crypto.StringToSignatureAlgorithm(account.SigAlgo), s)
 			return err
 		},
-	}
-	account.Key, err = keyPrompt.Run()
-	if err == promptui.ErrInterrupt {
-		os.Exit(-1)
-	}
+	)
 
-	keyIndexPrompt := promptui.Prompt{
-		Label:   "Enter key index (Default: 0)",
-		Default: "0",
-		Validate: func(s string) error {
+	account.KeyIndex, _ = RunTextInputWithValidation(
+		"Enter key index (Default: 0)",
+		"Default: 0",
+		"0",
+		func(s string) error {
 			v, err := strconv.Atoi(s)
 			if err != nil {
 				return fmt.Errorf("invalid index, must be a number")
@@ -342,12 +335,7 @@ func NewAccountPrompt() *AccountData {
 			}
 			return nil
 		},
-	}
-
-	account.KeyIndex, err = keyIndexPrompt.Run()
-	if err == promptui.ErrInterrupt {
-		os.Exit(-1)
-	}
+	)
 
 	return account
 }
@@ -364,22 +352,19 @@ func NewContractPrompt() *ContractData {
 	contract := &ContractData{
 		Name: NamePrompt(),
 	}
-	var err error
 
-	sourcePrompt := promptui.Prompt{
-		Label: "Enter contract file location",
-		Validate: func(s string) error {
+	contract.Source, _ = RunTextInputWithValidation(
+		"Enter contract file location",
+		"cadence/contracts/HelloWorld.cdc",
+		"",
+		func(s string) error {
 			if !config.Exists(s) {
 				return fmt.Errorf("contract file doesn't exist: %s", s)
 			}
 
 			return nil
 		},
-	}
-	contract.Source, err = sourcePrompt.Run()
-	if err == promptui.ErrInterrupt {
-		os.Exit(-1)
-	}
+	)
 
 	contract.Emulator = AddressPromptOrEmpty("Enter emulator alias, if exists", "invalid alias address")
 	contract.Testnet = AddressPromptOrEmpty("Enter testnet alias, if exists", "invalid testnet address")
@@ -390,20 +375,15 @@ func NewContractPrompt() *ContractData {
 
 func NewNetworkPrompt() map[string]string {
 	networkData := make(map[string]string)
-	var err error
 
 	networkData["name"] = NamePrompt()
 
-	hostPrompt := promptui.Prompt{
-		Label: "Enter host location",
-		Validate: func(s string) error {
-			return nil
-		},
-	}
-	networkData["host"], err = hostPrompt.Run()
-	if err == promptui.ErrInterrupt {
-		os.Exit(-1)
-	}
+	networkData["host"], _ = RunTextInputWithValidation(
+		"Enter host location",
+		"http://localhost:8080",
+		"",
+		nil,
+	)
 
 	networkData["key"] = secureNetworkKeyPrompt()
 
@@ -687,10 +667,11 @@ func InstallPrompt() int {
 }
 
 func InstallPathPrompt(defaultPath string) string {
-	prompt := promptui.Prompt{
-		Label:   "Install path",
-		Default: defaultPath,
-		Validate: func(s string) error {
+	install, _ := RunTextInputWithValidation(
+		"Install path",
+		defaultPath,
+		defaultPath,
+		func(s string) error {
 			if _, err := os.Stat(s); err == nil {
 				return nil
 			}
@@ -704,12 +685,7 @@ func InstallPathPrompt(defaultPath string) string {
 
 			return fmt.Errorf("path is invalid")
 		},
-	}
-
-	install, err := prompt.Run()
-	if err == promptui.ErrInterrupt {
-		os.Exit(-1)
-	}
+	)
 
 	return filepath.Clean(install)
 }
