@@ -166,7 +166,7 @@ func NamePrompt() string {
 func AccountNamePrompt(accountNames []string) string {
 	name, _ := RunTextInputWithValidation(
 		"Enter an account name",
-		"Type account name here...",
+		"my-account",
 		"",
 		func(s string) error {
 			if slices.Contains(accountNames, s) {
@@ -185,7 +185,7 @@ func AccountNamePrompt(accountNames []string) string {
 func secureNetworkKeyPrompt() string {
 	networkKey, _ := RunTextInputWithValidation(
 		"Enter a valid host network key or leave blank",
-		"Leave blank for default or enter network key...",
+		"0x123456789...",
 		"",
 		func(s string) error {
 			if s == "" {
@@ -200,9 +200,9 @@ func secureNetworkKeyPrompt() string {
 }
 
 func addressPrompt(label, errorMessage string, allowEmpty bool) string {
-	placeholder := "Enter address..."
+	placeholder := "0x1234567890abcdef"
 	if allowEmpty {
-		placeholder = "Enter address or leave blank..."
+		placeholder = "0x1234567890abcdef or leave blank"
 	}
 
 	address, _ := RunTextInputWithValidation(
@@ -313,7 +313,7 @@ func NewAccountPrompt() *AccountData {
 
 	account.Key, _ = RunTextInputWithValidation(
 		"Enter private key",
-		"Enter private key in hex format...",
+		"0xabcdef1234567890...",
 		"",
 		func(s string) error {
 			_, err := crypto.DecodePrivateKeyHex(crypto.StringToSignatureAlgorithm(account.SigAlgo), s)
