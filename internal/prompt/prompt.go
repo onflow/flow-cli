@@ -31,7 +31,6 @@ import (
 	"github.com/onflow/flowkit/v2/accounts"
 
 	"github.com/gosuri/uilive"
-	"github.com/manifoldco/promptui"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/sergi/go-diff/diffmatchpatch"
@@ -113,21 +112,18 @@ func ApproveTransactionPrompt(tx *flow.Transaction, promptMsg string) bool {
 }
 
 func AutocompletionPrompt() (string, string) {
-	prompt := promptui.Select{
-		Label: "❓ Select your shell (you can run 'echo $SHELL' to find out)",
-		Items: []string{"bash", "zsh", "powershell"},
-	}
-
-	_, shell, _ := prompt.Run()
+	shell, _ := RunSingleSelect(
+		[]string{"bash", "zsh", "powershell"},
+		"❓ Select your shell (you can run 'echo $SHELL' to find out)",
+	)
 	curOs := ""
 
 	switch shell {
 	case "bash":
-		prompt := promptui.Select{
-			Label: "❓ Select operation system",
-			Items: []string{"MacOS", "Linux"},
-		}
-		_, curOs, _ = prompt.Run()
+		curOs, _ = RunSingleSelect(
+			[]string{"MacOS", "Linux"},
+			"❓ Select operation system",
+		)
 	case "powershell":
 		fmt.Printf(`PowerShell Installation Guide:
 PS> flow config setup-completions powershell | Out-String | Invoke-Expression
@@ -222,12 +218,11 @@ func AddressPromptOrEmpty(label, errorMessage string) string {
 }
 
 func contractPrompt(contractNames []string) string {
-	contractPrompt := promptui.Select{
-		Label: "Choose contract you wish to deploy",
-		Items: contractNames,
-	}
-	_, contractName, err := contractPrompt.Run()
-	if err == promptui.ErrInterrupt {
+	contractName, err := RunSingleSelect(
+		contractNames,
+		"Choose contract you wish to deploy",
+	)
+	if err != nil {
 		os.Exit(-1)
 	}
 
@@ -284,21 +279,19 @@ func NewAccountPrompt() *AccountData {
 		Address: addressPrompt("Enter address", "invalid address", false),
 	}
 
-	sigAlgoPrompt := promptui.Select{
-		Label: "Choose signature algorithm",
-		Items: []string{"ECDSA_P256", "ECDSA_secp256k1"},
-	}
-	_, account.SigAlgo, err = sigAlgoPrompt.Run()
-	if err == promptui.ErrInterrupt {
+	account.SigAlgo, err = RunSingleSelect(
+		[]string{"ECDSA_P256", "ECDSA_secp256k1"},
+		"Choose signature algorithm",
+	)
+	if err != nil {
 		os.Exit(-1)
 	}
 
-	hashAlgoPrompt := promptui.Select{
-		Label: "Choose hashing algorithm",
-		Items: []string{"SHA3_256", "SHA2_256"},
-	}
-	_, account.HashAlgo, err = hashAlgoPrompt.Run()
-	if err == promptui.ErrInterrupt {
+	account.HashAlgo, err = RunSingleSelect(
+		[]string{"SHA3_256", "SHA2_256"},
+		"Choose hashing algorithm",
+	)
+	if err != nil {
 		os.Exit(-1)
 	}
 
@@ -400,12 +393,11 @@ func NewDeploymentPrompt(
 		networkNames = append(networkNames, network.Name)
 	}
 
-	networkPrompt := promptui.Select{
-		Label: "Choose network for deployment",
-		Items: networkNames,
-	}
-	_, deploymentData.Network, err = networkPrompt.Run()
-	if err == promptui.ErrInterrupt {
+	deploymentData.Network, err = RunSingleSelect(
+		networkNames,
+		"Choose network for deployment",
+	)
+	if err != nil {
 		os.Exit(-1)
 	}
 
@@ -414,12 +406,11 @@ func NewDeploymentPrompt(
 		accountNames = append(accountNames, account.Name)
 	}
 
-	accountPrompt := promptui.Select{
-		Label: "Choose an account to deploy to",
-		Items: accountNames,
-	}
-	_, deploymentData.Account, err = accountPrompt.Run()
-	if err == promptui.ErrInterrupt {
+	deploymentData.Account, err = RunSingleSelect(
+		accountNames,
+		"Choose an account to deploy to",
+	)
+	if err != nil {
 		os.Exit(-1)
 	}
 
@@ -474,21 +465,20 @@ func AddContractToDeploymentPrompt(networkName string, accounts accounts.Account
 	// Add a "none" option to the list of accounts
 	accountNames = append(accountNames, "none")
 
-	accountPrompt := promptui.Select{
-		Label: fmt.Sprintf("Choose an account to deploy %s to on %s (or 'none' to skip)", contractName, networkName),
-		Items: accountNames,
-	}
-	selectedIndex, _, err := accountPrompt.Run()
-	if err == promptui.ErrInterrupt {
+	selectedAccount, err := RunSingleSelect(
+		accountNames,
+		fmt.Sprintf("Choose an account to deploy %s to on %s (or 'none' to skip)", contractName, networkName),
+	)
+	if err != nil {
 		os.Exit(-1)
 	}
 
-	// Handle the "none" selection based on its last position
-	if selectedIndex == len(accountNames)-1 {
+	// Handle the "none" selection
+	if selectedAccount == "none" {
 		return nil
 	}
 
-	deploymentData.Account = accounts[selectedIndex].Name
+	deploymentData.Account = selectedAccount
 
 	return deploymentData
 }
@@ -500,13 +490,11 @@ func RemoveAccountPrompt(accounts config.Accounts) string {
 		accountNames = append(accountNames, account.Name)
 	}
 
-	namePrompt := promptui.Select{
-		Label: "Choose an account name you wish to remove",
-		Items: accountNames,
-	}
-
-	_, name, err := namePrompt.Run()
-	if err == promptui.ErrInterrupt {
+	name, err := RunSingleSelect(
+		accountNames,
+		"Choose an account name you wish to remove",
+	)
+	if err != nil {
 		os.Exit(-1)
 	}
 
@@ -533,17 +521,24 @@ func RemoveDeploymentPrompt(deployments config.Deployments) (account string, net
 		)
 	}
 
-	deployPrompt := promptui.Select{
-		Label: "Choose deployment you wish to remove",
-		Items: deploymentNames,
-	}
-
-	index, _, err := deployPrompt.Run()
-	if err == promptui.ErrInterrupt {
+	selectedDeployment, err := RunSingleSelect(
+		deploymentNames,
+		"Choose deployment you wish to remove",
+	)
+	if err != nil {
 		os.Exit(-1)
 	}
 
-	return deployments[index].Account, deployments[index].Network
+	// Find the index of the selected deployment
+	var selectedIndex int
+	for i, deploymentName := range deploymentNames {
+		if deploymentName == selectedDeployment {
+			selectedIndex = i
+			break
+		}
+	}
+
+	return deployments[selectedIndex].Account, deployments[selectedIndex].Network
 }
 
 func RemoveContractPrompt(contracts config.Contracts) string {
@@ -553,13 +548,11 @@ func RemoveContractPrompt(contracts config.Contracts) string {
 		contractNames = append(contractNames, contract.Name)
 	}
 
-	contractPrompt := promptui.Select{
-		Label: "Choose contract you wish to remove",
-		Items: contractNames,
-	}
-
-	_, name, err := contractPrompt.Run()
-	if err == promptui.ErrInterrupt {
+	name, err := RunSingleSelect(
+		contractNames,
+		"Choose contract you wish to remove",
+	)
+	if err != nil {
 		os.Exit(-1)
 	}
 
@@ -582,13 +575,11 @@ func RemoveNetworkPrompt(networks config.Networks) string {
 		networkNames = append(networkNames, network.Name)
 	}
 
-	networkPrompt := promptui.Select{
-		Label: "Choose network you wish to remove",
-		Items: networkNames,
-	}
-
-	_, name, err := networkPrompt.Run()
-	if err == promptui.ErrInterrupt {
+	name, err := RunSingleSelect(
+		networkNames,
+		"Choose network you wish to remove",
+	)
+	if err != nil {
 		os.Exit(-1)
 	}
 
@@ -611,13 +602,11 @@ func CreateAccountNetworkPrompt() (string, config.Network) {
 		"Mainnet":  config.MainnetNetwork,
 	}
 
-	networkPrompt := promptui.Select{
-		Label: "Choose a network",
-		Items: maps.Keys(networkMap),
-	}
-
-	_, selectedNetwork, err := networkPrompt.Run()
-	if err == promptui.ErrInterrupt {
+	selectedNetwork, err := RunSingleSelect(
+		maps.Keys(networkMap),
+		"Choose a network",
+	)
+	if err != nil {
 		os.Exit(-1)
 	}
 	fmt.Println("")
@@ -642,16 +631,23 @@ const CancelInstall = 1
 const AlreadyInstalled = 2
 
 func InstallPrompt() int {
-	prompt := promptui.Select{
-		Label: "Do you wish to install it",
-		Items: []string{"Yes", "No", "I've already installed it"},
-	}
-	index, _, err := prompt.Run()
-	if err == promptui.ErrInterrupt {
+	options := []string{"Yes", "No", "I've already installed it"}
+	selection, err := RunSingleSelect(
+		options,
+		"Do you wish to install it",
+	)
+	if err != nil {
 		os.Exit(-1)
 	}
 
-	return index
+	// Find the index of the selection
+	for i, option := range options {
+		if option == selection {
+			return i
+		}
+	}
+
+	return 0 // fallback to "Yes"
 }
 
 func InstallPathPrompt(defaultPath string) string {
@@ -685,11 +681,7 @@ func GenericBoolPrompt(msg string) bool {
 }
 
 func GenericSelect(items []string, message string) string {
-	prompt := promptui.Select{
-		Label: message,
-		Items: items,
-	}
-	_, result, _ := prompt.Run()
+	result, _ := RunSingleSelect(items, message)
 
 	return result
 }
