@@ -22,9 +22,9 @@ import "github.com/charmbracelet/lipgloss"
 
 // Shared color constants for prompts
 var (
-	FlowGreen   = lipgloss.Color("#00ff88")
+	FlowGreen   = lipgloss.Color("#02D87E")
 	GrayText    = lipgloss.Color("8")
-	PurpleText  = lipgloss.Color("#8b5cf6")
+	PurpleText  = lipgloss.Color("#50268C")
 )
 
 // Shared styles for prompts
