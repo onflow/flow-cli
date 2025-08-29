@@ -83,7 +83,7 @@ func (m optionSelectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m optionSelectModel) View() string {
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf("%s\n", GreenStyle.Render(m.message)))
+	b.WriteString(fmt.Sprintf("%s\n", MessageStyle.Render(m.message)))
 	b.WriteString(GrayStyle.Render("Use arrow keys to navigate, space to select, enter to confirm or skip, q to quit:") + "\n\n")
 	for i, choice := range m.choices {
 		if m.cursor == i {
@@ -180,7 +180,7 @@ func (m singleSelectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m singleSelectModel) View() string {
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf("%s\n\n", GreenStyle.Render(m.message)))
+	b.WriteString(fmt.Sprintf("%s\n\n", MessageStyle.Render(m.message)))
 
 	for i, choice := range m.choices {
 		if m.cursor == i {

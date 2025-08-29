@@ -28,7 +28,7 @@ import (
 )
 
 var (
-	projectNameStyle = GreenStyle
+	projectNameStyle = MessageStyle // Use default color for messages
 	helpTextStyle    = GrayStyle
 )
 
@@ -49,6 +49,11 @@ func newTextInput(customMsg, placeholder, defaultValue string, validate func(str
 	ti.Focus()
 	ti.CharLimit = 256
 	ti.Width = 30
+	
+	// Style the text input with green cursor and text
+	ti.TextStyle = GreenStyle
+	ti.Cursor.Style = GreenStyle
+	
 	if defaultValue != "" {
 		ti.SetValue(defaultValue)
 	}
