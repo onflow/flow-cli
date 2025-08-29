@@ -20,9 +20,11 @@ package prompt
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"golang.org/x/term"
 )
 
 // optionSelectModel represents the prompt state but is now private
@@ -102,6 +104,10 @@ func (m optionSelectModel) View() string {
 
 // RunSelectOptions remains public and is the interface for external usage.
 func RunSelectOptions(options []string, message string) ([]string, error) {
+	// Non-interactive fallback for CI: return no selection
+	if !term.IsTerminal(int(os.Stdin.Fd())) || !term.IsTerminal(int(os.Stdout.Fd())) {
+		return []string{}, nil
+	}
 	model := selectOptions(options, message)
 	p := tea.NewProgram(model)
 	finalModel, err := p.Run()
@@ -185,6 +191,13 @@ func (m singleSelectModel) View() string {
 
 // RunSingleSelect runs a single-choice selection prompt
 func RunSingleSelect(options []string, message string) (string, error) {
+	// Non-interactive fallback for CI: default to first option (safe default)
+	if !term.IsTerminal(int(os.Stdin.Fd())) || !term.IsTerminal(int(os.Stdout.Fd())) {
+		if len(options) == 0 {
+			return "", fmt.Errorf("no options provided")
+		}
+		return options[0], nil
+	}
 	model := newSingleSelect(options, message)
 	p := tea.NewProgram(model)
 	finalModel, err := p.Run()

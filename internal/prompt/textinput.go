@@ -24,6 +24,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"golang.org/x/term"
 )
 
 // textInputModel is now private, only accessible within the 'prompt' package.
@@ -106,6 +107,15 @@ func RunTextInput(customMsg, placeholder string) (string, error) {
 
 // RunTextInputWithValidation runs a text input with validation and optional default value
 func RunTextInputWithValidation(customMsg, placeholder, defaultValue string, validate func(string) error) (string, error) {
+	// Non-interactive fallback for CI: return default value (or empty) without TUI
+	if !term.IsTerminal(int(os.Stdin.Fd())) || !term.IsTerminal(int(os.Stdout.Fd())) {
+		if validate != nil {
+			if err := validate(defaultValue); err != nil {
+				return "", err
+			}
+		}
+		return defaultValue, nil
+	}
 	model := newTextInput(customMsg, placeholder, defaultValue, validate)
 	p := tea.NewProgram(model)
 
