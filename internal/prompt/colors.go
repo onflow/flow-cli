@@ -22,13 +22,15 @@ import "github.com/charmbracelet/lipgloss"
 
 // Shared color constants for prompts
 var (
-	FlowGreen = lipgloss.Color("#00ff88")
-	GrayText  = lipgloss.Color("8")
+	FlowGreen   = lipgloss.Color("#00ff88")
+	GrayText    = lipgloss.Color("8")
+	PurpleText  = lipgloss.Color("#8b5cf6")
 )
 
 // Shared styles for prompts
 var (
 	GreenStyle    = lipgloss.NewStyle().Foreground(FlowGreen)
 	GrayStyle     = lipgloss.NewStyle().Foreground(GrayText)
-	MessageStyle  = lipgloss.NewStyle() // Default terminal color for messages
+	PurpleStyle   = lipgloss.NewStyle().Foreground(PurpleText)
+	MessageStyle  = PurpleStyle // Use purple for messages/questions
 )
