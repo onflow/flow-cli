@@ -24,7 +24,15 @@ import (
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"golang.org/x/term"
+)
+
+var (
+	projectNameStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color("#00ff88")) // Green
+	helpTextStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("8")) // Gray
 )
 
 // textInputModel is now private, only accessible within the 'prompt' package.
@@ -91,7 +99,10 @@ func (m textInputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m textInputModel) View() string {
-	view := fmt.Sprintf("%s\n\n%s\n\n%s", m.customMsg, m.textInput.View(), "(Enter to submit, Esc to quit)")
+	message := projectNameStyle.Render(m.customMsg)
+	helpText := helpTextStyle.Render("(Enter to submit, Esc to quit)")
+
+	view := fmt.Sprintf("%s\n\n%s\n\n%s", message, m.textInput.View(), helpText)
 
 	if m.err != nil {
 		view = fmt.Sprintf("%s\n\n❌ %s", view, m.err.Error())
