@@ -24,15 +24,12 @@ import (
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"golang.org/x/term"
 )
 
 var (
-	projectNameStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color("#00ff88")) // Green
-	helpTextStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("8")) // Gray
+	projectNameStyle = GreenStyle
+	helpTextStyle    = GrayStyle
 )
 
 // textInputModel is now private, only accessible within the 'prompt' package.

@@ -83,21 +83,27 @@ func (m optionSelectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m optionSelectModel) View() string {
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf("%s\n", m.message))
-	b.WriteString("Use arrow keys to navigate, space to select, enter to confirm or skip, q to quit:\n\n")
+	b.WriteString(fmt.Sprintf("%s\n", GreenStyle.Render(m.message)))
+	b.WriteString(GrayStyle.Render("Use arrow keys to navigate, space to select, enter to confirm or skip, q to quit:") + "\n\n")
 	for i, choice := range m.choices {
 		if m.cursor == i {
-			b.WriteString("> ")
+			b.WriteString(GreenStyle.Render("> "))
 		} else {
 			b.WriteString("  ")
 		}
 		// Mark selected items
 		if _, ok := m.selected[i]; ok {
-			b.WriteString("[x] ")
+			b.WriteString(GreenStyle.Render("[x] "))
 		} else {
 			b.WriteString("[ ] ")
 		}
-		b.WriteString(choice + "\n")
+		
+		// Style the choice text if it's selected
+		if m.cursor == i {
+			b.WriteString(GreenStyle.Render(choice) + "\n")
+		} else {
+			b.WriteString(choice + "\n")
+		}
 	}
 	return b.String()
 }
@@ -174,18 +180,19 @@ func (m singleSelectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m singleSelectModel) View() string {
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf("%s\n\n", m.message))
+	b.WriteString(fmt.Sprintf("%s\n\n", GreenStyle.Render(m.message)))
 
 	for i, choice := range m.choices {
 		if m.cursor == i {
-			b.WriteString("> ")
+			b.WriteString(GreenStyle.Render("> "))
+			b.WriteString(GreenStyle.Render(choice) + "\n")
 		} else {
 			b.WriteString("  ")
+			b.WriteString(choice + "\n")
 		}
-		b.WriteString(choice + "\n")
 	}
 
-	b.WriteString("\nUse arrow keys to navigate, enter to select, esc to cancel")
+	b.WriteString("\n" + GrayStyle.Render("Use arrow keys to navigate, enter to select, esc to cancel"))
 	return b.String()
 }
 
