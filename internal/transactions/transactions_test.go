@@ -37,7 +37,6 @@ import (
 	"github.com/onflow/flowkit/v2/transactions"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/prompt"
 	"github.com/onflow/flow-cli/internal/util"
 )
 
@@ -64,21 +63,6 @@ func Test_Build(t *testing.T) {
 	})
 
 	t.Run("Fail not approved", func(t *testing.T) {
-		origPrompter := prompt.DefaultPrompter
-		t.Cleanup(func() { prompt.DefaultPrompter = origPrompter })
-
-		// Mock prompter that always returns "No"
-		prompt.DefaultPrompter = &prompt.MockPrompter{
-			SelectFunc: func(message string, options []string) (string, error) {
-				for _, opt := range options {
-					if opt == "No" {
-						return opt, nil
-					}
-				}
-				return options[0], nil
-			},
-		}
-
 		inArgs := []string{tests.TransactionSimple.Filename}
 		srv.BuildTransaction.Return(transactions.New(), nil)
 
@@ -431,7 +415,7 @@ ID		e913d1f3e431c7df49c99845bea9ebff9db11bbf25d507b9ad0fad45652d515f
 Payer		0000000000000002
 Authorizers	[]
 
-Proposal Key:
+Proposal Key:	
     Address	0000000000000001
     Index	0
     Sequence	1
@@ -465,7 +449,7 @@ ID		e913d1f3e431c7df49c99845bea9ebff9db11bbf25d507b9ad0fad45652d515f
 Payer		0000000000000002
 Authorizers	[]
 
-Proposal Key:
+Proposal Key:	
     Address	0000000000000001
     Index	0
     Sequence	1
@@ -474,12 +458,12 @@ Payload Signature 0: 0000000000000001
 Envelope Signature 0: 0000000000000001
 Signatures (minimized, use --include signatures)
 
-Events:
+Events:		 
     Index	0
     Type	A.foo
     Tx ID	0000000000000000000000000000000000000000000000000000000000000000
     Values
-		- bar (String): 1
+		- bar (String): 1 
 
 
 
@@ -520,7 +504,7 @@ ID		e913d1f3e431c7df49c99845bea9ebff9db11bbf25d507b9ad0fad45652d515f
 Payer		0000000000000002
 Authorizers	[]
 
-Proposal Key:
+Proposal Key:	
     Address	0000000000000001
     Index	0
     Sequence	1
@@ -529,12 +513,12 @@ Payload Signature 0: 0000000000000001
 Envelope Signature 0: 0000000000000001
 Signatures (minimized, use --include signatures)
 
-Events:
+Events:		 
     Index	0
     Type	A.foo
     Tx ID	0000000000000000000000000000000000000000000000000000000000000000
     Values
-		- bar (String): 1
+		- bar (String): 1 
 
 
 
@@ -555,7 +539,7 @@ ID		e913d1f3e431c7df49c99845bea9ebff9db11bbf25d507b9ad0fad45652d515f
 Payer		0000000000000002
 Authorizers	[]
 
-Proposal Key:
+Proposal Key:	
     Address	0000000000000001
     Index	0
     Sequence	1
@@ -564,42 +548,42 @@ Payload Signature 0: 0000000000000001
 Envelope Signature 0: 0000000000000001
 Signatures (minimized, use --include signatures)
 
-Events:
+Events:		 
     Index	0
     Type	A.foo
     Tx ID	0000000000000000000000000000000000000000000000000000000000000000
     Values
-		- bar (String): 1
+		- bar (String): 1 
 
     Index	1
     Type	A.1654653399040a61.FlowToken.TokensWithdrawn
     Tx ID	0000000000000000000000000000000000000000000000000000000000000000
     Values
-		- bar (String): 1
+		- bar (String): 1 
 
     Index	2
     Type	A.9a0766d93b6608b7.FungibleToken.TokensWithdrawn
     Tx ID	0000000000000000000000000000000000000000000000000000000000000000
     Values
-		- bar (String): 1
+		- bar (String): 1 
 
     Index	3
     Type	A.1654653399040a61.FlowToken.TokensDeposited
     Tx ID	0000000000000000000000000000000000000000000000000000000000000000
     Values
-		- bar (String): 1
+		- bar (String): 1 
 
     Index	4
     Type	A.9a0766d93b6608b7.FungibleToken.TokensDeposited
     Tx ID	0000000000000000000000000000000000000000000000000000000000000000
     Values
-		- bar (String): 1
+		- bar (String): 1 
 
     Index	5
     Type	A.f919ee77447b7497.FlowFees.FeesDeducted
     Tx ID	0000000000000000000000000000000000000000000000000000000000000000
     Values
-		- bar (String): 1
+		- bar (String): 1 
 
 
 

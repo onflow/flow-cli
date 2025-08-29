@@ -45,7 +45,7 @@ func ApproveTransactionForSigningPrompt(transaction *flow.Transaction) bool {
 }
 
 func ApproveTransactionForBuildingPrompt(transaction *flow.Transaction) bool {
-	return ApproveTransactionPromptWithPrompter(transaction, "⚠️  Do you want to BUILD this transaction?")
+	return ApproveTransactionPrompt(transaction, "⚠️  Do you want to BUILD this transaction?")
 }
 
 func ApproveTransactionForSendingPrompt(transaction *flow.Transaction) bool {
@@ -560,7 +560,12 @@ func RemoveContractPrompt(contracts config.Contracts) string {
 }
 
 func RemoveContractFromFlowJSONPrompt(contractName string) bool {
-	return RemoveContractFromFlowJSONPromptWithPrompter(contractName)
+	chosen, _ := RunSingleSelect(
+		[]string{"Yes", "No"},
+		fmt.Sprintf("Do you want to remove %s from your flow.json deployments?", contractName),
+	)
+
+	return chosen == "Yes"
 }
 
 func RemoveNetworkPrompt(networks config.Networks) string {

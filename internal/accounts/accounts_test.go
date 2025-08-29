@@ -35,7 +35,6 @@ import (
 	"github.com/onflow/flowkit/v2/tests"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/prompt"
 	"github.com/onflow/flow-cli/internal/util"
 )
 
@@ -136,22 +135,6 @@ func Test_RemoveContract(t *testing.T) {
 	srv, state, _ := util.TestMocks(t)
 
 	t.Run("Success", func(t *testing.T) {
-		origPrompter := prompt.DefaultPrompter
-		t.Cleanup(func() { prompt.DefaultPrompter = origPrompter })
-
-		// Mock prompter that always returns "Yes"
-		prompt.DefaultPrompter = &prompt.MockPrompter{
-			SelectFunc: func(message string, options []string) (string, error) {
-				// Always choose "Yes" for the remove prompt
-				for _, opt := range options {
-					if opt == "Yes" {
-						return opt, nil
-					}
-				}
-				return options[0], nil
-			},
-		}
-
 		inArgs := []string{"test"}
 
 		srv.RemoveContract.Run(func(args mock.Arguments) {
