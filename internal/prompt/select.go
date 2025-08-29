@@ -97,7 +97,7 @@ func (m optionSelectModel) View() string {
 		} else {
 			b.WriteString("[ ] ")
 		}
-		
+
 		// Style the choice text if it's selected
 		if m.cursor == i {
 			b.WriteString(GreenStyle.Render(choice) + "\n")
