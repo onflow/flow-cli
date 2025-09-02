@@ -140,6 +140,17 @@ func startInteractiveSetup(
 	var targetDir string
 	var err error
 
+	asciiArt := `   __ _
+  / _| |
+ | |_| | _____      __
+ |  _| |/ _ \ \ /\ / /
+ | | | | (_) \ V  V /
+ |_| |_|\___/ \_/\_/
+
+
+`
+	fmt.Print(asciiArt)
+
 	rw := afero.Afero{
 		Fs: afero.NewOsFs(),
 	}
