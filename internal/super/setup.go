@@ -149,7 +149,7 @@ func startInteractiveSetup(
 
 
 `
-	fmt.Print(asciiArt)
+	logger.Info(asciiArt)
 
 	rw := afero.Afero{
 		Fs: afero.NewOsFs(),
