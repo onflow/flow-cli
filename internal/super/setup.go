@@ -140,14 +140,13 @@ func startInteractiveSetup(
 	var targetDir string
 	var err error
 
-	asciiArt := `   __ _
-  / _| |
- | |_| | _____      __
- |  _| |/ _ \ \ /\ / /
- | | | | (_) \ V  V /
- |_| |_|\___/ \_/\_/
-
-
+	asciiArt := `   __   _                    
+  / _| | |                   
+ | |_  | |   ___   __      __
+ |  _| | |  / _ \  \ \ /\ / /
+ | |   | | | (_) |  \ V  V / 
+ |_|   |_|  \___/    \_/\_/  
+                             
 `
 	logger.Info(asciiArt)
 
