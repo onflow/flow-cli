@@ -34,7 +34,7 @@ require (
 	github.com/rs/zerolog v1.34.0
 	github.com/sergi/go-diff v1.4.0
 	github.com/spf13/afero v1.12.0
-	github.com/spf13/cobra v1.9.1
+	github.com/spf13/cobra v1.10.1
 	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/exp v0.0.0-20241217172543-b2144cdd0a67
@@ -244,7 +244,7 @@ require (
 	github.com/sourcegraph/jsonrpc2 v0.1.0 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/spf13/cast v1.7.1 // indirect
-	github.com/spf13/pflag v1.0.6 // indirect
+	github.com/spf13/pflag v1.0.9 // indirect
 	github.com/stoewer/go-strcase v1.3.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
