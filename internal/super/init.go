@@ -21,7 +21,6 @@ package super
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -43,11 +42,11 @@ import (
 	"github.com/onflow/flow-cli/internal/util"
 )
 
-type flagsSetup struct {
+type flagsInit struct {
 	ConfigOnly bool `default:"false" flag:"config-only" info:"Only create a flow.json default config"`
 }
 
-var setupFlags = flagsSetup{}
+var initFlags = flagsInit{}
 
 const (
 	// File permissions for created directories
@@ -60,7 +59,7 @@ const (
 )
 
 // TODO: Add --config-only flag
-var SetupCommand = &command.Command{
+var InitCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "init <project name>",
 		Short:   "Start a new Flow project",
@@ -68,7 +67,7 @@ var SetupCommand = &command.Command{
 		Args:    cobra.MaximumNArgs(1),
 		GroupID: "super",
 	},
-	Flags: &setupFlags,
+	Flags: &initFlags,
 	Run:   create,
 }
 
@@ -82,7 +81,7 @@ func create(
 	var targetDir string
 	var err error
 
-	if setupFlags.ConfigOnly {
+	if initFlags.ConfigOnly {
 		if len(args) > 0 {
 			return nil, fmt.Errorf("project name not required when using --config-only flag")
 		}
@@ -96,13 +95,13 @@ func create(
 
 		return nil, nil
 	} else {
-		targetDir, err = startInteractiveSetup(args, logger)
+		targetDir, err = startInteractiveInit(args, logger)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return &setupResult{targetDir: targetDir}, nil
+	return &initResult{targetDir: targetDir}, nil
 }
 
 func validateCurrentDirectoryForInit() error {
@@ -153,85 +152,6 @@ func resolveTargetDirectory(userInput string) (string, error) {
 	return getTargetDirectory(userInput)
 }
 
-// getReadmeFileName returns the appropriate README filename, avoiding conflicts
-func getReadmeFileName(targetDir string) string {
-	if _, err := os.Stat(filepath.Join(targetDir, defaultReadmeFile)); err == nil {
-		return flowReadmeFile
-	}
-	return defaultReadmeFile
-}
-
-// copyDirContents copies all files and directories from src to dst
-func copyDirContents(src, dst string) error {
-	srcInfo, err := os.Stat(src)
-	if err != nil {
-		return err
-	}
-
-	if !srcInfo.IsDir() {
-		return fmt.Errorf("source is not a directory")
-	}
-
-	// Read all entries in the source directory
-	entries, err := os.ReadDir(src)
-	if err != nil {
-		return err
-	}
-
-	// Copy each entry
-	for _, entry := range entries {
-		srcPath := filepath.Join(src, entry.Name())
-		dstPath := filepath.Join(dst, entry.Name())
-
-		if entry.IsDir() {
-			// Create directory and recursively copy its contents
-			err := os.MkdirAll(dstPath, defaultDirPerm)
-			if err != nil {
-				return err
-			}
-			err = copyDirContents(srcPath, dstPath)
-			if err != nil {
-				return err
-			}
-		} else {
-			// Copy file
-			err := copyFile(srcPath, dstPath)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
-// copyFile copies a single file from src to dst
-func copyFile(src, dst string) error {
-	srcFile, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer srcFile.Close()
-
-	dstFile, err := os.Create(dst)
-	if err != nil {
-		return err
-	}
-	defer dstFile.Close()
-
-	_, err = io.Copy(dstFile, srcFile)
-	if err != nil {
-		return err
-	}
-
-	// Copy file permissions
-	srcInfo, err := srcFile.Stat()
-	if err != nil {
-		return err
-	}
-	return os.Chmod(dst, srcInfo.Mode())
-}
-
 func updateGitignore(targetDir string, readerWriter flowkit.ReaderWriter) error {
 	return util.AddFlowEntriesToGitIgnore(targetDir, readerWriter)
 }
@@ -271,7 +191,7 @@ func createConfigOnly(targetDir string, readerWriter flowkit.ReaderWriter) error
 	return nil
 }
 
-func startInteractiveSetup(
+func startInteractiveInit(
 	args []string,
 	logger output.Logger,
 ) (string, error) {
@@ -435,42 +355,11 @@ func startInteractiveSetup(
 	return targetDir, nil
 }
 
-// getTargetDirectory checks if the specified directory path is suitable for use.
-// It verifies that the path points to an existing, empty directory.
-// If the directory does not exist, the function returns the path without error,
-// indicating that the path is available for use (assuming creation is handled elsewhere).
-func getTargetDirectory(directory string) (string, error) {
-	pwd, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-
-	target := filepath.Join(pwd, directory)
-	info, err := os.Stat(target)
-	if !os.IsNotExist(err) {
-		if !info.IsDir() {
-			return "", fmt.Errorf("%s is a file", target)
-		}
-
-		file, err := os.Open(target)
-		if err != nil {
-			return "", err
-		}
-		defer file.Close()
-
-		_, err = file.Readdirnames(1)
-		if err != io.EOF {
-			return "", fmt.Errorf("directory is not empty: %s", target)
-		}
-	}
-	return target, nil
-}
-
-type setupResult struct {
+type initResult struct {
 	targetDir string
 }
 
-func (s *setupResult) String() string {
+func (s *initResult) String() string {
 	wd, _ := os.Getwd()
 	relDir, _ := filepath.Rel(wd, s.targetDir)
 	out := bytes.Buffer{}
@@ -501,10 +390,10 @@ func (s *setupResult) String() string {
 	return out.String()
 }
 
-func (s *setupResult) Oneliner() string {
+func (s *initResult) Oneliner() string {
 	return fmt.Sprintf("Project created inside %s", s.targetDir)
 }
 
-func (s *setupResult) JSON() any {
+func (s *initResult) JSON() any {
 	return nil
 }
