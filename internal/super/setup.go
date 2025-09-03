@@ -122,6 +122,77 @@ func validateCurrentDirectoryForInit() error {
 	return nil
 }
 
+// copyDirContents copies all files and directories from src to dst
+func copyDirContents(src, dst string) error {
+	srcInfo, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+
+	if !srcInfo.IsDir() {
+		return fmt.Errorf("source is not a directory")
+	}
+
+	// Read all entries in the source directory
+	entries, err := os.ReadDir(src)
+	if err != nil {
+		return err
+	}
+
+	// Copy each entry
+	for _, entry := range entries {
+		srcPath := filepath.Join(src, entry.Name())
+		dstPath := filepath.Join(dst, entry.Name())
+
+		if entry.IsDir() {
+			// Create directory and recursively copy its contents
+			err := os.MkdirAll(dstPath, 0755)
+			if err != nil {
+				return err
+			}
+			err = copyDirContents(srcPath, dstPath)
+			if err != nil {
+				return err
+			}
+		} else {
+			// Copy file
+			err := copyFile(srcPath, dstPath)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// copyFile copies a single file from src to dst
+func copyFile(src, dst string) error {
+	srcFile, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer srcFile.Close()
+
+	dstFile, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer dstFile.Close()
+
+	_, err = io.Copy(dstFile, srcFile)
+	if err != nil {
+		return err
+	}
+
+	// Copy file permissions
+	srcInfo, err := srcFile.Stat()
+	if err != nil {
+		return err
+	}
+	return os.Chmod(dst, srcInfo.Mode())
+}
+
 func updateGitignore(targetDir string, readerWriter flowkit.ReaderWriter) error {
 	return util.AddFlowEntriesToGitIgnore(targetDir, readerWriter)
 }
@@ -325,10 +396,20 @@ func startInteractiveSetup(
 		return "", err
 	}
 
-	// Move the temp directory to the target directory
-	err = os.Rename(tempDir, targetDir)
-	if err != nil {
-		return "", fmt.Errorf("failed to move temp directory to target directory: %w", err)
+	// Move or copy the temp directory contents to the target directory
+	pwd, _ := os.Getwd()
+	if targetDir == pwd {
+		// For current directory, copy contents instead of moving the directory
+		err = copyDirContents(tempDir, targetDir)
+		if err != nil {
+			return "", fmt.Errorf("failed to copy temp directory contents to current directory: %w", err)
+		}
+	} else {
+		// For new directory, move the entire temp directory
+		err = os.Rename(tempDir, targetDir)
+		if err != nil {
+			return "", fmt.Errorf("failed to move temp directory to target directory: %w", err)
+		}
 	}
 
 	return targetDir, nil
