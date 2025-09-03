@@ -49,6 +49,16 @@ type flagsSetup struct {
 
 var setupFlags = flagsSetup{}
 
+const (
+	// File permissions for created directories
+	defaultDirPerm = 0755
+	// Core Flow project files that indicate an existing Flow project
+	flowConfigFile = "flow.json"
+	// README files
+	defaultReadmeFile = "README.md"
+	flowReadmeFile    = "README_flow.md"
+)
+
 // TODO: Add --config-only flag
 var SetupCommand = &command.Command{
 	Cmd: &cobra.Command{
@@ -103,8 +113,8 @@ func validateCurrentDirectoryForInit() error {
 
 	// Only check for core Flow project files that would cause real conflicts
 	coreFlowPaths := []string{
-		"flow.json",
-		"cadence",
+		flowConfigFile,
+		cadenceDir,
 	}
 
 	var conflicts []string
@@ -120,6 +130,35 @@ func validateCurrentDirectoryForInit() error {
 	}
 
 	return nil
+}
+
+// resolveTargetDirectory determines the target directory for the Flow project
+// based on user input. Empty input means current directory.
+func resolveTargetDirectory(userInput string) (string, error) {
+	if strings.TrimSpace(userInput) == "" {
+		// Validate current directory for Flow project conflicts
+		if err := validateCurrentDirectoryForInit(); err != nil {
+			return "", err
+		}
+
+		// Use current directory
+		pwd, err := os.Getwd()
+		if err != nil {
+			return "", fmt.Errorf("failed to get current working directory: %w", err)
+		}
+		return pwd, nil
+	}
+
+	// Use provided name to create new directory
+	return getTargetDirectory(userInput)
+}
+
+// getReadmeFileName returns the appropriate README filename, avoiding conflicts
+func getReadmeFileName(targetDir string) string {
+	if _, err := os.Stat(filepath.Join(targetDir, defaultReadmeFile)); err == nil {
+		return flowReadmeFile
+	}
+	return defaultReadmeFile
 }
 
 // copyDirContents copies all files and directories from src to dst
@@ -146,7 +185,7 @@ func copyDirContents(src, dst string) error {
 
 		if entry.IsDir() {
 			// Create directory and recursively copy its contents
-			err := os.MkdirAll(dstPath, 0755)
+			err := os.MkdirAll(dstPath, defaultDirPerm)
 			if err != nil {
 				return err
 			}
@@ -254,36 +293,20 @@ func startInteractiveSetup(
 		Fs: afero.NewOsFs(),
 	}
 
-	// Ask for project name if not given
+	// Resolve target directory from arguments or user input
+	var userInput string
 	if len(args) < 1 {
-		userInput, err := prompt.RunTextInput("Enter the name of your project (leave blank to use current directory)", "Type your project name here or press Enter for current directory...")
+		userInput, err = prompt.RunTextInput("Enter the name of your project (leave blank to use current directory)", "Type your project name here or press Enter for current directory...")
 		if err != nil {
 			return "", fmt.Errorf("error running project name: %v", err)
 		}
-
-		if strings.TrimSpace(userInput) == "" {
-			// Validate current directory for Flow project conflicts
-			if err := validateCurrentDirectoryForInit(); err != nil {
-				return "", err
-			}
-
-			// Use current directory
-			pwd, err := os.Getwd()
-			if err != nil {
-				return "", err
-			}
-			targetDir = pwd
-		} else {
-			targetDir, err = getTargetDirectory(userInput)
-			if err != nil {
-				return "", err
-			}
-		}
 	} else {
-		targetDir, err = getTargetDirectory(args[0])
-		if err != nil {
-			return "", err
-		}
+		userInput = args[0]
+	}
+
+	targetDir, err = resolveTargetDirectory(userInput)
+	if err != nil {
+		return "", err
 	}
 
 	// Create a temp directory which will later be moved to the target directory if successful
@@ -325,11 +348,8 @@ func startInteractiveSetup(
 	// cadence/tests/DefaultContract_test.cdc
 	// README.md
 
-	// Determine README filename - use README_flow.md if README.md already exists
-	readmeFileName := "README.md"
-	if _, err := os.Stat(filepath.Join(targetDir, "README.md")); err == nil {
-		readmeFileName = "README_flow.md"
-	}
+	// Determine README filename - avoid conflicts with existing README.md
+	readmeFileName := getReadmeFileName(targetDir)
 
 	templates := []generator.TemplateItem{
 		generator.ContractTemplate{
@@ -458,9 +478,9 @@ func (s *setupResult) String() string {
 	out.WriteString(fmt.Sprintf("%s Congrats! your project was created.\n\n", output.SuccessEmoji()))
 
 	// Check if we created README_flow.md instead of README.md
-	readmeFile := "README.md"
-	if _, err := os.Stat(filepath.Join(s.targetDir, "README_flow.md")); err == nil {
-		readmeFile = "README_flow.md"
+	readmeFile := defaultReadmeFile
+	if _, err := os.Stat(filepath.Join(s.targetDir, flowReadmeFile)); err == nil {
+		readmeFile = flowReadmeFile
 		out.WriteString("📝 Note: Created README_flow.md since README.md already exists.\n\n")
 	}
 
