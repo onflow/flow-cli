@@ -21,9 +21,9 @@ package super
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/onflow/flowkit/v2"
 
@@ -42,14 +42,24 @@ import (
 	"github.com/onflow/flow-cli/internal/util"
 )
 
-type flagsSetup struct {
+type flagsInit struct {
 	ConfigOnly bool `default:"false" flag:"config-only" info:"Only create a flow.json default config"`
 }
 
-var setupFlags = flagsSetup{}
+var initFlags = flagsInit{}
+
+const (
+	// File permissions for created directories
+	defaultDirPerm = 0755
+	// Core Flow project files that indicate an existing Flow project
+	flowConfigFile = "flow.json"
+	// README files
+	defaultReadmeFile = "README.md"
+	flowReadmeFile    = "README_flow.md"
+)
 
 // TODO: Add --config-only flag
-var SetupCommand = &command.Command{
+var InitCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "init <project name>",
 		Short:   "Start a new Flow project",
@@ -57,7 +67,7 @@ var SetupCommand = &command.Command{
 		Args:    cobra.MaximumNArgs(1),
 		GroupID: "super",
 	},
-	Flags: &setupFlags,
+	Flags: &initFlags,
 	Run:   create,
 }
 
@@ -71,7 +81,7 @@ func create(
 	var targetDir string
 	var err error
 
-	if setupFlags.ConfigOnly {
+	if initFlags.ConfigOnly {
 		if len(args) > 0 {
 			return nil, fmt.Errorf("project name not required when using --config-only flag")
 		}
@@ -85,13 +95,61 @@ func create(
 
 		return nil, nil
 	} else {
-		targetDir, err = startInteractiveSetup(args, logger)
+		targetDir, err = startInteractiveInit(args, logger)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return &setupResult{targetDir: targetDir}, nil
+	return &initResult{targetDir: targetDir}, nil
+}
+
+func validateCurrentDirectoryForInit() error {
+	pwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	// Only check for core Flow project files that would cause real conflicts
+	coreFlowPaths := []string{
+		flowConfigFile,
+		cadenceDir,
+	}
+
+	var conflicts []string
+	for _, path := range coreFlowPaths {
+		fullPath := filepath.Join(pwd, path)
+		if _, err := os.Stat(fullPath); err == nil {
+			conflicts = append(conflicts, path)
+		}
+	}
+
+	if len(conflicts) > 0 {
+		return fmt.Errorf("Flow project files already exist: %s. Cannot initialize Flow project in directory with existing Flow files", strings.Join(conflicts, ", "))
+	}
+
+	return nil
+}
+
+// resolveTargetDirectory determines the target directory for the Flow project
+// based on user input. Empty input means current directory.
+func resolveTargetDirectory(userInput string) (string, error) {
+	if strings.TrimSpace(userInput) == "" {
+		// Validate current directory for Flow project conflicts
+		if err := validateCurrentDirectoryForInit(); err != nil {
+			return "", err
+		}
+
+		// Use current directory
+		pwd, err := os.Getwd()
+		if err != nil {
+			return "", fmt.Errorf("failed to get current working directory: %w", err)
+		}
+		return pwd, nil
+	}
+
+	// Use provided name to create new directory
+	return getTargetDirectory(userInput)
 }
 
 func updateGitignore(targetDir string, readerWriter flowkit.ReaderWriter) error {
@@ -133,7 +191,7 @@ func createConfigOnly(targetDir string, readerWriter flowkit.ReaderWriter) error
 	return nil
 }
 
-func startInteractiveSetup(
+func startInteractiveInit(
 	args []string,
 	logger output.Logger,
 ) (string, error) {
@@ -155,22 +213,20 @@ func startInteractiveSetup(
 		Fs: afero.NewOsFs(),
 	}
 
-	// Ask for project name if not given
+	// Resolve target directory from arguments or user input
+	var userInput string
 	if len(args) < 1 {
-		userInput, err := prompt.RunTextInput("Enter the name of your project", "Type your project name here...")
+		userInput, err = prompt.RunTextInput("Enter the name of your project (leave blank to use current directory)", "Type your project name here or press Enter for current directory...")
 		if err != nil {
 			return "", fmt.Errorf("error running project name: %v", err)
 		}
-
-		targetDir, err = getTargetDirectory(userInput)
-		if err != nil {
-			return "", err
-		}
 	} else {
-		targetDir, err = getTargetDirectory(args[0])
-		if err != nil {
-			return "", err
-		}
+		userInput = args[0]
+	}
+
+	targetDir, err = resolveTargetDirectory(userInput)
+	if err != nil {
+		return "", err
 	}
 
 	// Create a temp directory which will later be moved to the target directory if successful
@@ -212,6 +268,9 @@ func startInteractiveSetup(
 	// cadence/tests/DefaultContract_test.cdc
 	// README.md
 
+	// Determine README filename - avoid conflicts with existing README.md
+	readmeFileName := getReadmeFileName(targetDir)
+
 	templates := []generator.TemplateItem{
 		generator.ContractTemplate{
 			Name:         "Counter",
@@ -229,7 +288,7 @@ func startInteractiveSetup(
 		},
 		generator.FileTemplate{
 			TemplatePath: "README.md.tmpl",
-			TargetPath:   "README.md",
+			TargetPath:   readmeFileName,
 			Data: map[string]interface{}{
 				"Dependencies": (func() []map[string]interface{} {
 					contracts := []map[string]interface{}{}
@@ -277,69 +336,64 @@ func startInteractiveSetup(
 		return "", err
 	}
 
-	// Move the temp directory to the target directory
-	err = os.Rename(tempDir, targetDir)
-	if err != nil {
-		return "", fmt.Errorf("failed to move temp directory to target directory: %w", err)
+	// Move or copy the temp directory contents to the target directory
+	pwd, _ := os.Getwd()
+	if targetDir == pwd {
+		// For current directory, copy contents instead of moving the directory
+		err = copyDirContents(tempDir, targetDir)
+		if err != nil {
+			return "", fmt.Errorf("failed to copy temp directory contents to current directory: %w", err)
+		}
+	} else {
+		// For new directory, move the entire temp directory
+		err = os.Rename(tempDir, targetDir)
+		if err != nil {
+			return "", fmt.Errorf("failed to move temp directory to target directory: %w", err)
+		}
 	}
 
 	return targetDir, nil
 }
 
-// getTargetDirectory checks if the specified directory path is suitable for use.
-// It verifies that the path points to an existing, empty directory.
-// If the directory does not exist, the function returns the path without error,
-// indicating that the path is available for use (assuming creation is handled elsewhere).
-func getTargetDirectory(directory string) (string, error) {
-	pwd, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-
-	target := filepath.Join(pwd, directory)
-	info, err := os.Stat(target)
-	if !os.IsNotExist(err) {
-		if !info.IsDir() {
-			return "", fmt.Errorf("%s is a file", target)
-		}
-
-		file, err := os.Open(target)
-		if err != nil {
-			return "", err
-		}
-		defer file.Close()
-
-		_, err = file.Readdirnames(1)
-		if err != io.EOF {
-			return "", fmt.Errorf("directory is not empty: %s", target)
-		}
-	}
-	return target, nil
-}
-
-type setupResult struct {
+type initResult struct {
 	targetDir string
 }
 
-func (s *setupResult) String() string {
+func (s *initResult) String() string {
 	wd, _ := os.Getwd()
 	relDir, _ := filepath.Rel(wd, s.targetDir)
 	out := bytes.Buffer{}
 
 	out.WriteString(fmt.Sprintf("%s Congrats! your project was created.\n\n", output.SuccessEmoji()))
+
+	// Check if we created README_flow.md instead of README.md
+	readmeFile := defaultReadmeFile
+	if _, err := os.Stat(filepath.Join(s.targetDir, flowReadmeFile)); err == nil {
+		readmeFile = flowReadmeFile
+		out.WriteString("📝 Note: Created README_flow.md since README.md already exists.\n\n")
+	}
+
 	out.WriteString("Start development by following these steps:\n")
-	out.WriteString(fmt.Sprintf("1. '%s' to change to your new project,\n", output.Bold(fmt.Sprintf("cd %s", relDir))))
-	out.WriteString(fmt.Sprintf("2. '%s' or run Flowser to start the emulator,\n", output.Bold("flow emulator")))
-	out.WriteString(fmt.Sprintf("3. '%s' to test your project.\n\n", output.Bold("flow test")))
-	out.WriteString(fmt.Sprintf("You should also read README.md to learn more about the development process!\n"))
+
+	// Only show cd command if not current directory
+	if s.targetDir != wd {
+		out.WriteString(fmt.Sprintf("1. '%s' to change to your new project,\n", output.Bold(fmt.Sprintf("cd %s", relDir))))
+		out.WriteString(fmt.Sprintf("2. '%s' to start the emulator,\n", output.Bold("flow emulator")))
+		out.WriteString(fmt.Sprintf("3. '%s' to test your project.\n\n", output.Bold("flow test")))
+	} else {
+		out.WriteString(fmt.Sprintf("1. '%s' to start the emulator,\n", output.Bold("flow emulator")))
+		out.WriteString(fmt.Sprintf("2. '%s' to test your project.\n\n", output.Bold("flow test")))
+	}
+
+	out.WriteString(fmt.Sprintf("You should also read %s to learn more about the development process!\n", readmeFile))
 
 	return out.String()
 }
 
-func (s *setupResult) Oneliner() string {
+func (s *initResult) Oneliner() string {
 	return fmt.Sprintf("Project created inside %s", s.targetDir)
 }
 
-func (s *setupResult) JSON() any {
+func (s *initResult) JSON() any {
 	return nil
 }

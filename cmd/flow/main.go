@@ -67,7 +67,7 @@ func main() {
 	test.TestCommand.AddToParent(cmd)
 
 	// super commands
-	super.SetupCommand.AddToParent(cmd)
+	super.InitCommand.AddToParent(cmd)
 	super.DevCommand.AddToParent(cmd)
 
 	// structured commands
