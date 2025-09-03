@@ -24,6 +24,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/onflow/flowkit/v2"
 
@@ -94,6 +95,33 @@ func create(
 	return &setupResult{targetDir: targetDir}, nil
 }
 
+func validateCurrentDirectoryForInit() error {
+	pwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	// Only check for core Flow project files that would cause real conflicts
+	coreFlowPaths := []string{
+		"flow.json",
+		"cadence",
+	}
+
+	var conflicts []string
+	for _, path := range coreFlowPaths {
+		fullPath := filepath.Join(pwd, path)
+		if _, err := os.Stat(fullPath); err == nil {
+			conflicts = append(conflicts, path)
+		}
+	}
+
+	if len(conflicts) > 0 {
+		return fmt.Errorf("Flow project files already exist: %s. Cannot initialize Flow project in directory with existing Flow files", strings.Join(conflicts, ", "))
+	}
+
+	return nil
+}
+
 func updateGitignore(targetDir string, readerWriter flowkit.ReaderWriter) error {
 	return util.AddFlowEntriesToGitIgnore(targetDir, readerWriter)
 }
@@ -157,14 +185,28 @@ func startInteractiveSetup(
 
 	// Ask for project name if not given
 	if len(args) < 1 {
-		userInput, err := prompt.RunTextInput("Enter the name of your project", "Type your project name here...")
+		userInput, err := prompt.RunTextInput("Enter the name of your project (leave blank to use current directory)", "Type your project name here or press Enter for current directory...")
 		if err != nil {
 			return "", fmt.Errorf("error running project name: %v", err)
 		}
 
-		targetDir, err = getTargetDirectory(userInput)
-		if err != nil {
-			return "", err
+		if strings.TrimSpace(userInput) == "" {
+			// Validate current directory for Flow project conflicts
+			if err := validateCurrentDirectoryForInit(); err != nil {
+				return "", err
+			}
+
+			// Use current directory
+			pwd, err := os.Getwd()
+			if err != nil {
+				return "", err
+			}
+			targetDir = pwd
+		} else {
+			targetDir, err = getTargetDirectory(userInput)
+			if err != nil {
+				return "", err
+			}
 		}
 	} else {
 		targetDir, err = getTargetDirectory(args[0])
@@ -212,6 +254,12 @@ func startInteractiveSetup(
 	// cadence/tests/DefaultContract_test.cdc
 	// README.md
 
+	// Determine README filename - use README_flow.md if README.md already exists
+	readmeFileName := "README.md"
+	if _, err := os.Stat(filepath.Join(targetDir, "README.md")); err == nil {
+		readmeFileName = "README_flow.md"
+	}
+
 	templates := []generator.TemplateItem{
 		generator.ContractTemplate{
 			Name:         "Counter",
@@ -229,7 +277,7 @@ func startInteractiveSetup(
 		},
 		generator.FileTemplate{
 			TemplatePath: "README.md.tmpl",
-			TargetPath:   "README.md",
+			TargetPath:   readmeFileName,
 			Data: map[string]interface{}{
 				"Dependencies": (func() []map[string]interface{} {
 					contracts := []map[string]interface{}{}
@@ -327,11 +375,27 @@ func (s *setupResult) String() string {
 	out := bytes.Buffer{}
 
 	out.WriteString(fmt.Sprintf("%s Congrats! your project was created.\n\n", output.SuccessEmoji()))
+
+	// Check if we created README_flow.md instead of README.md
+	readmeFile := "README.md"
+	if _, err := os.Stat(filepath.Join(s.targetDir, "README_flow.md")); err == nil {
+		readmeFile = "README_flow.md"
+		out.WriteString("📝 Note: Created README_flow.md since README.md already exists.\n\n")
+	}
+
 	out.WriteString("Start development by following these steps:\n")
-	out.WriteString(fmt.Sprintf("1. '%s' to change to your new project,\n", output.Bold(fmt.Sprintf("cd %s", relDir))))
-	out.WriteString(fmt.Sprintf("2. '%s' or run Flowser to start the emulator,\n", output.Bold("flow emulator")))
-	out.WriteString(fmt.Sprintf("3. '%s' to test your project.\n\n", output.Bold("flow test")))
-	out.WriteString(fmt.Sprintf("You should also read README.md to learn more about the development process!\n"))
+
+	// Only show cd command if not current directory
+	if s.targetDir != wd {
+		out.WriteString(fmt.Sprintf("1. '%s' to change to your new project,\n", output.Bold(fmt.Sprintf("cd %s", relDir))))
+		out.WriteString(fmt.Sprintf("2. '%s' or run Flowser to start the emulator,\n", output.Bold("flow emulator")))
+		out.WriteString(fmt.Sprintf("3. '%s' to test your project.\n\n", output.Bold("flow test")))
+	} else {
+		out.WriteString(fmt.Sprintf("1. '%s' or run Flowser to start the emulator,\n", output.Bold("flow emulator")))
+		out.WriteString(fmt.Sprintf("2. '%s' to test your project.\n\n", output.Bold("flow test")))
+	}
+
+	out.WriteString(fmt.Sprintf("You should also read %s to learn more about the development process!\n", readmeFile))
 
 	return out.String()
 }
