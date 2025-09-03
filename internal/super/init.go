@@ -378,10 +378,10 @@ func (s *initResult) String() string {
 	// Only show cd command if not current directory
 	if s.targetDir != wd {
 		out.WriteString(fmt.Sprintf("1. '%s' to change to your new project,\n", output.Bold(fmt.Sprintf("cd %s", relDir))))
-		out.WriteString(fmt.Sprintf("2. '%s' or run Flowser to start the emulator,\n", output.Bold("flow emulator")))
+		out.WriteString(fmt.Sprintf("2. '%s' to start the emulator,\n", output.Bold("flow emulator")))
 		out.WriteString(fmt.Sprintf("3. '%s' to test your project.\n\n", output.Bold("flow test")))
 	} else {
-		out.WriteString(fmt.Sprintf("1. '%s' or run Flowser to start the emulator,\n", output.Bold("flow emulator")))
+		out.WriteString(fmt.Sprintf("1. '%s' to start the emulator,\n", output.Bold("flow emulator")))
 		out.WriteString(fmt.Sprintf("2. '%s' to test your project.\n\n", output.Bold("flow test")))
 	}
 
