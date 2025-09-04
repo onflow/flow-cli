@@ -24,8 +24,9 @@ import (
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/onflow/flow-cli/common/branding"
 	"golang.org/x/term"
+
+	"github.com/onflow/flow-cli/common/branding"
 )
 
 var (

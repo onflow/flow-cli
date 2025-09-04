@@ -30,14 +30,15 @@ import (
 	"github.com/spf13/afero"
 	"golang.org/x/exp/maps"
 
-	"github.com/onflow/flow-cli/common/branding"
 	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/output"
+
+	"github.com/onflow/flow-cli/common/branding"
 )
 
 // Error styling
 var (
-	errorStyle       = branding.ErrorStyle
+	errorStyle        = branding.ErrorStyle
 	errorMessageStyle = branding.ErrorStyle
 	suggestionStyle   = branding.GreenStyle.Copy().Italic(true)
 	descriptionStyle  = branding.GrayStyle.Copy().Bold(true)
@@ -157,21 +158,21 @@ func handleError(description string, err error) {
 			errorMsg := errorStyle.Render(fmt.Sprintf("%s Config Error:", output.ErrorEmoji()))
 			detailMsg := errorMessageStyle.Render(err.Error())
 			_, _ = fmt.Fprintf(os.Stderr, "%s %s\n", errorMsg, detailMsg)
-			
+
 			suggestion := suggestionStyle.Render(fmt.Sprintf("%s Please reset configuration using: 'flow init --reset'. Read more about new configuration here: https://github.com/onflow/flow-cli/releases/tag/v0.17.0", output.TryEmoji()))
 			_, _ = fmt.Fprintf(os.Stderr, "%s\n", suggestion)
 		} else if errors.Is(err, config.ErrDoesNotExist) {
 			errorMsg := errorStyle.Render(fmt.Sprintf("%s Config Error:", output.ErrorEmoji()))
 			detailMsg := errorMessageStyle.Render(err.Error())
 			_, _ = fmt.Fprintf(os.Stderr, "%s %s\n", errorMsg, detailMsg)
-			
+
 			suggestion := suggestionStyle.Render(fmt.Sprintf("%s Please create configuration using: flow init", output.TryEmoji()))
 			_, _ = fmt.Fprintf(os.Stderr, "%s\n", suggestion)
 		} else if strings.Contains(err.Error(), "transport:") {
 			errorMsg := errorStyle.Render(fmt.Sprintf("%s Connection Error:", output.ErrorEmoji()))
 			detailMsg := errorMessageStyle.Render(strings.Split(err.Error(), "transport:")[1])
 			_, _ = fmt.Fprintf(os.Stderr, "%s %s\n", errorMsg, detailMsg)
-			
+
 			suggestion := suggestionStyle.Render(fmt.Sprintf("%s Make sure your emulator is running or connection address is correct.", output.TryEmoji()))
 			_, _ = fmt.Fprintf(os.Stderr, "%s\n", suggestion)
 		} else if strings.Contains(err.Error(), "NotFound desc =") {
@@ -183,7 +184,7 @@ func handleError(description string, err error) {
 			errorMsg := errorStyle.Render(fmt.Sprintf("%s Invalid argument:", output.ErrorEmoji()))
 			detailMsg := errorMessageStyle.Render(desc[len(desc)-1])
 			_, _ = fmt.Fprintf(os.Stderr, "%s %s\n", errorMsg, detailMsg)
-			
+
 			if strings.Contains(err.Error(), "is invalid for chain") {
 				suggestion := suggestionStyle.Render(fmt.Sprintf("%s Check you are connecting to the correct network or account address you use is correct.", output.TryEmoji()))
 				_, _ = fmt.Fprintf(os.Stderr, "%s\n", suggestion)
@@ -195,14 +196,14 @@ func handleError(description string, err error) {
 			errorMsg := errorStyle.Render(fmt.Sprintf("%s Invalid signature:", output.ErrorEmoji()))
 			detailMsg := errorMessageStyle.Render(strings.Split(err.Error(), "invalid signature:")[1])
 			_, _ = fmt.Fprintf(os.Stderr, "%s %s\n", errorMsg, detailMsg)
-			
+
 			suggestion := suggestionStyle.Render(fmt.Sprintf("%s Check the signer private key is provided or is in the correct format. If running emulator, make sure it's using the same configuration as this command.", output.TryEmoji()))
 			_, _ = fmt.Fprintf(os.Stderr, "%s\n", suggestion)
 		} else if strings.Contains(err.Error(), "signature could not be verified using public key with") {
 			errorMsg := errorStyle.Render(fmt.Sprintf("%s %s:", output.ErrorEmoji(), description))
 			detailMsg := errorMessageStyle.Render(err.Error())
 			_, _ = fmt.Fprintf(os.Stderr, "%s %s\n", errorMsg, detailMsg)
-			
+
 			suggestion := suggestionStyle.Render(fmt.Sprintf("%s If you are running emulator locally make sure that the emulator was started with the same config as used in this command. \nTry restarting the emulator.", output.TryEmoji()))
 			_, _ = fmt.Fprintf(os.Stderr, "%s\n", suggestion)
 		} else {

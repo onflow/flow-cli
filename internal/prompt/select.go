@@ -24,8 +24,9 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/onflow/flow-cli/common/branding"
 	"golang.org/x/term"
+
+	"github.com/onflow/flow-cli/common/branding"
 )
 
 // optionSelectModel represents the prompt state but is now private

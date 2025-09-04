@@ -34,10 +34,11 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flow-cli/common/branding"
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/output"
+
+	"github.com/onflow/flow-cli/common/branding"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
@@ -362,7 +363,7 @@ func colorizeTestOutput(output string) string {
 	// Regex patterns for PASS and FAIL
 	passPattern := regexp.MustCompile(`(- PASS:)(.*)`)
 	failPattern := regexp.MustCompile(`(- FAIL:)(.*)`)
-	
+
 	// Colorize PASS lines
 	output = passPattern.ReplaceAllStringFunc(output, func(match string) string {
 		parts := passPattern.FindStringSubmatch(match)
@@ -373,8 +374,8 @@ func colorizeTestOutput(output string) string {
 		}
 		return match
 	})
-	
-	// Colorize FAIL lines  
+
+	// Colorize FAIL lines
 	output = failPattern.ReplaceAllStringFunc(output, func(match string) string {
 		parts := failPattern.FindStringSubmatch(match)
 		if len(parts) >= 3 {
@@ -384,7 +385,7 @@ func colorizeTestOutput(output string) string {
 		}
 		return match
 	})
-	
+
 	return output
 }
 
