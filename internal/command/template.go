@@ -23,7 +23,7 @@ import (
 	"text/template"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/onflow/flow-cli/internal/branding"
+	"github.com/onflow/flow-cli/common/branding"
 	"github.com/spf13/cobra"
 )
 

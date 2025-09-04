@@ -29,7 +29,7 @@ import (
 
 	"github.com/spf13/afero"
 
-	"github.com/onflow/flow-cli/internal/branding"
+	"github.com/onflow/flow-cli/common/branding"
 	"github.com/onflow/flow-cli/internal/prompt"
 
 	"github.com/spf13/cobra"
