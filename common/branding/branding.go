@@ -25,7 +25,7 @@ var (
 	FlowGreen  = lipgloss.Color("#02D87E")
 	GrayText   = lipgloss.Color("8")
 	PurpleText = lipgloss.Color("#50268C")
-	ErrorRed   = lipgloss.Color("#CC4444")
+	ErrorRed   = lipgloss.Color("#E55555")
 )
 
 // Shared styles for consistent branding
