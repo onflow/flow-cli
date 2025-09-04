@@ -25,6 +25,7 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	cdcTests "github.com/onflow/cadence-tools/test"
@@ -33,6 +34,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/flow-cli/common/branding"
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/output"
@@ -355,6 +357,37 @@ func (r *result) JSON() any {
 	return results
 }
 
+// colorizeTestOutput adds colors to PASS/FAIL indicators in test output
+func colorizeTestOutput(output string) string {
+	// Regex patterns for PASS and FAIL
+	passPattern := regexp.MustCompile(`(- PASS:)(.*)`)
+	failPattern := regexp.MustCompile(`(- FAIL:)(.*)`)
+	
+	// Colorize PASS lines
+	output = passPattern.ReplaceAllStringFunc(output, func(match string) string {
+		parts := passPattern.FindStringSubmatch(match)
+		if len(parts) >= 3 {
+			passIndicator := branding.GreenStyle.Render(parts[1])
+			testName := parts[2]
+			return passIndicator + testName
+		}
+		return match
+	})
+	
+	// Colorize FAIL lines  
+	output = failPattern.ReplaceAllStringFunc(output, func(match string) string {
+		parts := failPattern.FindStringSubmatch(match)
+		if len(parts) >= 3 {
+			failIndicator := branding.ErrorStyle.Render(parts[1])
+			testName := parts[2]
+			return failIndicator + testName
+		}
+		return match
+	})
+	
+	return output
+}
+
 func (r *result) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
@@ -363,7 +396,9 @@ func (r *result) String() string {
 		_, _ = fmt.Fprint(writer, "No tests found")
 	} else {
 		for scriptPath, testResult := range r.Results {
-			_, _ = fmt.Fprint(writer, cdcTests.PrettyPrintResults(testResult, scriptPath))
+			testOutput := cdcTests.PrettyPrintResults(testResult, scriptPath)
+			colorizedOutput := colorizeTestOutput(testOutput)
+			_, _ = fmt.Fprint(writer, colorizedOutput)
 		}
 		if r.CoverageReport != nil {
 			_, _ = fmt.Fprint(writer, r.CoverageReport.String())
