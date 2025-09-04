@@ -121,6 +121,8 @@ func main() {
 		Title: "🔗 Dependency Manager",
 	})
 
+	// Initialize template functions for styling
+	command.InitTemplateFunc(cmd)
 	cmd.SetUsageTemplate(command.UsageTemplate)
 
 	// Don't print usage on error

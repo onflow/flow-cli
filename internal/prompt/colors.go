@@ -18,19 +18,19 @@
 
 package prompt
 
-import "github.com/charmbracelet/lipgloss"
+import "github.com/onflow/flow-cli/internal/branding"
 
-// Shared color constants for prompts
+// Re-export branding colors and styles for backward compatibility
 var (
-	FlowGreen  = lipgloss.Color("#02D87E")
-	GrayText   = lipgloss.Color("8")
-	PurpleText = lipgloss.Color("#50268C")
+	FlowGreen  = branding.FlowGreen
+	GrayText   = branding.GrayText
+	PurpleText = branding.PurpleText
 )
 
-// Shared styles for prompts
+// Re-export branding styles for backward compatibility
 var (
-	GreenStyle   = lipgloss.NewStyle().Foreground(FlowGreen)
-	GrayStyle    = lipgloss.NewStyle().Foreground(GrayText)
-	PurpleStyle  = lipgloss.NewStyle().Foreground(PurpleText)
-	MessageStyle = PurpleStyle
+	GreenStyle   = branding.GreenStyle
+	GrayStyle    = branding.GrayStyle
+	PurpleStyle  = branding.PurpleStyle
+	MessageStyle = branding.MessageStyle
 )

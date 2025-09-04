@@ -29,6 +29,7 @@ import (
 
 	"github.com/spf13/afero"
 
+	"github.com/onflow/flow-cli/internal/branding"
 	"github.com/onflow/flow-cli/internal/prompt"
 
 	"github.com/spf13/cobra"
@@ -198,16 +199,7 @@ func startInteractiveInit(
 	var targetDir string
 	var err error
 
-	asciiArt := `   ___  ___
- /'___\/\_ \
-/\ \__/\//\ \     ___   __  __  __
-\ \ ,__\ \ \ \   / __` + "`" + `\/\ \/\ \/\ \
- \ \ \_/  \_\ \_/\ \L\ \ \ \_/ \_/ \
-  \ \_\   /\____\ \____/\ \___x___/'
-   \/_/   \/____/\/___/  \/__//__/
-
-`
-	logger.Info(asciiArt)
+	logger.Info(branding.GreenStyle.Render(branding.FlowASCII) + "\n")
 
 	rw := afero.Afero{
 		Fs: afero.NewOsFs(),
