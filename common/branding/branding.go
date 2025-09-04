@@ -25,6 +25,7 @@ var (
 	FlowGreen  = lipgloss.Color("#02D87E")
 	GrayText   = lipgloss.Color("8")
 	PurpleText = lipgloss.Color("#50268C")
+	ErrorRed   = lipgloss.Color("#CC4444")
 )
 
 // Shared styles for consistent branding
@@ -33,6 +34,7 @@ var (
 	GrayStyle    = lipgloss.NewStyle().Foreground(GrayText)
 	PurpleStyle  = lipgloss.NewStyle().Foreground(PurpleText)
 	MessageStyle = PurpleStyle
+	ErrorStyle   = lipgloss.NewStyle().Foreground(ErrorRed).Bold(true)
 )
 
 // Flow ASCII art logo
