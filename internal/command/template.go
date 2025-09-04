@@ -18,7 +18,86 @@
 
 package command
 
-var UsageTemplate = `Usage:{{if .Runnable}}
+import (
+	"fmt"
+	"text/template"
+
+	"github.com/charmbracelet/lipgloss"
+	"github.com/spf13/cobra"
+
+	"github.com/onflow/flow-cli/common/branding"
+)
+
+var (
+	// Header styles
+	logoStyle = lipgloss.NewStyle().
+			Foreground(branding.FlowGreen).
+			Bold(true)
+
+	welcomeStyle = lipgloss.NewStyle().
+			Foreground(branding.PurpleText).
+			Bold(true)
+
+	subtitleStyle = lipgloss.NewStyle().
+			Foreground(branding.GrayText).
+			Italic(true).
+			MarginLeft(2)
+
+	// Command group styles
+	groupTitleStyle = lipgloss.NewStyle().
+			Foreground(branding.FlowGreen).
+			Bold(true)
+
+	commandNameStyle = lipgloss.NewStyle().
+				Foreground(branding.PurpleText).
+				Bold(true)
+
+	commandDescStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color("7"))
+
+	// Section styles
+	sectionTitleStyle = lipgloss.NewStyle().
+				Foreground(branding.FlowGreen).
+				Bold(true)
+
+	// Footer style
+	footerStyle = lipgloss.NewStyle().
+			Foreground(branding.GrayText).
+			Italic(true)
+)
+
+// Template functions for styling
+var templateFuncs = template.FuncMap{
+	"styleFlowHeader": func() string {
+		logo := logoStyle.Render(branding.FlowASCII)
+		welcome := welcomeStyle.Render("👋 Welcome Flow developer!")
+		subtitle := subtitleStyle.Render("If you are starting a new flow project use our super commands, start by running 'flow init'.")
+		return fmt.Sprintf("%s\n%s\n%s\n", logo, welcome, subtitle)
+	},
+	"styleGroupTitle": func(title string) string {
+		return groupTitleStyle.Render(title)
+	},
+	"styleCommandName": func(name string) string {
+		return commandNameStyle.Render(name)
+	},
+	"styleCommandDesc": func(desc string) string {
+		return commandDescStyle.Render(desc)
+	},
+	"styleSectionTitle": func(title string) string {
+		return sectionTitleStyle.Render(title)
+	},
+	"styleFooter": func(text string) string {
+		return footerStyle.Render(text)
+	},
+}
+
+func InitTemplateFunc(cmd *cobra.Command) {
+	for name, fn := range templateFuncs {
+		cobra.AddTemplateFunc(name, fn)
+	}
+}
+
+var UsageTemplate = `{{if (eq .Name "flow")}}{{styleFlowHeader}}{{else}}Usage:{{if .Runnable}}
   {{.UseLine}}{{end}}{{if .HasAvailableSubCommands}}
   {{.CommandPath}} [command]{{end}}{{if gt (len .Aliases) 0}}
 
@@ -26,27 +105,24 @@ Aliases:
   {{.NameAndAliases}}{{end}}{{if .HasExample}}
 
 Examples:
-{{.Example}}{{end}}
-{{if .HasAvailableSubCommands}}{{if (eq .Name "flow")}}
-[1m👋 Welcome Flow developer![0m
-   If you are starting a new flow project use our super commands, start by running 'flow init'. {{end}}{{end}}{{if .HasAvailableSubCommands}}{{$cmds := .Commands}}{{if eq (len .Groups) 0}}
-Available Commands:{{range $cmds}}{{if (or .IsAvailableCommand (eq .Name "help"))}}
-  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{else}}{{range $group := .Groups}}
+{{.Example}}{{end}}{{end}}{{if .HasAvailableSubCommands}}{{$cmds := .Commands}}{{if eq (len .Groups) 0}}
 
-[1m{{.Title}}[0m{{range $cmds}}{{if (and (eq .GroupID $group.ID) (or .IsAvailableCommand (eq .Name "help")))}}
-  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if not .AllChildCommandsHaveGroup}}
+{{styleSectionTitle "Available Commands:"}}{{range $cmds}}{{if (or .IsAvailableCommand (eq .Name "help"))}}
+  {{styleCommandName (rpad .Name .NamePadding)}} {{styleCommandDesc .Short}}{{end}}{{end}}{{else}}{{range $group := .Groups}}
 
-Additional Commands:{{range $cmds}}{{if (and (eq .GroupID "") (or .IsAvailableCommand (eq .Name "help")))}}
-  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}
+{{styleGroupTitle .Title}}{{range $cmds}}{{if (and (eq .GroupID $group.ID) (or .IsAvailableCommand (eq .Name "help")))}}
+  {{styleCommandName (rpad .Name .NamePadding)}} {{styleCommandDesc .Short}}{{end}}{{end}}{{end}}{{if not .AllChildCommandsHaveGroup}}
 
-Flags:
+{{styleSectionTitle "Additional Commands:"}}{{range $cmds}}{{if (and (eq .GroupID "") (or .IsAvailableCommand (eq .Name "help")))}}
+  {{styleCommandName (rpad .Name .NamePadding)}} {{styleCommandDesc .Short}}{{end}}{{end}}{{end}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}
+
+{{styleSectionTitle "Flags:"}}
 {{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasAvailableInheritedFlags}}
 
-Global Flags:
+{{styleSectionTitle "Global Flags:"}}
 {{.InheritedFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasHelpSubCommands}}
 
-Additional help topics:{{range .Commands}}{{if .IsAdditionalHelpTopicCommand}}
-  {{rpad .CommandPath .CommandPathPadding}} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableSubCommands}}
+{{styleSectionTitle "Additional help topics:"}}{{range .Commands}}{{if .IsAdditionalHelpTopicCommand}}
+  {{styleCommandName (rpad .CommandPath .CommandPathPadding)}} {{styleCommandDesc .Short}}{{end}}{{end}}{{end}}{{if .HasAvailableSubCommands}}
 
-Use "{{.CommandPath}} [command] --help" for more information about a command.{{end}}
-`
+{{styleFooter (printf "Use \"%s [command] --help\" for more information about a command." .CommandPath)}}{{end}}`

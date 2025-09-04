@@ -32,6 +32,16 @@ import (
 
 	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/output"
+
+	"github.com/onflow/flow-cli/common/branding"
+)
+
+// Error styling
+var (
+	errorStyle        = branding.ErrorStyle
+	errorMessageStyle = branding.ErrorStyle
+	suggestionStyle   = branding.GreenStyle.Copy().Italic(true)
+	descriptionStyle  = branding.GrayStyle.Copy().Bold(true)
 )
 
 // Result interface describes all the formats for the result output.
@@ -140,35 +150,66 @@ func handleError(description string, err error) {
 	// handle rpc error
 	switch t := err.(type) {
 	case *grpc.RPCError:
-		_, _ = fmt.Fprintf(os.Stderr, "%s Grpc Error: %s \n", output.ErrorEmoji(), t.GRPCStatus().Err().Error())
+		errorMsg := errorStyle.Render(fmt.Sprintf("%s Grpc Error:", output.ErrorEmoji()))
+		detailMsg := errorMessageStyle.Render(t.GRPCStatus().Err().Error())
+		_, _ = fmt.Fprintf(os.Stderr, "%s %s\n", errorMsg, detailMsg)
 	default:
 		if errors.Is(err, config.ErrOutdatedFormat) {
-			_, _ = fmt.Fprintf(os.Stderr, "%s Config Error: %s \n", output.ErrorEmoji(), err.Error())
-			_, _ = fmt.Fprintf(os.Stderr, "%s Please reset configuration using: 'flow init --reset'. Read more about new configuration here: https://github.com/onflow/flow-cli/releases/tag/v0.17.0", output.TryEmoji())
+			errorMsg := errorStyle.Render(fmt.Sprintf("%s Config Error:", output.ErrorEmoji()))
+			detailMsg := errorMessageStyle.Render(err.Error())
+			_, _ = fmt.Fprintf(os.Stderr, "%s %s\n", errorMsg, detailMsg)
+
+			suggestion := suggestionStyle.Render(fmt.Sprintf("%s Please reset configuration using: 'flow init --reset'. Read more about new configuration here: https://github.com/onflow/flow-cli/releases/tag/v0.17.0", output.TryEmoji()))
+			_, _ = fmt.Fprintf(os.Stderr, "%s\n", suggestion)
 		} else if errors.Is(err, config.ErrDoesNotExist) {
-			_, _ = fmt.Fprintf(os.Stderr, "%s Config Error: %s \n", output.ErrorEmoji(), err.Error())
-			_, _ = fmt.Fprintf(os.Stderr, "%s Please create configuration using: flow init", output.TryEmoji())
+			errorMsg := errorStyle.Render(fmt.Sprintf("%s Config Error:", output.ErrorEmoji()))
+			detailMsg := errorMessageStyle.Render(err.Error())
+			_, _ = fmt.Fprintf(os.Stderr, "%s %s\n", errorMsg, detailMsg)
+
+			suggestion := suggestionStyle.Render(fmt.Sprintf("%s Please create configuration using: flow init", output.TryEmoji()))
+			_, _ = fmt.Fprintf(os.Stderr, "%s\n", suggestion)
 		} else if strings.Contains(err.Error(), "transport:") {
-			_, _ = fmt.Fprintf(os.Stderr, "%s %s \n", output.ErrorEmoji(), strings.Split(err.Error(), "transport:")[1])
-			_, _ = fmt.Fprintf(os.Stderr, "%s Make sure your emulator is running or connection address is correct.", output.TryEmoji())
+			errorMsg := errorStyle.Render(fmt.Sprintf("%s Connection Error:", output.ErrorEmoji()))
+			detailMsg := errorMessageStyle.Render(strings.Split(err.Error(), "transport:")[1])
+			_, _ = fmt.Fprintf(os.Stderr, "%s %s\n", errorMsg, detailMsg)
+
+			suggestion := suggestionStyle.Render(fmt.Sprintf("%s Make sure your emulator is running or connection address is correct.", output.TryEmoji()))
+			_, _ = fmt.Fprintf(os.Stderr, "%s\n", suggestion)
 		} else if strings.Contains(err.Error(), "NotFound desc =") {
-			_, _ = fmt.Fprintf(os.Stderr, "%s Not Found:%s \n", output.ErrorEmoji(), strings.Split(err.Error(), "NotFound desc =")[1])
+			errorMsg := errorStyle.Render(fmt.Sprintf("%s Not Found:", output.ErrorEmoji()))
+			detailMsg := errorMessageStyle.Render(strings.Split(err.Error(), "NotFound desc =")[1])
+			_, _ = fmt.Fprintf(os.Stderr, "%s%s\n", errorMsg, detailMsg)
 		} else if strings.Contains(err.Error(), "code = InvalidArgument desc = ") {
 			desc := strings.Split(err.Error(), "code = InvalidArgument desc = ")
-			_, _ = fmt.Fprintf(os.Stderr, "%s Invalid argument: %s \n", output.ErrorEmoji(), desc[len(desc)-1])
+			errorMsg := errorStyle.Render(fmt.Sprintf("%s Invalid argument:", output.ErrorEmoji()))
+			detailMsg := errorMessageStyle.Render(desc[len(desc)-1])
+			_, _ = fmt.Fprintf(os.Stderr, "%s %s\n", errorMsg, detailMsg)
+
 			if strings.Contains(err.Error(), "is invalid for chain") {
-				_, _ = fmt.Fprintf(os.Stderr, "%s Check you are connecting to the correct network or account address you use is correct.", output.TryEmoji())
+				suggestion := suggestionStyle.Render(fmt.Sprintf("%s Check you are connecting to the correct network or account address you use is correct.", output.TryEmoji()))
+				_, _ = fmt.Fprintf(os.Stderr, "%s\n", suggestion)
 			} else {
-				_, _ = fmt.Fprintf(os.Stderr, "%s Check your argument and flags value, you can use --help.", output.TryEmoji())
+				suggestion := suggestionStyle.Render(fmt.Sprintf("%s Check your argument and flags value, you can use --help.", output.TryEmoji()))
+				_, _ = fmt.Fprintf(os.Stderr, "%s\n", suggestion)
 			}
 		} else if strings.Contains(err.Error(), "invalid signature:") {
-			_, _ = fmt.Fprintf(os.Stderr, "%s Invalid signature: %s \n", output.ErrorEmoji(), strings.Split(err.Error(), "invalid signature:")[1])
-			_, _ = fmt.Fprintf(os.Stderr, "%s Check the signer private key is provided or is in the correct format. If running emulator, make sure it's using the same configuration as this command.", output.TryEmoji())
+			errorMsg := errorStyle.Render(fmt.Sprintf("%s Invalid signature:", output.ErrorEmoji()))
+			detailMsg := errorMessageStyle.Render(strings.Split(err.Error(), "invalid signature:")[1])
+			_, _ = fmt.Fprintf(os.Stderr, "%s %s\n", errorMsg, detailMsg)
+
+			suggestion := suggestionStyle.Render(fmt.Sprintf("%s Check the signer private key is provided or is in the correct format. If running emulator, make sure it's using the same configuration as this command.", output.TryEmoji()))
+			_, _ = fmt.Fprintf(os.Stderr, "%s\n", suggestion)
 		} else if strings.Contains(err.Error(), "signature could not be verified using public key with") {
-			_, _ = fmt.Fprintf(os.Stderr, "%s %s: %s \n", output.ErrorEmoji(), description, err)
-			_, _ = fmt.Fprintf(os.Stderr, "%s If you are running emulator locally make sure that the emulator was started with the same config as used in this command. \nTry restarting the emulator.", output.TryEmoji())
+			errorMsg := errorStyle.Render(fmt.Sprintf("%s %s:", output.ErrorEmoji(), description))
+			detailMsg := errorMessageStyle.Render(err.Error())
+			_, _ = fmt.Fprintf(os.Stderr, "%s %s\n", errorMsg, detailMsg)
+
+			suggestion := suggestionStyle.Render(fmt.Sprintf("%s If you are running emulator locally make sure that the emulator was started with the same config as used in this command. \nTry restarting the emulator.", output.TryEmoji()))
+			_, _ = fmt.Fprintf(os.Stderr, "%s\n", suggestion)
 		} else {
-			_, _ = fmt.Fprintf(os.Stderr, "%s %s: %s", output.ErrorEmoji(), description, err)
+			errorMsg := errorStyle.Render(fmt.Sprintf("%s %s:", output.ErrorEmoji(), description))
+			detailMsg := errorMessageStyle.Render(err.Error())
+			_, _ = fmt.Fprintf(os.Stderr, "%s %s\n", errorMsg, detailMsg)
 		}
 	}
 

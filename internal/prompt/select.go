@@ -25,6 +25,8 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"golang.org/x/term"
+
+	"github.com/onflow/flow-cli/common/branding"
 )
 
 // optionSelectModel represents the prompt state but is now private
@@ -83,24 +85,24 @@ func (m optionSelectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m optionSelectModel) View() string {
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf("%s\n", MessageStyle.Render(m.message)))
-	b.WriteString(GrayStyle.Render("Use arrow keys to navigate, space to select, enter to confirm or skip, q to quit:") + "\n\n")
+	b.WriteString(fmt.Sprintf("%s\n", branding.MessageStyle.Render(m.message)))
+	b.WriteString(branding.GrayStyle.Render("Use arrow keys to navigate, space to select, enter to confirm or skip, q to quit:") + "\n\n")
 	for i, choice := range m.choices {
 		if m.cursor == i {
-			b.WriteString(GreenStyle.Render("> "))
+			b.WriteString(branding.GreenStyle.Render("> "))
 		} else {
 			b.WriteString("  ")
 		}
 		// Mark selected items
 		if _, ok := m.selected[i]; ok {
-			b.WriteString(GreenStyle.Render("[x] "))
+			b.WriteString(branding.GreenStyle.Render("[x] "))
 		} else {
 			b.WriteString("[ ] ")
 		}
 
 		// Style the choice text if it's selected
 		if m.cursor == i {
-			b.WriteString(GreenStyle.Render(choice) + "\n")
+			b.WriteString(branding.GreenStyle.Render(choice) + "\n")
 		} else {
 			b.WriteString(choice + "\n")
 		}
@@ -180,19 +182,19 @@ func (m singleSelectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m singleSelectModel) View() string {
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf("%s\n\n", MessageStyle.Render(m.message)))
+	b.WriteString(fmt.Sprintf("%s\n\n", branding.MessageStyle.Render(m.message)))
 
 	for i, choice := range m.choices {
 		if m.cursor == i {
-			b.WriteString(GreenStyle.Render("> "))
-			b.WriteString(GreenStyle.Render(choice) + "\n")
+			b.WriteString(branding.GreenStyle.Render("> "))
+			b.WriteString(branding.GreenStyle.Render(choice) + "\n")
 		} else {
 			b.WriteString("  ")
 			b.WriteString(choice + "\n")
 		}
 	}
 
-	b.WriteString("\n" + GrayStyle.Render("Use arrow keys to navigate, enter to select, esc to cancel"))
+	b.WriteString("\n" + branding.GrayStyle.Render("Use arrow keys to navigate, enter to select, esc to cancel"))
 	return b.String()
 }
 

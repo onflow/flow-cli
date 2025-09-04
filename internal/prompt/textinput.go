@@ -25,11 +25,13 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"golang.org/x/term"
+
+	"github.com/onflow/flow-cli/common/branding"
 )
 
 var (
-	projectNameStyle = MessageStyle // Use default color for messages
-	helpTextStyle    = GrayStyle
+	projectNameStyle = branding.MessageStyle // Use default color for messages
+	helpTextStyle    = branding.GrayStyle
 )
 
 // textInputModel is now private, only accessible within the 'prompt' package.
@@ -51,8 +53,8 @@ func newTextInput(customMsg, placeholder, defaultValue string, validate func(str
 	ti.Width = 30
 
 	// Style the text input with green cursor and text
-	ti.TextStyle = GreenStyle
-	ti.Cursor.Style = GreenStyle
+	ti.TextStyle = branding.GreenStyle
+	ti.Cursor.Style = branding.GreenStyle
 
 	if defaultValue != "" {
 		ti.SetValue(defaultValue)
