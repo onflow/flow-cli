@@ -356,28 +356,40 @@ func (s *initResult) String() string {
 	relDir, _ := filepath.Rel(wd, s.targetDir)
 	out := bytes.Buffer{}
 
-	out.WriteString(fmt.Sprintf("%s Congrats! your project was created.\n\n", output.SuccessEmoji()))
+	// Colorized success message
+	successMsg := branding.GreenStyle.Render(fmt.Sprintf("%s Congrats! your project was created.", output.SuccessEmoji()))
+	out.WriteString(fmt.Sprintf("%s\n\n", successMsg))
 
 	// Check if we created README_flow.md instead of README.md
 	readmeFile := defaultReadmeFile
 	if _, err := os.Stat(filepath.Join(s.targetDir, flowReadmeFile)); err == nil {
 		readmeFile = flowReadmeFile
-		out.WriteString("📝 Note: Created README_flow.md since README.md already exists.\n\n")
+		noteMsg := branding.PurpleStyle.Render("📝 Note: Created README_flow.md since README.md already exists.")
+		out.WriteString(fmt.Sprintf("%s\n\n", noteMsg))
 	}
 
-	out.WriteString("Start development by following these steps:\n")
+	// Colorized section header
+	headerMsg := branding.PurpleStyle.Render("Start development by following these steps:")
+	out.WriteString(fmt.Sprintf("%s\n", headerMsg))
 
 	// Only show cd command if not current directory
 	if s.targetDir != wd {
-		out.WriteString(fmt.Sprintf("1. '%s' to change to your new project,\n", output.Bold(fmt.Sprintf("cd %s", relDir))))
-		out.WriteString(fmt.Sprintf("2. '%s' to start the emulator,\n", output.Bold("flow emulator")))
-		out.WriteString(fmt.Sprintf("3. '%s' to test your project.\n\n", output.Bold("flow test")))
+		cdCmd := branding.GreenStyle.Render(fmt.Sprintf("cd %s", relDir))
+		emulatorCmd := branding.GreenStyle.Render("flow emulator")
+		testCmd := branding.GreenStyle.Render("flow test")
+		out.WriteString(fmt.Sprintf("1. '%s' to change to your new project,\n", cdCmd))
+		out.WriteString(fmt.Sprintf("2. '%s' to start the emulator,\n", emulatorCmd))
+		out.WriteString(fmt.Sprintf("3. '%s' to test your project.\n\n", testCmd))
 	} else {
-		out.WriteString(fmt.Sprintf("1. '%s' to start the emulator,\n", output.Bold("flow emulator")))
-		out.WriteString(fmt.Sprintf("2. '%s' to test your project.\n\n", output.Bold("flow test")))
+		emulatorCmd := branding.GreenStyle.Render("flow emulator")
+		testCmd := branding.GreenStyle.Render("flow test")
+		out.WriteString(fmt.Sprintf("1. '%s' to start the emulator,\n", emulatorCmd))
+		out.WriteString(fmt.Sprintf("2. '%s' to test your project.\n\n", testCmd))
 	}
 
-	out.WriteString(fmt.Sprintf("You should also read %s to learn more about the development process!\n", readmeFile))
+	// Colorized footer message
+	readmeMsg := branding.GrayStyle.Render(fmt.Sprintf("You should also read %s to learn more about the development process!", readmeFile))
+	out.WriteString(fmt.Sprintf("%s\n", readmeMsg))
 
 	return out.String()
 }
