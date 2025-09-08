@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"io"
 	"sort"
+	"strings"
 
 	"github.com/onflow/cadence"
 	jsoncdc "github.com/onflow/cadence/encoding/json"
@@ -91,21 +92,21 @@ func (e *EventResult) String() string {
 }
 
 func (e *EventResult) Oneliner() string {
-	result := ""
+	var result strings.Builder
 	for _, blockEvent := range e.BlockEvents {
 		if len(blockEvent.Events) > 0 {
-			result += fmt.Sprintf("Events Block #%v: [", blockEvent.Height)
+			result.WriteString(fmt.Sprintf("Events Block #%v: [", blockEvent.Height))
 			for _, event := range blockEvent.Events {
-				result += fmt.Sprintf(
+				result.WriteString(fmt.Sprintf(
 					"Index: %v, Type: %v, TxID: %s, Value: %v",
 					event.EventIndex, event.Type, event.TransactionID, event.Value,
-				)
+				))
 			}
-			result += "] "
+			result.WriteString("] ")
 		}
 	}
 
-	return result
+	return result.String()
 }
 
 func eventsString(writer io.Writer, events []flow.Event) {
