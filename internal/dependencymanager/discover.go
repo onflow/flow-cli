@@ -99,7 +99,7 @@ func PromptInstallCoreContracts(logger output.Logger, state *flowkit.State, targ
 	installedCount := totalContracts - availableContracts
 
 	if installedCount > 0 {
-		footer = fmt.Sprintf("ℹ️  Note: %d core contracts already installed. Use 'flow deps list' to view them.", installedCount)
+		footer = fmt.Sprintf("ℹ️  Note: %d core contracts already installed. Use 'flow dependencies list' to view them.", installedCount)
 	}
 
 	selectedContractNames, err := prompt.RunSelectOptionsWithFooter(contractNames, promptMessage, footer)
