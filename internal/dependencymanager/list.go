@@ -27,6 +27,7 @@ import (
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/output"
 
+	"github.com/onflow/flow-cli/common/branding"
 	"github.com/onflow/flow-cli/internal/command"
 )
 
@@ -79,11 +80,13 @@ func list(
 
 func (r *ListResult) String() string {
 	if len(r.Dependencies) == 0 {
-		return "No dependencies installed"
+		return branding.GrayStyle.Render("📦 No dependencies installed")
 	}
 
 	var result strings.Builder
-	result.WriteString(fmt.Sprintf("Installed dependencies (%d):\n\n", len(r.Dependencies)))
+
+	header := fmt.Sprintf("📦 Installed dependencies (%d):", len(r.Dependencies))
+	result.WriteString(branding.PurpleStyle.Render(header) + "\n\n")
 
 	// Find max widths for alignment
 	maxNameWidth := 4    // "NAME"
@@ -102,19 +105,23 @@ func (r *ListResult) String() string {
 		}
 	}
 
-	result.WriteString(fmt.Sprintf("%-*s  %-*s  %-*s  %s\n",
-		maxNameWidth, "NAME",
-		maxNetworkWidth, "NETWORK",
-		maxAddressWidth, "ADDRESS",
-		"CONTRACT"))
-	result.WriteString(strings.Repeat("-", maxNameWidth+maxNetworkWidth+maxAddressWidth+20) + "\n")
+	result.WriteString(fmt.Sprintf("%s  %s  %s  %s\n",
+		branding.GreenStyle.Render(fmt.Sprintf("%-*s", maxNameWidth, "NAME")),
+		branding.GreenStyle.Render(fmt.Sprintf("%-*s", maxNetworkWidth, "NETWORK")),
+		branding.GreenStyle.Render(fmt.Sprintf("%-*s", maxAddressWidth, "ADDRESS")),
+		branding.GreenStyle.Render("CONTRACT")))
+
+	result.WriteString(branding.GrayStyle.Render(strings.Repeat("─", maxNameWidth+maxNetworkWidth+maxAddressWidth+20)) + "\n")
 
 	for _, dep := range r.Dependencies {
-		result.WriteString(fmt.Sprintf("%-*s  %-*s  %-*s  %s\n",
-			maxNameWidth, dep.Name,
-			maxNetworkWidth, dep.NetworkName,
-			maxAddressWidth, dep.Address,
-			dep.Contract))
+
+		contractName := branding.GreenStyle.Render(fmt.Sprintf("%-*s", maxNameWidth, dep.Name))
+		network := branding.PurpleStyle.Render(fmt.Sprintf("%-*s", maxNetworkWidth, dep.NetworkName))
+		address := branding.GrayStyle.Render(fmt.Sprintf("%-*s", maxAddressWidth, dep.Address))
+		contract := dep.Contract
+
+		result.WriteString(fmt.Sprintf("%s  %s  %s  %s\n",
+			contractName, network, address, contract))
 	}
 
 	return result.String()
