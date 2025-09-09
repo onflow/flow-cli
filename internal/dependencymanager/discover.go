@@ -93,7 +93,16 @@ func PromptInstallCoreContracts(logger output.Logger, state *flowkit.State, targ
 		contractNames = append(contractNames, contract.Name)
 	}
 
-	selectedContractNames, err := prompt.RunSelectOptions(contractNames, promptMessage)
+	var footer string
+	totalContracts := len(sc.All())
+	availableContracts := len(contractNames)
+	installedCount := totalContracts - availableContracts
+
+	if installedCount > 0 {
+		footer = fmt.Sprintf("ℹ️  Note: %d core contracts already installed. Use 'flow deps list' to view them.", installedCount)
+	}
+
+	selectedContractNames, err := prompt.RunSelectOptionsWithFooter(contractNames, promptMessage, footer)
 	if err != nil {
 		return fmt.Errorf("error running dependency selection: %v\n", err)
 	}

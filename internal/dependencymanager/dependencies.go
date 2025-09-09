@@ -33,5 +33,6 @@ var Cmd = &cobra.Command{
 func init() {
 	addCommand.AddToParent(Cmd)
 	installCommand.AddToParent(Cmd)
+	listCommand.AddToParent(Cmd)
 	discoverCommand.AddToParent(Cmd)
 }
