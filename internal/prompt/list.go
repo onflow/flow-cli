@@ -31,8 +31,7 @@ import (
 
 var docStyle = lipgloss.NewStyle().Margin(1, 2)
 
-// ContractItem represents a contract that can be selected
-type ContractItem struct {
+type Item struct {
 	name            string
 	section         string
 	sectionDesc     string
@@ -40,10 +39,9 @@ type ContractItem struct {
 	isFirstInSection bool
 }
 
-func (i ContractItem) Title() string {
+func (i Item) Title() string {
 	title := ""
 	
-	// Add section header if this is the first item in the section
 	if i.isFirstInSection {
 		title += branding.PurpleStyle.Render("--- " + i.section + " ---") + "\n"
 		if i.sectionDesc != "" {
@@ -60,28 +58,27 @@ func (i ContractItem) Title() string {
 	return title
 }
 
-func (i ContractItem) Description() string {
+func (i Item) Description() string {
 	return branding.GrayStyle.Render(i.section)
 }
 
-func (i ContractItem) FilterValue() string {
+func (i Item) FilterValue() string {
 	return i.name
 }
 
-// ContractListModel handles the list-based contract selection
-type ContractListModel struct {
+type ListModel struct {
 	list     list.Model
-	items    []ContractItem
+	items    []Item
 	selected map[int]struct{}
 	footer   string
 	quitting bool
 }
 
-func (m ContractListModel) Init() tea.Cmd {
+func (m ListModel) Init() tea.Cmd {
 	return nil
 }
 
-func (m ContractListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -89,7 +86,6 @@ func (m ContractListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.quitting = true
 			return m, tea.Quit
 		case " ":
-			// Toggle selection
 			selectedIndex := m.list.Index()
 			if selectedIndex < len(m.items) {
 				if _, exists := m.selected[selectedIndex]; exists {
@@ -100,7 +96,6 @@ func (m ContractListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.items[selectedIndex].selected = true
 				}
 				
-				// Update the list items
 				listItems := make([]list.Item, len(m.items))
 				for i, item := range m.items {
 					listItems[i] = item
@@ -121,63 +116,55 @@ func (m ContractListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (m ContractListModel) View() string {
+func (m ListModel) View() string {
 	if m.quitting {
 		return ""
 	}
 	
 	view := m.list.View()
 	
-	// Add footer if present
 	if m.footer != "" {
 		view += "\n" + branding.GrayStyle.Render(m.footer)
 	}
 	
-	// Add instructions
 	instructions := branding.GrayStyle.Render("Space: select/deselect • Enter: confirm • q/Ctrl+C: quit")
 	view += "\n" + instructions
 	
 	return docStyle.Render(view)
 }
 
-// ContractSectionData contains metadata about a contract section
-type ContractSectionData struct {
+type ListSectionData struct {
 	Name        string
 	Description string
-	Contracts   []string
+	Items       []string
 }
 
-// RunContractList runs a list-based contract selection prompt
-func RunContractList(sections []ContractSectionData, message string, footer string) ([]string, error) {
-	// Non-interactive fallback for CI: return no selection
+func RunList(sections []ListSectionData, message string, footer string) ([]string, error) {
 	if !term.IsTerminal(int(os.Stdin.Fd())) || !term.IsTerminal(int(os.Stdout.Fd())) {
 		return []string{}, nil
 	}
 
-	// Build contract items with sections
-	var items []ContractItem
+	var items []Item
 	var listItems []list.Item
 
 	for _, section := range sections {
-		if len(section.Contracts) == 0 {
+		if len(section.Items) == 0 {
 			continue
 		}
 
-		// Add contracts in section
-		for i, contract := range section.Contracts {
-			contractItem := ContractItem{
-				name:            contract,
+		for i, item := range section.Items {
+			listItem := Item{
+				name:            item,
 				section:         section.Name,
 				sectionDesc:     section.Description,
 				selected:        false,
-				isFirstInSection: i == 0, // Mark first contract in section
+				isFirstInSection: i == 0,
 			}
-			items = append(items, contractItem)
-			listItems = append(listItems, contractItem)
+			items = append(items, listItem)
+			listItems = append(listItems, listItem)
 		}
 	}
 
-	// Create list model
 	delegate := list.NewDefaultDelegate()
 	delegate.Styles.SelectedTitle = branding.GreenStyle
 	delegate.Styles.SelectedDesc = branding.GrayStyle
@@ -189,7 +176,7 @@ func RunContractList(sections []ContractSectionData, message string, footer stri
 	listModel.SetFilteringEnabled(true)
 	listModel.SetShowHelp(false)
 
-	model := ContractListModel{
+	model := ListModel{
 		list:     listModel,
 		items:    items,
 		selected: make(map[int]struct{}),
@@ -202,16 +189,15 @@ func RunContractList(sections []ContractSectionData, message string, footer stri
 		return nil, err
 	}
 
-	final := finalModel.(ContractListModel)
+	final := finalModel.(ListModel)
 	
-	// Collect selected contracts
-	var selectedContracts []string
+	var selectedItems []string
 	for i := range final.selected {
 		if i < len(final.items) {
-			selectedContracts = append(selectedContracts, final.items[i].name)
+			selectedItems = append(selectedItems, final.items[i].name)
 		}
 	}
 
-	return selectedContracts, nil
+	return selectedItems, nil
 }
 
