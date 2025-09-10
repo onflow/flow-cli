@@ -309,4 +309,3 @@ func IsCoreContract(contractName string) bool {
 	}
 	return false
 }
-
