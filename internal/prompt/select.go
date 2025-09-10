@@ -272,8 +272,21 @@ func RunSelectSections(sections map[string][]string, message string, footer stri
 		return []string{}, nil
 	}
 
+	// Core Contracts first, then others alphabetically
+	orderedSectionNames := make([]string, 0, len(sections))
+	if _, exists := sections["Core Contracts"]; exists {
+		orderedSectionNames = append(orderedSectionNames, "Core Contracts")
+	}
+
+	for sectionName := range sections {
+		if sectionName != "Core Contracts" {
+			orderedSectionNames = append(orderedSectionNames, sectionName)
+		}
+	}
+
 	var items []SectionItem
-	for sectionName, options := range sections {
+	for _, sectionName := range orderedSectionNames {
+		options := sections[sectionName]
 		if len(options) == 0 {
 			continue
 		}
