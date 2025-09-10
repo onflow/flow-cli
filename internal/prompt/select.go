@@ -35,6 +35,7 @@ type optionSelectModel struct {
 	cursor   int              // position of the cursor
 	choices  []string         // items on the list
 	selected map[int]struct{} // which items are selected
+	footer   string           // optional footer message
 }
 
 // selectOptions creates a prompt for selecting multiple options but is now private
@@ -43,6 +44,16 @@ func selectOptions(options []string, message string) optionSelectModel {
 		message:  message,
 		choices:  options,
 		selected: make(map[int]struct{}),
+	}
+}
+
+// selectOptionsWithFooter creates a prompt for selecting multiple options with footer message
+func selectOptionsWithFooter(options []string, message string, footer string) optionSelectModel {
+	return optionSelectModel{
+		message:  message,
+		choices:  options,
+		selected: make(map[int]struct{}),
+		footer:   footer,
 	}
 }
 
@@ -107,16 +118,27 @@ func (m optionSelectModel) View() string {
 			b.WriteString(choice + "\n")
 		}
 	}
+
+	// Add footer message if present
+	if m.footer != "" {
+		b.WriteString("\n" + branding.GrayStyle.Render(m.footer))
+	}
+
 	return b.String()
 }
 
 // RunSelectOptions remains public and is the interface for external usage.
 func RunSelectOptions(options []string, message string) ([]string, error) {
+	return RunSelectOptionsWithFooter(options, message, "")
+}
+
+// RunSelectOptionsWithFooter runs the selection prompt with an optional footer message.
+func RunSelectOptionsWithFooter(options []string, message string, footer string) ([]string, error) {
 	// Non-interactive fallback for CI: return no selection
 	if !term.IsTerminal(int(os.Stdin.Fd())) || !term.IsTerminal(int(os.Stdout.Fd())) {
 		return []string{}, nil
 	}
-	model := selectOptions(options, message)
+	model := selectOptionsWithFooter(options, message, footer)
 	p := tea.NewProgram(model)
 	finalModel, err := p.Run()
 	if err != nil {
