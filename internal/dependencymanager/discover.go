@@ -81,7 +81,7 @@ func PromptInstallCoreContracts(logger output.Logger, state *flowkit.State, targ
 
 func PromptInstallContracts(logger output.Logger, state *flowkit.State, targetDir string, excludeContracts []string) error {
 	sections := GetAllContractSections()
-	sectionMap := make(map[string][]string)
+	var sectionData []prompt.ContractSectionData
 	allDependenciesByName := make(map[string]flowkitConfig.Dependency)
 
 	var totalAvailable, totalInstalled int
@@ -108,7 +108,11 @@ func PromptInstallContracts(logger output.Logger, state *flowkit.State, targetDi
 		totalInstalled += sectionInstalled
 
 		if len(availableContracts) > 0 {
-			sectionMap[section.Name] = availableContracts
+			sectionData = append(sectionData, prompt.ContractSectionData{
+				Name:        section.Name,
+				Description: section.Description,
+				Contracts:   availableContracts,
+			})
 		}
 	}
 
@@ -118,7 +122,7 @@ func PromptInstallContracts(logger output.Logger, state *flowkit.State, targetDi
 	}
 
 	promptMessage := "Select any contracts you would like to install"
-	selectedContractNames, err := prompt.RunContractList(sectionMap, promptMessage, footer)
+	selectedContractNames, err := prompt.RunContractList(sectionData, promptMessage, footer)
 	if err != nil {
 		return fmt.Errorf("error running dependency selection: %v\n", err)
 	}

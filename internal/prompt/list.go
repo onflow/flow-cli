@@ -33,16 +33,22 @@ var docStyle = lipgloss.NewStyle().Margin(1, 2)
 
 // ContractItem represents a contract that can be selected
 type ContractItem struct {
-	name        string
-	section     string
-	description string
-	selected    bool
-	isHeader    bool
+	name            string
+	section         string
+	sectionDesc     string
+	selected        bool
+	isFirstInSection bool
 }
 
 func (i ContractItem) Title() string {
-	if i.isHeader {
-		return branding.PurpleStyle.Render("--- " + i.name + " ---")
+	title := ""
+	
+	// Add section header if this is the first item in the section
+	if i.isFirstInSection {
+		title += branding.PurpleStyle.Render("--- " + i.section + " ---") + "\n"
+		if i.sectionDesc != "" {
+			title += branding.GrayStyle.Render(i.sectionDesc) + "\n"
+		}
 	}
 	
 	prefix := "[ ] "
@@ -50,13 +56,11 @@ func (i ContractItem) Title() string {
 		prefix = branding.GreenStyle.Render("[✓] ")
 	}
 	
-	return prefix + i.name
+	title += prefix + i.name
+	return title
 }
 
 func (i ContractItem) Description() string {
-	if i.isHeader {
-		return branding.GrayStyle.Render(i.description)
-	}
 	return branding.GrayStyle.Render(i.section)
 }
 
@@ -87,7 +91,7 @@ func (m ContractListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case " ":
 			// Toggle selection
 			selectedIndex := m.list.Index()
-			if selectedIndex < len(m.items) && !m.items[selectedIndex].isHeader {
+			if selectedIndex < len(m.items) {
 				if _, exists := m.selected[selectedIndex]; exists {
 					delete(m.selected, selectedIndex)
 					m.items[selectedIndex].selected = false
@@ -136,8 +140,15 @@ func (m ContractListModel) View() string {
 	return docStyle.Render(view)
 }
 
+// ContractSectionData contains metadata about a contract section
+type ContractSectionData struct {
+	Name        string
+	Description string
+	Contracts   []string
+}
+
 // RunContractList runs a list-based contract selection prompt
-func RunContractList(sections map[string][]string, message string, footer string) ([]string, error) {
+func RunContractList(sections []ContractSectionData, message string, footer string) ([]string, error) {
 	// Non-interactive fallback for CI: return no selection
 	if !term.IsTerminal(int(os.Stdin.Fd())) || !term.IsTerminal(int(os.Stdout.Fd())) {
 		return []string{}, nil
@@ -146,44 +157,20 @@ func RunContractList(sections map[string][]string, message string, footer string
 	// Build contract items with sections
 	var items []ContractItem
 	var listItems []list.Item
-	
-	// Ensure consistent section order: Core Contracts first, then others
-	orderedSectionNames := make([]string, 0, len(sections))
-	if _, exists := sections["Core Contracts"]; exists {
-		orderedSectionNames = append(orderedSectionNames, "Core Contracts")
-	}
-	
-	for sectionName := range sections {
-		if sectionName != "Core Contracts" {
-			orderedSectionNames = append(orderedSectionNames, sectionName)
-		}
-	}
 
-	for _, sectionName := range orderedSectionNames {
-		contracts := sections[sectionName]
-		if len(contracts) == 0 {
+	for _, section := range sections {
+		if len(section.Contracts) == 0 {
 			continue
 		}
 
-		// Add section header
-		headerItem := ContractItem{
-			name:        sectionName,
-			section:     "",
-			description: getSectionDescription(sectionName),
-			selected:    false,
-			isHeader:    true,
-		}
-		items = append(items, headerItem)
-		listItems = append(listItems, headerItem)
-
 		// Add contracts in section
-		for _, contract := range contracts {
+		for i, contract := range section.Contracts {
 			contractItem := ContractItem{
-				name:        contract,
-				section:     sectionName,
-				description: "",
-				selected:    false,
-				isHeader:    false,
+				name:            contract,
+				section:         section.Name,
+				sectionDesc:     section.Description,
+				selected:        false,
+				isFirstInSection: i == 0, // Mark first contract in section
 			}
 			items = append(items, contractItem)
 			listItems = append(listItems, contractItem)
@@ -220,7 +207,7 @@ func RunContractList(sections map[string][]string, message string, footer string
 	// Collect selected contracts
 	var selectedContracts []string
 	for i := range final.selected {
-		if i < len(final.items) && !final.items[i].isHeader {
+		if i < len(final.items) {
 			selectedContracts = append(selectedContracts, final.items[i].name)
 		}
 	}
@@ -228,13 +215,3 @@ func RunContractList(sections map[string][]string, message string, footer string
 	return selectedContracts, nil
 }
 
-func getSectionDescription(sectionName string) string {
-	switch sectionName {
-	case "Core Contracts":
-		return "Essential Flow blockchain system contracts"
-	case "DeFi Actions":
-		return "DeFi protocol integration contracts for automated actions"
-	default:
-		return ""
-	}
-}
