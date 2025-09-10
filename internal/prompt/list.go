@@ -57,7 +57,7 @@ func (i ContractItem) Description() string {
 	if i.isHeader {
 		return branding.GrayStyle.Render(i.description)
 	}
-	return branding.GrayStyle.Render("From " + i.section)
+	return branding.GrayStyle.Render(i.section)
 }
 
 func (i ContractItem) FilterValue() string {
