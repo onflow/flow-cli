@@ -117,8 +117,8 @@ func PromptInstallContracts(logger output.Logger, state *flowkit.State, targetDi
 		footer = fmt.Sprintf("ℹ️  Note: %d contracts already installed. Use 'flow dependencies list' to view them.", totalInstalled)
 	}
 
-	promptMessage := "Select any contracts you would like to install or skip to continue."
-	selectedContractNames, err := prompt.RunSelectSections(sectionMap, promptMessage, footer)
+	promptMessage := "Select any contracts you would like to install"
+	selectedContractNames, err := prompt.RunContractList(sectionMap, promptMessage, footer)
 	if err != nil {
 		return fmt.Errorf("error running dependency selection: %v\n", err)
 	}
