@@ -55,7 +55,7 @@ func getCoreContractsSection() ContractSection {
 
 	return ContractSection{
 		Name:         "Core Contracts",
-		Description:  "Smart contracts that define Flow's core functionality",
+		Description:  "Flow's core protocol contracts",
 		Dependencies: dependencies,
 	}
 }
@@ -107,7 +107,7 @@ func getDefiActionsSection() ContractSection {
 
 	return ContractSection{
 		Name:         "DeFi Actions",
-		Description:  "Composable DeFi primitives for building financial workflows",
+		Description:  "Composable DeFi primitives",
 		Dependencies: dependencies,
 	}
 }
