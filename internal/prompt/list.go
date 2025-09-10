@@ -32,28 +32,28 @@ import (
 var docStyle = lipgloss.NewStyle().Margin(1, 2)
 
 type Item struct {
-	name            string
-	section         string
-	sectionDesc     string
-	selected        bool
+	name             string
+	section          string
+	sectionDesc      string
+	selected         bool
 	isFirstInSection bool
 }
 
 func (i Item) Title() string {
 	title := ""
-	
+
 	if i.isFirstInSection {
-		title += branding.PurpleStyle.Render("--- " + i.section + " ---") + "\n"
+		title += branding.PurpleStyle.Render("--- "+i.section+" ---") + "\n"
 		if i.sectionDesc != "" {
 			title += branding.GrayStyle.Render(i.sectionDesc) + "\n"
 		}
 	}
-	
+
 	prefix := "[ ] "
 	if i.selected {
 		prefix = branding.GreenStyle.Render("[✓] ")
 	}
-	
+
 	title += prefix + i.name
 	return title
 }
@@ -95,7 +95,7 @@ func (m ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.selected[selectedIndex] = struct{}{}
 					m.items[selectedIndex].selected = true
 				}
-				
+
 				listItems := make([]list.Item, len(m.items))
 				for i, item := range m.items {
 					listItems[i] = item
@@ -120,16 +120,16 @@ func (m ListModel) View() string {
 	if m.quitting {
 		return ""
 	}
-	
+
 	view := m.list.View()
-	
+
 	if m.footer != "" {
 		view += "\n" + branding.GrayStyle.Render(m.footer)
 	}
-	
+
 	instructions := branding.GrayStyle.Render("Space: select/deselect • Enter: confirm • q/Ctrl+C: quit")
 	view += "\n" + instructions
-	
+
 	return docStyle.Render(view)
 }
 
@@ -154,10 +154,10 @@ func RunList(sections []ListSectionData, message string, footer string) ([]strin
 
 		for i, item := range section.Items {
 			listItem := Item{
-				name:            item,
-				section:         section.Name,
-				sectionDesc:     section.Description,
-				selected:        false,
+				name:             item,
+				section:          section.Name,
+				sectionDesc:      section.Description,
+				selected:         false,
 				isFirstInSection: i == 0,
 			}
 			items = append(items, listItem)
@@ -168,7 +168,7 @@ func RunList(sections []ListSectionData, message string, footer string) ([]strin
 	delegate := list.NewDefaultDelegate()
 	delegate.Styles.SelectedTitle = branding.GreenStyle
 	delegate.Styles.SelectedDesc = branding.GrayStyle
-	
+
 	listModel := list.New(listItems, delegate, 0, 0)
 	listModel.Title = message
 	listModel.Styles.Title = branding.MessageStyle
@@ -190,7 +190,7 @@ func RunList(sections []ListSectionData, message string, footer string) ([]strin
 	}
 
 	final := finalModel.(ListModel)
-	
+
 	var selectedItems []string
 	for i := range final.selected {
 		if i < len(final.items) {
@@ -200,4 +200,3 @@ func RunList(sections []ListSectionData, message string, footer string) ([]strin
 
 	return selectedItems, nil
 }
-

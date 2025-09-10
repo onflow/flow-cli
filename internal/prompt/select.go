@@ -29,7 +29,6 @@ import (
 	"github.com/onflow/flow-cli/common/branding"
 )
 
-
 // optionSelectModel represents the prompt state but is now private
 type optionSelectModel struct {
 	message  string           // message to display
@@ -248,4 +247,3 @@ func RunSingleSelect(options []string, message string) (string, error) {
 
 	return "", fmt.Errorf("no selection made")
 }
-
