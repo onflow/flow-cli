@@ -55,7 +55,7 @@ func getCoreContractsSection() ContractSection {
 
 	return ContractSection{
 		Name:         "Core Contracts",
-		Description:  "Essential Flow blockchain system contracts",
+		Description:  "Smart contracts that define Flow's core functionality",
 		Dependencies: dependencies,
 	}
 }
@@ -107,7 +107,7 @@ func getDefiActionsSection() ContractSection {
 
 	return ContractSection{
 		Name:         "DeFi Actions",
-		Description:  "DeFi protocol integration contracts for automated actions",
+		Description:  "Composable DeFi primitives for building financial workflows",
 		Dependencies: dependencies,
 	}
 }
