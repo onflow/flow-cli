@@ -230,10 +230,10 @@ func (di *DependencyInstaller) AddByCoreContractName(coreContractName string) er
 }
 
 func (di *DependencyInstaller) AddByDefiContractName(defiContractName string) error {
-	defiSection := getDefiActionsSection()
+	defiActionsSection := getDefiActionsSection()
 	var targetDep *config.Dependency
 	
-	for _, dep := range defiSection.Dependencies {
+	for _, dep := range defiActionsSection.Dependencies {
 		if dep.Name == defiContractName && dep.Source.NetworkName == config.MainnetNetwork.Name {
 			targetDep = &dep
 			break

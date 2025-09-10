@@ -183,8 +183,8 @@ func findCoreContractCaseInsensitive(name string) string {
 }
 
 func findDefiActionsContractCaseInsensitive(name string) string {
-	defiSection := getDefiActionsSection()
-	for _, dep := range defiSection.Dependencies {
+	defiActionsSection := getDefiActionsSection()
+	for _, dep := range defiActionsSection.Dependencies {
 		if strings.EqualFold(dep.Name, name) {
 			return dep.Name
 		}
