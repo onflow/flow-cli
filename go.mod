@@ -231,6 +231,7 @@ require (
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/rs/cors v1.8.0 // indirect
 	github.com/sagikazarmark/locafero v0.7.0 // indirect
+	github.com/sahilm/fuzzy v0.1.1 // indirect
 	github.com/samber/lo v1.39.0 // indirect
 	github.com/samber/slog-zerolog v1.0.0 // indirect
 	github.com/schollz/progressbar/v3 v3.18.0 // indirect

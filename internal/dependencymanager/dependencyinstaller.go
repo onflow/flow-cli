@@ -229,6 +229,34 @@ func (di *DependencyInstaller) AddByCoreContractName(coreContractName string) er
 	return di.Add(dep)
 }
 
+func (di *DependencyInstaller) AddByDefiContractName(defiContractName string) error {
+	defiActionsSection := getDefiActionsSection()
+	var targetDep *config.Dependency
+
+	for _, dep := range defiActionsSection.Dependencies {
+		if dep.Name == defiContractName && dep.Source.NetworkName == config.MainnetNetwork.Name {
+			targetDep = &dep
+			break
+		}
+	}
+
+	if targetDep == nil {
+		return fmt.Errorf("contract %s not found in DeFi actions contracts", defiContractName)
+	}
+
+	return di.Add(*targetDep)
+}
+
+func isDefiActionsContract(contractName string) bool {
+	defiActionsSection := getDefiActionsSection()
+	for _, dep := range defiActionsSection.Dependencies {
+		if dep.Name == contractName {
+			return true
+		}
+	}
+	return false
+}
+
 // Add processes a single dependency and installs it and any dependencies it has, as well as adding it to the state
 func (di *DependencyInstaller) Add(dep config.Dependency) error {
 	if err := di.processDependency(dep); err != nil {
@@ -494,7 +522,7 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, co
 
 func (di *DependencyInstaller) handleAdditionalDependencyTasks(networkName, contractName string) error {
 	// If the contract is not a core contract and the user does not want to skip deployments, then prompt for a deployment
-	if !di.SkipDeployments && !util.IsCoreContract(contractName) {
+	if !di.SkipDeployments && !util.IsCoreContract(contractName) && !isDefiActionsContract(contractName) {
 		err := di.updateDependencyDeployment(contractName)
 		if err != nil {
 			di.Logger.Error(fmt.Sprintf("Error updating deployment: %v", err))
@@ -506,7 +534,7 @@ func (di *DependencyInstaller) handleAdditionalDependencyTasks(networkName, cont
 	}
 
 	// If the contract is not a core contract and the user does not want to skip aliasing, then prompt for an alias
-	if !di.SkipAlias && !util.IsCoreContract(contractName) {
+	if !di.SkipAlias && !util.IsCoreContract(contractName) && !isDefiActionsContract(contractName) {
 		err := di.updateDependencyAlias(contractName, networkName)
 		if err != nil {
 			di.Logger.Error(fmt.Sprintf("Error updating alias: %v", err))

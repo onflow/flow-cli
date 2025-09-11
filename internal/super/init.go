@@ -245,7 +245,7 @@ func startInteractiveInit(
 		return "", fmt.Errorf("failed to initialize configuration: %w", err)
 	}
 
-	msg := "Would you like to install any core contracts and their dependencies?"
+	msg := "Would you like to install any standard Flow contracts and their dependencies?"
 	if prompt.GenericBoolPrompt(msg) {
 		err := dependencymanager.PromptInstallCoreContracts(logger, state, tempDir, nil)
 		if err != nil {

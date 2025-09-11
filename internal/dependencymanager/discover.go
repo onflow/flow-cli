@@ -22,15 +22,11 @@ import (
 	"fmt"
 	"slices"
 
-	flowsdk "github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flow-go/fvm/systemcontracts"
-
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/output"
 
-	flowGo "github.com/onflow/flow-go/model/flow"
 	flowkitConfig "github.com/onflow/flowkit/v2/config"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -80,53 +76,72 @@ func discover(
 }
 
 func PromptInstallCoreContracts(logger output.Logger, state *flowkit.State, targetDir string, excludeContracts []string) error {
-	// Prompt to ask which core contracts should be installed
-	sc := systemcontracts.SystemContractsForChain(flowGo.Mainnet)
-	promptMessage := "Select any core contracts you would like to install or skip to continue."
+	return PromptInstallContracts(logger, state, targetDir, excludeContracts)
+}
 
-	contractNames := make([]string, 0)
+func PromptInstallContracts(logger output.Logger, state *flowkit.State, targetDir string, excludeContracts []string) error {
+	sections := GetAllContractSections()
+	var sectionData []prompt.ListSectionData
+	allDependenciesByName := make(map[string]flowkitConfig.Dependency)
 
-	for _, contract := range sc.All() {
-		if slices.Contains(excludeContracts, contract.Name) {
-			continue
+	var totalAvailable, totalInstalled int
+
+	for _, section := range sections {
+		var availableContracts []string
+		sectionInstalled := 0
+
+		for _, dep := range section.Dependencies {
+			if dep.Source.NetworkName != flowkitConfig.MainnetNetwork.Name {
+				continue
+			}
+
+			if slices.Contains(excludeContracts, dep.Name) {
+				sectionInstalled++
+				continue
+			}
+
+			availableContracts = append(availableContracts, dep.Name)
+			allDependenciesByName[dep.Name] = dep
 		}
-		contractNames = append(contractNames, contract.Name)
+
+		totalAvailable += len(availableContracts)
+		totalInstalled += sectionInstalled
+
+		if len(availableContracts) > 0 {
+			sectionData = append(sectionData, prompt.ListSectionData{
+				Name:        section.Name,
+				Description: section.Description,
+				Items:       availableContracts,
+			})
+		}
 	}
 
 	var footer string
-	totalContracts := len(sc.All())
-	availableContracts := len(contractNames)
-	installedCount := totalContracts - availableContracts
-
-	if installedCount > 0 {
-		footer = fmt.Sprintf("ℹ️  Note: %d core contracts already installed. Use 'flow dependencies list' to view them.", installedCount)
+	if totalInstalled > 0 {
+		footer = fmt.Sprintf("ℹ️  Note: %d contracts already installed. Use 'flow dependencies list' to view them.", totalInstalled)
 	}
 
-	selectedContractNames, err := prompt.RunSelectOptionsWithFooter(contractNames, promptMessage, footer)
+	promptMessage := "Select any contracts you would like to install"
+	selectedContractNames, err := prompt.RunList(sectionData, promptMessage, footer)
 	if err != nil {
 		return fmt.Errorf("error running dependency selection: %v\n", err)
 	}
 
 	var dependencies []flowkitConfig.Dependency
-
-	// Loop standard contracts and add them to the dependencies if selected
-	for _, contract := range sc.All() {
-		if slices.Contains(selectedContractNames, contract.Name) {
-			dependencies = append(dependencies, flowkitConfig.Dependency{
-				Name: contract.Name,
-				Source: flowkitConfig.Source{
-					NetworkName:  flowkitConfig.MainnetNetwork.Name,
-					Address:      flowsdk.HexToAddress(contract.Address.String()),
-					ContractName: contract.Name,
-				},
-			})
+	for _, contractName := range selectedContractNames {
+		if dep, exists := allDependenciesByName[contractName]; exists {
+			dependencies = append(dependencies, dep)
 		}
 	}
 
-	logger.Info("")
-	logger.Info(util.MessageWithEmojiPrefix("🔄", "Installing selected core contracts and dependencies..."))
+	if len(dependencies) == 0 {
+		return nil
+	}
 
-	// Add the selected core contracts as dependencies
+	logger.Info("")
+	logger.Info(util.MessageWithEmojiPrefix("🔄", "Installing selected contracts and dependencies..."))
+
+	// Add the selected contracts as dependencies
 	installer, err := NewDependencyInstaller(logger, state, false, targetDir, Flags{})
 	if err != nil {
 		return err
