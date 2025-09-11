@@ -172,7 +172,7 @@ func Test_Lint(t *testing.T) {
 							{
 								Category:         "semantic-error",
 								Message:          "cannot find variable in this scope: `qqq`",
-								SecondaryMessage: "not found in this scope",
+								SecondaryMessage: "not found in this scope; check for typos or declare it",
 								Location:         common.StringLocation("LintError.cdc"),
 								Range: ast.Range{
 									StartPos: ast.Position{Line: 5, Column: 3, Offset: 63},
@@ -237,7 +237,7 @@ func Test_Lint(t *testing.T) {
 							{
 								Category:         "semantic-error",
 								Message:          "cannot find variable in this scope: `getAuthAccount`",
-								SecondaryMessage: "not found in this scope",
+								SecondaryMessage: "not found in this scope; check for typos or declare it",
 								Location:         common.StringLocation("StdlibImportsContract.cdc"),
 								Range: ast.Range{
 									StartPos: ast.Position{Line: 6, Column: 13, Offset: 99},
@@ -271,7 +271,7 @@ func Test_Lint(t *testing.T) {
 							{
 								Category:         "semantic-error",
 								Message:          "cannot find variable in this scope: `getAuthAccount`",
-								SecondaryMessage: "not found in this scope",
+								SecondaryMessage: "not found in this scope; check for typos or declare it",
 								Location:         common.StringLocation("StdlibImportsTransaction.cdc"),
 								Range: ast.Range{
 									StartPos: ast.Position{Line: 6, Column: 13, Offset: 98},
