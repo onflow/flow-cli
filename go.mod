@@ -20,7 +20,7 @@ require (
 	github.com/onflow/flixkit-go/v2 v2.5.0
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.7.2-0.20250905214304-819c6e946442
 	github.com/onflow/flow-emulator v1.7.0
-	github.com/onflow/flow-evm-gateway v1.3.0-preview.1.0.20250911074823-12eaf5343bde
+	github.com/onflow/flow-evm-gateway v1.3.0
 	github.com/onflow/flow-go v0.43.0-dev-pebble.1.0.20250910132853-12699a150fd9
 	github.com/onflow/flow-go-sdk v1.8.1
 	github.com/onflow/flowkit/v2 v2.5.0
