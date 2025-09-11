@@ -393,7 +393,7 @@ func (di *DependencyInstaller) fetchDependencies(networkName string, address flo
 	if program.HasAddressImports() {
 		imports := program.AddressImportDeclarations()
 		for _, imp := range imports {
-			contractName := imp.Identifiers[0].String()
+			contractName := imp.Imports[0].Identifier.Identifier
 			err := di.fetchDependencies(networkName, flowsdk.HexToAddress(imp.Location.String()), contractName)
 			if err != nil {
 				return err

@@ -301,7 +301,7 @@ func validateImports(code string, depContracts flixkit.ContractInfos, depNetwork
 
 	// Check for any missing string imports
 	for _, imp := range astProgram.ImportDeclarations() {
-		if len(imp.Identifiers) > 0 || imp.Location == nil {
+		if len(imp.Imports) > 0 || imp.Location == nil {
 			return fmt.Errorf("only string imports of the form `import \"ContractName\"` are supported")
 		}
 
