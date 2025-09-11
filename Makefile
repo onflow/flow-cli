@@ -1,6 +1,6 @@
 # Configuration for goreleaser
 PACKAGE_NAME := github.com/onflow/flow-cli
-GOLANG_CROSS_VERSION ?= v1.22.0
+GOLANG_CROSS_VERSION ?= v1.25.0
 
 # The tag of the current commit, otherwise empty
 VERSION := $(shell git describe --tags --abbrev=0 --exact-match 2>/dev/null)
