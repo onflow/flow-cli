@@ -49,7 +49,7 @@ You can also specify one or more dependencies directly on the command line, usin
   • network://address
   • network://address.ContractName
   • core contract name (e.g., FlowToken, NonFungibleToken)
-  • DeFi Actions contract name (e.g., BandOracleConnectors, SwapConnectors)
+  • DeFi Actions contract name (e.g., DeFiActions, SwapConnectors)
 
 Examples:
   1. Install dependencies listed in flow.json:
@@ -59,7 +59,7 @@ Examples:
      flow dependencies install FlowToken
 
   3. Install a specific DeFi actions contract by name:
-     flow dependencies install BandOracleConnectors
+     flow dependencies install DeFiActions
 
   4. Install a single contract by network and address (all contracts at that address):
      flow dependencies install testnet://0x1234abcd
@@ -68,21 +68,21 @@ Examples:
      flow dependencies install testnet://0x1234abcd.MyContract
 
   6. Install multiple dependencies:
-     flow dependencies install FungibleToken NonFungibleToken BandOracleConnectors
+     flow dependencies install FungibleToken NonFungibleToken DeFiActions
 
 Note:
 • Using 'network://address' will attempt to install all contracts deployed at that address.
 • Using 'network://address.ContractName' will install only the specified contract.
 • Specifying a known core contract (e.g., FlowToken) will install it from the official system contracts
   address on Mainnet or Testnet (depending on your project's default network).
-• Specifying a known DeFi actions contract (e.g., BandOracleConnectors) will install it from the
+• Specifying a known DeFi actions contract (e.g., DeFiActions) will install it from the
   official DeFi actions address on Mainnet.
 `,
 		Example: `flow dependencies install
 flow dependencies install testnet://0x7e60df042a9c0868.FlowToken
 flow dependencies install FlowToken
-flow dependencies install BandOracleConnectors
-flow dependencies install FlowToken NonFungibleToken BandOracleConnectors`,
+flow dependencies install DeFiActions
+flow dependencies install FlowToken NonFungibleToken DeFiActions`,
 		Args: cobra.ArbitraryArgs,
 	},
 	Flags: &installFlags,
@@ -140,7 +140,7 @@ func install(
 			} else {
 				if err := installer.AddBySourceString(dep); err != nil {
 					if strings.Contains(err.Error(), "invalid dependency source format") {
-						logger.Error(fmt.Sprintf("Error: '%s' is neither a core contract, DeFi actions contract, nor a valid dependency source format.\nPlease provide a valid dependency source in the format 'network://address.ContractName', e.g., 'testnet://0x1234567890abcdef.MyContract', or use a valid core contract name such as 'FlowToken', or a valid DeFi actions contract name such as 'BandOracleConnectors'.", dep))
+						logger.Error(fmt.Sprintf("Error: '%s' is neither a core contract, DeFi actions contract, nor a valid dependency source format.\nPlease provide a valid dependency source in the format 'network://address.ContractName', e.g., 'testnet://0x1234567890abcdef.MyContract', or use a valid core contract name such as 'FlowToken', or a valid DeFi actions contract name such as 'DeFiActions'.", dep))
 					} else {
 						logger.Error(fmt.Sprintf("Error adding dependency %s: %v", dep, err))
 					}
