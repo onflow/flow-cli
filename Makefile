@@ -26,10 +26,8 @@ binary: $(BINARY)
 install-tools:
 	cd '${GOPATH}'; \
 	mkdir -p '${GOPATH}'; \
-	GO111MODULE=on go install github.com/axw/gocov/gocov@latest; \
-	GO111MODULE=on go install github.com/matm/gocov-html/cmd/gocov-html@latest; \
 	GO111MODULE=on go install github.com/sanderhahn/gozip/cmd/gozip@latest; \
-	GO111MODULE=on go install github.com/vektra/mockery/v2@v2.43.2;
+	GO111MODULE=on go install github.com/vektra/mockery/v2@v2.53.5;
 
 .PHONY: test
 test:
@@ -42,12 +40,12 @@ test-e2e-emulator:
 .PHONY: coverage
 coverage:
 ifeq ($(COVER), true)
-	# file has to be called index.html
-	gocov convert $(COVER_PROFILE) > cover.json
-	./cover-summary.sh
-	gocov-html cover.json > index.html
-	# coverage.zip will automatically be picked up by teamcity
-	gozip -c coverage.zip index.html
+	# Generate HTML coverage report using built-in Go tool.
+	go tool cover -html=$(COVER_PROFILE) -o index.html
+	# Generate textual summary.
+	go tool cover -func=$(COVER_PROFILE) | tee cover-summary.txt
+	# Optionally zip the HTML (if gozip installed) for CI systems expecting an artifact.
+	if [ -x "$(shell command -v gozip 2>/dev/null)" ]; then gozip -c coverage.zip index.html || true; fi
 endif
 
 .PHONY: ci
