@@ -1,13 +1,32 @@
+version: "2"
 linters:
-  disable-all: true
+  default: none
   enable:
-    - govet
     - errcheck
+    - govet
     - ineffassign
-    - typecheck
     - misspell
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
     - goimports
-linters-settings:
-  goimports:
-    # put imports beginning with prefix after 3rd-party package
-    local-prefixes: github.com/onflow/flow-cli
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/onflow/flow-cli
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
