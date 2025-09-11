@@ -1,3 +1,4 @@
+version: 2
 before:
   hooks:
     - make generate
@@ -36,18 +37,18 @@ builds:
 
 archives:
   - id: golang-cross
-    builds:
+    ids:
       - flow-cli
     name_template: "{{ .ProjectName }}-v{{ .Version }}-{{ .Os }}-{{ .Arch }}"
-    format: tar.gz
+    formats:
+      - tar.gz
     format_overrides:
       - goos: windows
-        format: zip
+        formats:
+          - zip
     wrap_in_directory: false
-snapshot:
-  name_template: "{{ .Tag }}"
 changelog:
-  skip: true
+  disable: true
 checksum:
   name_template: "checksums.txt"
 release:
