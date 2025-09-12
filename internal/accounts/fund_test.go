@@ -166,6 +166,25 @@ func Test_ResolveAddressOrAccountName(t *testing.T) {
 		assert.Equal(t, flow.EmptyAddress, address)
 		assert.Contains(t, err.Error(), "could not find account with name 'invalid-hex-123'")
 	})
+
+	t.Run("Fails when account name resolves to non-testnet address", func(t *testing.T) {
+		_, state, _ := util.TestMocks(t)
+		
+		// Add an emulator account (not testnet-valid)
+		emulatorAddr := flow.HexToAddress("f8d6e0586b0a20c7") 
+		emulatorAccount := &accounts.Account{
+			Name:    "emulator-account",
+			Address: emulatorAddr,
+			Key:     accounts.NewHexKeyFromPrivateKey(0, crypto.SHA3_256, generateTestPrivateKey()),
+		}
+		state.Accounts().AddOrUpdate(emulatorAccount)
+		
+		address, err := resolveAddressOrAccountName("emulator-account", state)
+		
+		assert.Equal(t, flow.EmptyAddress, address)
+		assert.Contains(t, err.Error(), "account 'emulator-account' has address f8d6e0586b0a20c7 which is not valid for testnet")
+		assert.Contains(t, err.Error(), "The faucet can only fund testnet addresses")
+	})
 }
 
 func Test_Fund(t *testing.T) {
@@ -184,6 +203,30 @@ func Test_Fund(t *testing.T) {
 
 		assert.Nil(t, result)
 		assert.Contains(t, err.Error(), "faucet can only work for valid Testnet addresses")
+	})
+
+	t.Run("Fail with non-testnet account name", func(t *testing.T) {
+		// Add an emulator account to the state
+		emulatorAddr := flow.HexToAddress("f8d6e0586b0a20c7")
+		emulatorAccount := &accounts.Account{
+			Name:    "emulator-account",
+			Address: emulatorAddr,
+			Key:     accounts.NewHexKeyFromPrivateKey(0, crypto.SHA3_256, generateTestPrivateKey()),
+		}
+		state.Accounts().AddOrUpdate(emulatorAccount)
+		
+		args := []string{"emulator-account"} // Non-testnet account name
+		
+		result, err := fund(
+			args,
+			command.GlobalFlags{},
+			util.NoLogger,
+			srv.Mock,
+			state,
+		)
+
+		assert.Nil(t, result)
+		assert.Contains(t, err.Error(), "account 'emulator-account' has address f8d6e0586b0a20c7 which is not valid for testnet")
 	})
 
 	t.Run("Fail with no address and no testnet accounts", func(t *testing.T) {
