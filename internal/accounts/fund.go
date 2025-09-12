@@ -57,25 +57,20 @@ func getTestnetAccounts(state *flowkit.State) []accounts.Account {
 }
 
 // resolveAddressOrAccountName resolves a string that could be either an address or account name
-// This follows the same pattern as getAddress in transactions/build.go but adds testnet validation
 func resolveAddressOrAccountName(input string, state *flowkit.State) (flowsdk.Address, error) {
-	// First try to parse as a hex address
 	address := flowsdk.HexToAddress(input)
 
-	// Check if it's a valid address on any network (mainnet, testnet, or emulator)
 	if address.IsValid(flowsdk.Mainnet) || address.IsValid(flowsdk.Testnet) || address.IsValid(flowsdk.Emulator) {
 		// For direct addresses, we'll let the caller handle testnet validation
 		return address, nil
 	}
 
-	// If not a valid address, try to find it as an account name
 	account, err := state.Accounts().ByName(input)
 	if err != nil {
 		accountName := branding.GrayStyle.Render(input)
 		return flowsdk.EmptyAddress, fmt.Errorf("could not find account with name %s", accountName)
 	}
 
-	// For account names, validate that the resolved address is testnet-compatible
 	if !account.Address.IsValid(flowsdk.Testnet) {
 		accountName := branding.PurpleStyle.Render(input)
 		addressStr := branding.GrayStyle.Render(account.Address.String())
@@ -149,7 +144,7 @@ func fund(
 
 	addressStr := branding.PurpleStyle.Render(address.HexWithPrefix())
 	linkStr := branding.GreenStyle.Render(testnetFaucetURL(address))
-	
+
 	logger.Info(
 		fmt.Sprintf(
 			"Opening the Testnet faucet to fund %s on your native browser."+
