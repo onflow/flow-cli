@@ -56,11 +56,31 @@ func getTestnetAccounts(state *flowkit.State) []accounts.Account {
 	return testnetAccounts
 }
 
+// resolveAddressOrAccountName resolves a string that could be either an address or account name
+// This follows the same pattern as getAddress in transactions/build.go
+func resolveAddressOrAccountName(input string, state *flowkit.State) (flowsdk.Address, error) {
+	// First try to parse as a hex address
+	address := flowsdk.HexToAddress(input)
+	
+	// Check if it's a valid address on any network (mainnet, testnet, or emulator)
+	if address.IsValid(flowsdk.Mainnet) || address.IsValid(flowsdk.Testnet) || address.IsValid(flowsdk.Emulator) {
+		return address, nil
+	}
+	
+	// If not a valid address, try to find it as an account name
+	account, err := state.Accounts().ByName(input)
+	if err != nil {
+		return flowsdk.EmptyAddress, fmt.Errorf("could not find account with name '%s' or parse as address: %w", input, err)
+	}
+	
+	return account.Address, nil
+}
+
 var fundCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "fund [address]",
-		Short:   "Funds an account by address through the Testnet Faucet",
-		Example: "flow accounts fund 8e94eaa81771313a\nflow accounts fund",
+		Use:     "fund [address|name]",
+		Short:   "Funds an account by address or account name through the Testnet Faucet",
+		Example: "flow accounts fund 8e94eaa81771313a\nflow accounts fund testnet-account\nflow accounts fund",
 		Args:    cobra.MaximumNArgs(1),
 	},
 	Flags: &fundFlags,
@@ -103,7 +123,12 @@ func fund(
 			}
 		}
 	} else {
-		address = flowsdk.HexToAddress(args[0])
+		// Address or account name provided as argument
+		var err error
+		address, err = resolveAddressOrAccountName(args[0], state)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if !address.IsValid(flowsdk.Testnet) {

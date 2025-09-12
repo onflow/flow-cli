@@ -24,6 +24,7 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/onflow/flowkit/v2/accounts"
 
@@ -108,6 +109,62 @@ func Test_GetTestnetAccounts(t *testing.T) {
 			}
 		}
 		assert.GreaterOrEqual(t, testnetCount, 1, "Should find at least our testnet account")
+	})
+}
+
+func Test_ResolveAddressOrAccountName(t *testing.T) {
+	t.Run("Resolves valid hex address", func(t *testing.T) {
+		_, state, _ := util.TestMocks(t)
+		
+		address, err := resolveAddressOrAccountName("8efde57e98c557fa", state)
+		
+		require.NoError(t, err)
+		assert.Equal(t, "8efde57e98c557fa", address.String())
+	})
+
+	t.Run("Resolves address with 0x prefix", func(t *testing.T) {
+		_, state, _ := util.TestMocks(t)
+		
+		address, err := resolveAddressOrAccountName("0x8efde57e98c557fa", state)
+		
+		require.NoError(t, err)
+		assert.Equal(t, "8efde57e98c557fa", address.String())
+	})
+
+	t.Run("Resolves account name", func(t *testing.T) {
+		_, state, _ := util.TestMocks(t)
+		
+		// Add a testnet account to state
+		testnetAddr := flow.HexToAddress("8efde57e98c557fa")
+		testnetAccount := &accounts.Account{
+			Name:    "my-testnet-account",
+			Address: testnetAddr,
+			Key:     accounts.NewHexKeyFromPrivateKey(0, crypto.SHA3_256, generateTestPrivateKey()),
+		}
+		state.Accounts().AddOrUpdate(testnetAccount)
+		
+		address, err := resolveAddressOrAccountName("my-testnet-account", state)
+		
+		require.NoError(t, err)
+		assert.Equal(t, testnetAddr, address)
+	})
+
+	t.Run("Fails with invalid account name", func(t *testing.T) {
+		_, state, _ := util.TestMocks(t)
+		
+		address, err := resolveAddressOrAccountName("non-existent-account", state)
+		
+		assert.Equal(t, flow.EmptyAddress, address)
+		assert.Contains(t, err.Error(), "could not find account with name 'non-existent-account'")
+	})
+
+	t.Run("Fails with invalid hex string", func(t *testing.T) {
+		_, state, _ := util.TestMocks(t)
+		
+		address, err := resolveAddressOrAccountName("invalid-hex-123", state)
+		
+		assert.Equal(t, flow.EmptyAddress, address)
+		assert.Contains(t, err.Error(), "could not find account with name 'invalid-hex-123'")
 	})
 }
 
