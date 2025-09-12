@@ -28,9 +28,12 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/accounts"
 	"github.com/onflow/flowkit/v2/output"
 
+	"github.com/onflow/flow-cli/common/branding"
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/prompt"
 )
 
 type flagsFund struct {
@@ -39,25 +42,70 @@ type flagsFund struct {
 
 var fundFlags = flagsFund{}
 
+// getTestnetAccounts returns all accounts that have testnet-valid addresses
+func getTestnetAccounts(state *flowkit.State) []accounts.Account {
+	var testnetAccounts []accounts.Account
+
+	allAccounts := *state.Accounts()
+	for _, account := range allAccounts {
+		if account.Address.IsValid(flowsdk.Testnet) {
+			testnetAccounts = append(testnetAccounts, account)
+		}
+	}
+
+	return testnetAccounts
+}
+
 var fundCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "fund <address>",
+		Use:     "fund [address]",
 		Short:   "Funds an account by address through the Testnet Faucet",
-		Example: "flow accounts fund 8e94eaa81771313a",
-		Args:    cobra.ExactArgs(1),
+		Example: "flow accounts fund 8e94eaa81771313a\nflow accounts fund",
+		Args:    cobra.MaximumNArgs(1),
 	},
 	Flags: &fundFlags,
-	Run:   fund,
+	RunS:  fund,
 }
 
 func fund(
 	args []string,
 	_ command.GlobalFlags,
 	logger output.Logger,
-	_ flowkit.ReaderWriter,
 	flow flowkit.Services,
+	state *flowkit.State,
 ) (command.Result, error) {
-	address := flowsdk.HexToAddress(args[0])
+	var address flowsdk.Address
+
+	if len(args) == 0 {
+		// No address provided, prompt user to select from testnet accounts
+		testnetAccounts := getTestnetAccounts(state)
+		if len(testnetAccounts) == 0 {
+			errorMsg := branding.ErrorStyle.Render("no testnet accounts found in flow.json.")
+			helpText := branding.GrayStyle.Render("Create a testnet account first with:")
+			suggestion := branding.GreenStyle.Render("flow accounts create --network testnet")
+			return nil, fmt.Errorf("%s\n%s %s", errorMsg, helpText, suggestion)
+		}
+
+		options := make([]string, len(testnetAccounts))
+		for i, account := range testnetAccounts {
+			options[i] = fmt.Sprintf("0x%s (%s)", account.Address.String(), account.Name)
+		}
+
+		selected, err := prompt.RunSingleSelect(options, "Select a testnet account to fund:")
+		if err != nil {
+			return nil, fmt.Errorf("account selection cancelled: %w", err)
+		}
+
+		for i, option := range options {
+			if option == selected {
+				address = testnetAccounts[i].Address
+				break
+			}
+		}
+	} else {
+		address = flowsdk.HexToAddress(args[0])
+	}
+
 	if !address.IsValid(flowsdk.Testnet) {
 		return nil, fmt.Errorf("unsupported address %s, faucet can only work for valid Testnet addresses", address.String())
 	}
