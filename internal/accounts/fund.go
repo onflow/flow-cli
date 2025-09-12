@@ -72,7 +72,7 @@ func resolveAddressOrAccountName(input string, state *flowkit.State) (flowsdk.Ad
 	account, err := state.Accounts().ByName(input)
 	if err != nil {
 		accountName := branding.PurpleStyle.Render(input)
-		return flowsdk.EmptyAddress, fmt.Errorf("could not find account with name %s or parse as address: %w", accountName, err)
+		return flowsdk.EmptyAddress, fmt.Errorf("could not find account with name %s", accountName)
 	}
 
 	// For account names, validate that the resolved address is testnet-compatible
