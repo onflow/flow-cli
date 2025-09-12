@@ -61,20 +61,20 @@ func getTestnetAccounts(state *flowkit.State) []accounts.Account {
 func resolveAddressOrAccountName(input string, state *flowkit.State) (flowsdk.Address, error) {
 	// First try to parse as a hex address
 	address := flowsdk.HexToAddress(input)
-	
+
 	// Check if it's a valid address on any network (mainnet, testnet, or emulator)
 	if address.IsValid(flowsdk.Mainnet) || address.IsValid(flowsdk.Testnet) || address.IsValid(flowsdk.Emulator) {
 		// For direct addresses, we'll let the caller handle testnet validation
 		return address, nil
 	}
-	
+
 	// If not a valid address, try to find it as an account name
 	account, err := state.Accounts().ByName(input)
 	if err != nil {
 		accountName := branding.PurpleStyle.Render(input)
 		return flowsdk.EmptyAddress, fmt.Errorf("could not find account with name %s or parse as address: %w", accountName, err)
 	}
-	
+
 	// For account names, validate that the resolved address is testnet-compatible
 	if !account.Address.IsValid(flowsdk.Testnet) {
 		accountName := branding.PurpleStyle.Render(input)
@@ -82,7 +82,7 @@ func resolveAddressOrAccountName(input string, state *flowkit.State) (flowsdk.Ad
 		errorMsg := branding.ErrorStyle.Render("The faucet can only fund testnet addresses")
 		return flowsdk.EmptyAddress, fmt.Errorf("account %s has address %s which is not valid for testnet. %s", accountName, addressStr, errorMsg)
 	}
-	
+
 	return account.Address, nil
 }
 
@@ -134,7 +134,6 @@ func fund(
 			}
 		}
 	} else {
-		// Address or account name provided as argument
 		var err error
 		address, err = resolveAddressOrAccountName(args[0], state)
 		if err != nil {
