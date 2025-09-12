@@ -31,6 +31,7 @@ import (
 	"github.com/onflow/flowkit/v2/accounts"
 	"github.com/onflow/flowkit/v2/output"
 
+	"github.com/onflow/flow-cli/common/branding"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/prompt"
 )
@@ -79,7 +80,10 @@ func fund(
 		// No address provided, prompt user to select from testnet accounts
 		testnetAccounts := getTestnetAccounts(state)
 		if len(testnetAccounts) == 0 {
-			return nil, fmt.Errorf("no testnet accounts found in flow.json.\nCreate a testnet account first with: flow accounts create --network testnet")
+			errorMsg := branding.ErrorStyle.Render("no testnet accounts found in flow.json.")
+			helpText := branding.GrayStyle.Render("Create a testnet account first with:")
+			suggestion := branding.GreenStyle.Render("flow accounts create --network testnet")
+			return nil, fmt.Errorf("%s\n%s %s", errorMsg, helpText, suggestion)
 		}
 
 		options := make([]string, len(testnetAccounts))
