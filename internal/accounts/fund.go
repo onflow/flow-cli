@@ -56,11 +56,36 @@ func getTestnetAccounts(state *flowkit.State) []accounts.Account {
 	return testnetAccounts
 }
 
+// resolveAddressOrAccountName resolves a string that could be either an address or account name
+func resolveAddressOrAccountName(input string, state *flowkit.State) (flowsdk.Address, error) {
+	address := flowsdk.HexToAddress(input)
+
+	if address.IsValid(flowsdk.Mainnet) || address.IsValid(flowsdk.Testnet) || address.IsValid(flowsdk.Emulator) {
+		// For direct addresses, we'll let the caller handle testnet validation
+		return address, nil
+	}
+
+	account, err := state.Accounts().ByName(input)
+	if err != nil {
+		accountName := branding.GrayStyle.Render(input)
+		return flowsdk.EmptyAddress, fmt.Errorf("could not find account with name %s", accountName)
+	}
+
+	if !account.Address.IsValid(flowsdk.Testnet) {
+		accountName := branding.PurpleStyle.Render(input)
+		addressStr := branding.GrayStyle.Render(account.Address.String())
+		errorMsg := branding.ErrorStyle.Render("The faucet can only fund testnet addresses")
+		return flowsdk.EmptyAddress, fmt.Errorf("account %s has address %s which is not valid for testnet. %s", accountName, addressStr, errorMsg)
+	}
+
+	return account.Address, nil
+}
+
 var fundCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "fund [address]",
-		Short:   "Funds an account by address through the Testnet Faucet",
-		Example: "flow accounts fund 8e94eaa81771313a\nflow accounts fund",
+		Use:     "fund [address|name]",
+		Short:   "Funds an account by address or account name through the Testnet Faucet",
+		Example: "flow accounts fund 8e94eaa81771313a\nflow accounts fund testnet-account\nflow accounts fund",
 		Args:    cobra.MaximumNArgs(1),
 	},
 	Flags: &fundFlags,
@@ -88,12 +113,13 @@ func fund(
 
 		options := make([]string, len(testnetAccounts))
 		for i, account := range testnetAccounts {
-			options[i] = fmt.Sprintf("0x%s (%s)", account.Address.String(), account.Name)
+			options[i] = fmt.Sprintf("%s (%s)", account.Address.HexWithPrefix(), account.Name)
 		}
 
 		selected, err := prompt.RunSingleSelect(options, "Select a testnet account to fund:")
 		if err != nil {
-			return nil, fmt.Errorf("account selection cancelled: %w", err)
+			errorMsg := branding.ErrorStyle.Render("account selection cancelled")
+			return nil, fmt.Errorf("%s: %w", errorMsg, err)
 		}
 
 		for i, option := range options {
@@ -103,19 +129,28 @@ func fund(
 			}
 		}
 	} else {
-		address = flowsdk.HexToAddress(args[0])
+		var err error
+		address, err = resolveAddressOrAccountName(args[0], state)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if !address.IsValid(flowsdk.Testnet) {
-		return nil, fmt.Errorf("unsupported address %s, faucet can only work for valid Testnet addresses", address.String())
+		addressStr := branding.GrayStyle.Render(address.String())
+		errorMsg := branding.ErrorStyle.Render("faucet can only work for valid Testnet addresses")
+		return nil, fmt.Errorf("unsupported address %s, %s", addressStr, errorMsg)
 	}
+
+	addressStr := branding.PurpleStyle.Render(address.HexWithPrefix())
+	linkStr := branding.GreenStyle.Render(testnetFaucetURL(address))
 
 	logger.Info(
 		fmt.Sprintf(
-			"Opening the Testnet faucet to fund 0x%s on your native browser."+
+			"Opening the Testnet faucet to fund %s on your native browser."+
 				"\n\nIf there is an issue, please use this link instead: %s",
-			address.String(),
-			testnetFaucetURL(address),
+			addressStr,
+			linkStr,
 		))
 	// wait for the user to read the message
 	time.Sleep(5 * time.Second)
