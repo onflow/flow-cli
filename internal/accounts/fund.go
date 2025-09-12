@@ -71,12 +71,16 @@ func resolveAddressOrAccountName(input string, state *flowkit.State) (flowsdk.Ad
 	// If not a valid address, try to find it as an account name
 	account, err := state.Accounts().ByName(input)
 	if err != nil {
-		return flowsdk.EmptyAddress, fmt.Errorf("could not find account with name '%s' or parse as address: %w", input, err)
+		accountName := branding.PurpleStyle.Render(input)
+		return flowsdk.EmptyAddress, fmt.Errorf("could not find account with name %s or parse as address: %w", accountName, err)
 	}
 	
 	// For account names, validate that the resolved address is testnet-compatible
 	if !account.Address.IsValid(flowsdk.Testnet) {
-		return flowsdk.EmptyAddress, fmt.Errorf("account '%s' has address %s which is not valid for testnet. The faucet can only fund testnet addresses", input, account.Address.String())
+		accountName := branding.PurpleStyle.Render(input)
+		addressStr := branding.GrayStyle.Render(account.Address.String())
+		errorMsg := branding.ErrorStyle.Render("The faucet can only fund testnet addresses")
+		return flowsdk.EmptyAddress, fmt.Errorf("account %s has address %s which is not valid for testnet. %s", accountName, addressStr, errorMsg)
 	}
 	
 	return account.Address, nil
@@ -119,7 +123,8 @@ func fund(
 
 		selected, err := prompt.RunSingleSelect(options, "Select a testnet account to fund:")
 		if err != nil {
-			return nil, fmt.Errorf("account selection cancelled: %w", err)
+			errorMsg := branding.ErrorStyle.Render("account selection cancelled")
+			return nil, fmt.Errorf("%s: %w", errorMsg, err)
 		}
 
 		for i, option := range options {
