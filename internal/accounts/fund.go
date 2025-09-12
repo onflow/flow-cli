@@ -118,7 +118,7 @@ func fund(
 
 		options := make([]string, len(testnetAccounts))
 		for i, account := range testnetAccounts {
-			options[i] = fmt.Sprintf("0x%s (%s)", account.Address.String(), account.Name)
+			options[i] = fmt.Sprintf("%s (%s)", account.Address.HexWithPrefix(), account.Name)
 		}
 
 		selected, err := prompt.RunSingleSelect(options, "Select a testnet account to fund:")
@@ -147,7 +147,7 @@ func fund(
 		return nil, fmt.Errorf("unsupported address %s, %s", addressStr, errorMsg)
 	}
 
-	addressStr := branding.PurpleStyle.Render(fmt.Sprintf("0x%s", address.String()))
+	addressStr := branding.PurpleStyle.Render(address.HexWithPrefix())
 	linkStr := branding.GreenStyle.Render(testnetFaucetURL(address))
 	
 	logger.Info(
