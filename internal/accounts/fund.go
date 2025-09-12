@@ -71,7 +71,7 @@ func resolveAddressOrAccountName(input string, state *flowkit.State) (flowsdk.Ad
 	// If not a valid address, try to find it as an account name
 	account, err := state.Accounts().ByName(input)
 	if err != nil {
-		accountName := branding.PurpleStyle.Render(input)
+		accountName := branding.GrayStyle.Render(input)
 		return flowsdk.EmptyAddress, fmt.Errorf("could not find account with name %s", accountName)
 	}
 
