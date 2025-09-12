@@ -147,12 +147,15 @@ func fund(
 		return nil, fmt.Errorf("unsupported address %s, %s", addressStr, errorMsg)
 	}
 
+	addressStr := branding.PurpleStyle.Render(fmt.Sprintf("0x%s", address.String()))
+	linkStr := branding.GreenStyle.Render(testnetFaucetURL(address))
+	
 	logger.Info(
 		fmt.Sprintf(
-			"Opening the Testnet faucet to fund 0x%s on your native browser."+
+			"Opening the Testnet faucet to fund %s on your native browser."+
 				"\n\nIf there is an issue, please use this link instead: %s",
-			address.String(),
-			testnetFaucetURL(address),
+			addressStr,
+			linkStr,
 		))
 	// wait for the user to read the message
 	time.Sleep(5 * time.Second)
