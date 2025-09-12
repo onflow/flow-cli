@@ -82,7 +82,7 @@ func fund(
 		if len(testnetAccounts) == 0 {
 			errorMsg := branding.ErrorStyle.Render("no testnet accounts found in flow.json.")
 			helpText := branding.GrayStyle.Render("Create a testnet account first with:")
-			suggestion := branding.PurpleStyle.Render("flow accounts create --network testnet")
+			suggestion := branding.GreenStyle.Render("flow accounts create --network testnet")
 			return nil, fmt.Errorf("%s\n%s %s", errorMsg, helpText, suggestion)
 		}
 
