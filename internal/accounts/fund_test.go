@@ -65,7 +65,7 @@ func Test_GetTestnetAccounts(t *testing.T) {
 		_, state, _ := util.TestMocks(t)
 
 		// Remove the default emulator account if it exists and add a non-testnet account
-		state.Accounts().Remove("emulator-account")
+		_ = state.Accounts().Remove("emulator-account")
 
 		// Add an account that is definitely not testnet-valid
 		mainnetAddr := flow.HexToAddress("01cf0e2f2f715450")
@@ -134,7 +134,7 @@ func Test_Fund(t *testing.T) {
 		_, testState, _ := util.TestMocks(t)
 
 		// Remove default account and add a non-testnet account
-		testState.Accounts().Remove("emulator-account")
+		_ = testState.Accounts().Remove("emulator-account")
 
 		mainnetAddr := flow.HexToAddress("01cf0e2f2f715450") // A mainnet-style address
 		mainnetAccount := &accounts.Account{
