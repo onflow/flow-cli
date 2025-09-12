@@ -143,7 +143,9 @@ func fund(
 	}
 
 	if !address.IsValid(flowsdk.Testnet) {
-		return nil, fmt.Errorf("unsupported address %s, faucet can only work for valid Testnet addresses", address.String())
+		addressStr := branding.GrayStyle.Render(address.String())
+		errorMsg := branding.ErrorStyle.Render("faucet can only work for valid Testnet addresses")
+		return nil, fmt.Errorf("unsupported address %s, %s", addressStr, errorMsg)
 	}
 
 	logger.Info(
