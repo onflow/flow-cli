@@ -133,24 +133,36 @@ func validateCurrentDirectoryForInit() error {
 }
 
 // resolveTargetDirectory determines the target directory for the Flow project
-// based on user input. Empty input means current directory.
+// based on user input by resolving a candidate path and checking if it equals
+// the current working directory.
 func resolveTargetDirectory(userInput string) (string, error) {
-	if strings.TrimSpace(userInput) == "" {
-		// Validate current directory for Flow project conflicts
+	pwd, err := os.Getwd()
+	if err != nil {
+		return "", fmt.Errorf("failed to get current working directory: %w", err)
+	}
+
+	trimmed := strings.TrimSpace(userInput)
+
+	// Build a candidate absolute path for comparison
+	var candidate string
+	if trimmed == "" {
+		candidate = pwd
+	} else if filepath.IsAbs(trimmed) {
+		candidate = filepath.Clean(trimmed)
+	} else {
+		candidate = filepath.Clean(filepath.Join(pwd, trimmed))
+	}
+
+	// If candidate resolves to current directory, validate and use it
+	if candidate == filepath.Clean(pwd) {
 		if err := validateCurrentDirectoryForInit(); err != nil {
 			return "", err
-		}
-
-		// Use current directory
-		pwd, err := os.Getwd()
-		if err != nil {
-			return "", fmt.Errorf("failed to get current working directory: %w", err)
 		}
 		return pwd, nil
 	}
 
-	// Use provided name to create new directory
-	return getTargetDirectory(userInput)
+	// Otherwise, use provided name/path to create or validate new directory
+	return getTargetDirectory(trimmed)
 }
 
 func updateGitignore(targetDir string, readerWriter flowkit.ReaderWriter) error {
