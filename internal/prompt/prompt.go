@@ -675,7 +675,10 @@ func InstallPathPrompt(defaultPath string) string {
 }
 
 func GenericBoolPrompt(msg string) bool {
-	result, _ := RunSingleSelect([]string{"Yes", "No"}, msg)
+	result, err := RunSingleSelect([]string{"Yes", "No"}, msg)
+	if err != nil {
+		os.Exit(-1)
+	}
 
 	return result == "Yes"
 }
