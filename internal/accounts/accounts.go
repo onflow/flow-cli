@@ -37,10 +37,6 @@ var Cmd = &cobra.Command{
 	GroupID:          "resources",
 }
 
-func testnetFaucetURL(address flow.Address) string {
-	return fmt.Sprintf("https://testnet-faucet.onflow.org/fund-account?address=%s", address)
-}
-
 func init() {
 	addContractCommand.AddToParent(Cmd)
 	removeCommand.AddToParent(Cmd)
@@ -96,7 +92,7 @@ func (r *accountResult) String() string {
 			writer,
 			"If you would like to fund the account with 1000 FLOW tokens for testing,"+
 				" visit %s\n\n",
-			testnetFaucetURL(r.Address),
+			util.TestnetFaucetURL(r.Address),
 		)
 	}
 

@@ -40,6 +40,13 @@ import (
 
 const EnvPrefix = "FLOW"
 
+const (
+	// TestnetFaucetURLBase is the base URL for the public Flow Testnet faucet.
+	TestnetFaucetURLBase = "https://faucet.flow.com/fund-account"
+	// MainnetGetFlowURL is the canonical page for getting FLOW on Mainnet.
+	MainnetGetFlowURL = "https://flow.com/use-flow/flow-token"
+)
+
 func Exit(code int, msg string) {
 	fmt.Fprintln(os.Stderr, msg)
 	os.Exit(code)
@@ -308,4 +315,9 @@ func IsCoreContract(contractName string) bool {
 		}
 	}
 	return false
+}
+
+// TestnetFaucetURL returns the Flow Testnet faucet link with the address pre-populated.
+func TestnetFaucetURL(address flow.Address) string {
+	return fmt.Sprintf("%s?address=%s", TestnetFaucetURLBase, address)
 }

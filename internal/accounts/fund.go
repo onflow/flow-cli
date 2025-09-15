@@ -34,6 +34,7 @@ import (
 	"github.com/onflow/flow-cli/common/branding"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/prompt"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 type flagsFund struct {
@@ -143,7 +144,7 @@ func fund(
 	}
 
 	addressStr := branding.PurpleStyle.Render(address.HexWithPrefix())
-	linkStr := branding.GreenStyle.Render(testnetFaucetURL(address))
+	linkStr := branding.GreenStyle.Render(util.TestnetFaucetURL(address))
 
 	logger.Info(
 		fmt.Sprintf(
@@ -155,7 +156,7 @@ func fund(
 	// wait for the user to read the message
 	time.Sleep(5 * time.Second)
 
-	if err := browser.OpenURL(testnetFaucetURL(address)); err != nil {
+	if err := browser.OpenURL(util.TestnetFaucetURL(address)); err != nil {
 		return nil, err
 	}
 
