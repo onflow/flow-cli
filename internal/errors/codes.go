@@ -23,10 +23,17 @@ import (
 	"strings"
 )
 
-// Flow error codes
+// FlowErrorType represents different types of Flow errors
+type FlowErrorType string
+
 const (
-	StorageLimitExceeded = 1103
+	StorageLimitExceeded FlowErrorType = "storage_limit"
 )
+
+// Flow error codes mapped to their types
+var errorCodeMap = map[int]FlowErrorType{
+	1103: StorageLimitExceeded,
+}
 
 // HasErrorCode checks if an error contains a specific Flow error code
 func HasErrorCode(err error, code int) bool {
@@ -38,7 +45,16 @@ func HasErrorCode(err error, code int) bool {
 	return strings.Contains(err.Error(), errorCodePattern)
 }
 
-// IsStorageLimitError checks if an error is a storage limit exceeded error
-func IsStorageLimitError(err error) bool {
-	return HasErrorCode(err, StorageLimitExceeded)
+// IsErrorType checks if an error is of a specific Flow error type
+func IsErrorType(err error, errorType FlowErrorType) bool {
+	if err == nil {
+		return false
+	}
+
+	for code, errType := range errorCodeMap {
+		if errType == errorType && HasErrorCode(err, code) {
+			return true
+		}
+	}
+	return false
 }
