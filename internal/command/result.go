@@ -154,6 +154,16 @@ func handleError(description string, err error) {
 		detailMsg := errorMessageStyle.Render(t.GRPCStatus().Err().Error())
 		_, _ = fmt.Fprintf(os.Stderr, "%s %s\n", errorMsg, detailMsg)
 	default:
+		// targeted suggestions for common user errors
+		if isMissingSignerKeyFile(err) {
+			errorMsg := errorStyle.Render(fmt.Sprintf("%s %s:", output.ErrorEmoji(), description))
+			detailMsg := errorMessageStyle.Render(err.Error())
+			_, _ = fmt.Fprintf(os.Stderr, "%s %s\n", errorMsg, detailMsg)
+
+			suggestion := suggestionStyle.Render(buildMissingSignerKeySuggestion(err))
+			_, _ = fmt.Fprintf(os.Stderr, "%s\n", suggestion)
+			return
+		}
 		if errors.Is(err, config.ErrOutdatedFormat) {
 			errorMsg := errorStyle.Render(fmt.Sprintf("%s Config Error:", output.ErrorEmoji()))
 			detailMsg := errorMessageStyle.Render(err.Error())
@@ -215,4 +225,41 @@ func handleError(description string, err error) {
 
 	fmt.Println()
 	os.Exit(1)
+}
+
+// isMissingSignerKeyFile checks if the error indicates a missing signer private key file.
+func isMissingSignerKeyFile(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	msg := err.Error()
+	// Match common file-not-found patterns originating from key file loading
+	return strings.Contains(msg, "no such file or directory") &&
+		(strings.Contains(msg, ".pkey") || strings.Contains(msg, "provided location") || strings.Contains(msg, "could not load the key") || strings.Contains(msg, "failed to load key") || strings.Contains(msg, "failed to read private key") || strings.Contains(msg, "open testnet.pkey"))
+}
+
+// buildMissingSignerKeySuggestion returns a user-friendly suggestion for resolving missing signer key file errors.
+func buildMissingSignerKeySuggestion(err error) string {
+	file := extractPathFromOpenErr(err.Error())
+	if file == "" {
+		// fallback generic message
+		return fmt.Sprintf("%s Missing signer private key file. Ensure the file exists or update flow.json to point to a valid key. You can generate one with 'flow keys generate' or create an account with 'flow accounts create --network <network>'.", output.TryEmoji())
+	}
+
+	return fmt.Sprintf("%s Missing signer private key file. Ensure '%s' exists (relative to your project) or update 'flow.json' to point to a valid key. Generate a key with 'flow keys generate' or create one with 'flow accounts create --network <network>'. If your project stores keys under 'testnet.pkey' or similar, make sure the file is present or update the path.", output.TryEmoji(), file)
+}
+
+// extractPathFromOpenErr tries to extract the file path from an error containing the pattern "open <path>: ...".
+func extractPathFromOpenErr(msg string) string {
+	idx := strings.Index(msg, "open ")
+	if idx == -1 {
+		return ""
+	}
+	rest := msg[idx+len("open "):]
+	// path is up to the next colon or end of string
+	if colon := strings.Index(rest, ":"); colon != -1 {
+		return strings.TrimSpace(rest[:colon])
+	}
+	return strings.TrimSpace(rest)
 }
