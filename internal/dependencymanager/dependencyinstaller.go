@@ -492,7 +492,11 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, co
 	// If no hash, ignore
 	if dependency != nil && dependency.Hash != "" && dependency.Hash != originalContractDataHash {
 		msg := fmt.Sprintf("The latest version of %s is different from the one you have locally. Do you want to update it?", contractName)
-		if !prompt.GenericBoolPrompt(msg) {
+		shouldUpdate, err := prompt.GenericBoolPrompt(msg)
+		if err != nil {
+			return err
+		}
+		if !shouldUpdate {
 			return nil
 		}
 	}

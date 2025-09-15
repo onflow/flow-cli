@@ -674,13 +674,13 @@ func InstallPathPrompt(defaultPath string) string {
 	return filepath.Clean(install)
 }
 
-func GenericBoolPrompt(msg string) bool {
+func GenericBoolPrompt(msg string) (bool, error) {
 	result, err := RunSingleSelect([]string{"Yes", "No"}, msg)
 	if err != nil {
-		os.Exit(-1)
+		return false, err
 	}
 
-	return result == "Yes"
+	return result == "Yes", nil
 }
 
 func GenericSelect(items []string, message string) string {
