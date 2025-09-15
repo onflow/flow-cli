@@ -31,7 +31,7 @@ require (
 	github.com/radovskyb/watcher v1.0.7
 	github.com/rs/zerolog v1.34.0
 	github.com/sergi/go-diff v1.4.0
-	github.com/spf13/afero v1.12.0
+	github.com/spf13/afero v1.15.0
 	github.com/spf13/cobra v1.10.1
 	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.11.1
