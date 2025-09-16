@@ -5,6 +5,7 @@ before:
 
 builds:
   - id: flow-cli
+    binary: flow-cli
     main: ./cmd/flow
     goos:
       - darwin
@@ -14,18 +15,23 @@ builds:
       - amd64
       - arm64
     env:
-      - CGO_CFLAGS=-O2 -D__BLST_PORTABLE__
+      - CGO_CFLAGS=-O2 -D__BLST_PORTABLE__ -std=gnu11
       - CGO_ENABLED=1
+      # Darwin
       - CC_darwin_amd64=o64-clang
-      - CXX_darwin_amd64=o64-clang+
+      - CXX_darwin_amd64=o64-clang++
       - CC_darwin_arm64=oa64-clang
       - CXX_darwin_arm64=oa64-clang++
+      # Linux
       - CC_linux_amd64=x86_64-linux-gnu-gcc
       - CXX_linux_amd64=x86_64-linux-gnu-g++
       - CC_linux_arm64=aarch64-linux-gnu-gcc
       - CXX_linux_arm64=aarch64-linux-gnu-g++
-      - CC_windows_amd64=x86_64-w64-mingw32-gcc
-      - CXX_windows_amd64=x86_64-w64-mingw32-g++
+      # Windows (llvm-mingw toolchains in cross image)
+      - CC_windows_amd64=/llvm-mingw/bin/x86_64-w64-mingw32-gcc
+      - CC_windows_amd64_v1=/llvm-mingw/bin/x86_64-w64-mingw32-gcc
+      - CXX_windows_amd64=/llvm-mingw/bin/x86_64-w64-mingw32-g++
+      - CXX_windows_amd64_v1=/llvm-mingw/bin/x86_64-w64-mingw32-g++
       - CC_windows_arm64=/llvm-mingw/bin/aarch64-w64-mingw32-gcc
       - CXX_windows_arm64=/llvm-mingw/bin/aarch64-w64-mingw32-g++
       - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
@@ -33,7 +39,8 @@ builds:
     flags:
       - -mod=readonly
     ldflags:
-      - -X github.com/onflow/flow-cli/build.semver={{ .Env.VERSION }} -X github.com/onflow/flow-cli/internal/command.MixpanelToken={{ .Env.MIXPANEL_PROJECT_TOKEN }} -X github.com/onflow/flow-cli/internal/accounts.accountToken={{ .Env.LILICO_TOKEN }}
+      - -X github.com/onflow/flow-cli/build.semver={{ .Env.VERSION }} -X github.com/onflow/flow-cli/build.commit={{ .ShortCommit }} -X github.com/onflow/flow-cli/internal/command.MixpanelToken={{ .Env.MIXPANEL_PROJECT_TOKEN }} -X github.com/onflow/flow-cli/internal/accounts.accountToken={{ .Env.LILICO_TOKEN }}
+    
 
 archives:
   - id: golang-cross
