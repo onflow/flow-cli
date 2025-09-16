@@ -22,8 +22,8 @@ require (
 	github.com/onflow/flow-emulator v1.7.0
 	github.com/onflow/flow-evm-gateway v1.3.0
 	github.com/onflow/flow-go v0.43.0-dev-pebble.1.0.20250910132853-12699a150fd9
-	github.com/onflow/flow-go-sdk v1.8.2-0.20250916034424-f5bc339ee94f
-	github.com/onflow/flowkit/v2 v2.5.1-0.20250916172151-d09544191c87
+	github.com/onflow/flow-go-sdk v1.8.2
+	github.com/onflow/flowkit/v2 v2.5.1
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/pkg/errors v0.9.1
@@ -291,7 +291,7 @@ require (
 	google.golang.org/genproto v0.0.0-20250603155806-513f23925822 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250707201910-8d1bb00bc6a7 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250804133106-a7a43d27e69b // indirect
-	google.golang.org/protobuf v1.36.8 // indirect
+	google.golang.org/protobuf v1.36.9 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	lukechampine.com/blake3 v1.4.1 // indirect

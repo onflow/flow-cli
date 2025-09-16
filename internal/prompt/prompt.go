@@ -75,16 +75,26 @@ func ApproveTransactionPrompt(tx *flow.Transaction, promptMsg string) bool {
 
 	for i, e := range tx.PayloadSignatures {
 		_, _ = fmt.Fprintf(writer, "\nPayload Signature %v:\n", i)
-		_, _ = fmt.Fprintf(writer, "    Address\t%s\n", e.Address)
-		_, _ = fmt.Fprintf(writer, "    Signature\t%x\n", e.Signature)
-		_, _ = fmt.Fprintf(writer, "    Key Index\t%d\n", e.KeyIndex)
+		_, _ = fmt.Fprintf(writer, "    Address\t\t%s\n", e.Address)
+		_, _ = fmt.Fprintf(writer, "    Signature\t\t%x\n", e.Signature)
+		_, _ = fmt.Fprintf(writer, "    Key Index\t\t%d\n", e.KeyIndex)
+		if len(e.ExtensionData) > 0 {
+			_, _ = fmt.Fprintf(writer, "    Extension Data\t%x\n", e.ExtensionData)
+		} else {
+			_, _ = fmt.Fprintf(writer, "    Extension Data\t None\n")
+		}
 	}
 
 	for i, e := range tx.EnvelopeSignatures {
 		_, _ = fmt.Fprintf(writer, "\nEnvelope Signature %v:\n", i)
-		_, _ = fmt.Fprintf(writer, "    Address\t%s\n", e.Address)
-		_, _ = fmt.Fprintf(writer, "    Signature\t%x\n", e.Signature)
-		_, _ = fmt.Fprintf(writer, "    Key Index\t%d\n", e.KeyIndex)
+		_, _ = fmt.Fprintf(writer, "    Address\t\t%s\n", e.Address)
+		_, _ = fmt.Fprintf(writer, "    Signature\t\t%x\n", e.Signature)
+		_, _ = fmt.Fprintf(writer, "    Key Index\t\t%d\n", e.KeyIndex)
+		if len(e.ExtensionData) > 0 {
+			_, _ = fmt.Fprintf(writer, "    Extension Data\t%x\n", e.ExtensionData)
+		} else {
+			_, _ = fmt.Fprintf(writer, "    Extension Data\t None\n")
+		}
 	}
 
 	if tx.Script != nil {
