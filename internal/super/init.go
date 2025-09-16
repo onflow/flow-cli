@@ -258,7 +258,11 @@ func startInteractiveInit(
 	}
 
 	msg := "Would you like to install any standard Flow contracts and their dependencies?"
-	if prompt.GenericBoolPrompt(msg) {
+	installContracts, err := prompt.GenericBoolPrompt(msg)
+	if err != nil {
+		return "", err
+	}
+	if installContracts {
 		err := dependencymanager.PromptInstallCoreContracts(logger, state, tempDir, nil)
 		if err != nil {
 			return "", err
