@@ -22,7 +22,7 @@ require (
 	github.com/onflow/flow-emulator v1.7.0
 	github.com/onflow/flow-evm-gateway v1.3.0
 	github.com/onflow/flow-go v0.43.0-dev-pebble.1.0.20250910132853-12699a150fd9
-	github.com/onflow/flow-go-sdk v1.8.2
+	github.com/onflow/flow-go-sdk v1.8.3-0.20250917204435-cd9d4cf5f6af
 	github.com/onflow/flowkit/v2 v2.5.1
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
