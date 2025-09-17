@@ -27,21 +27,18 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/onflow/flow-cli/internal/prompt"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
-
-	"github.com/onflow/flowkit/v2/config"
-	"github.com/onflow/flowkit/v2/transactions"
-
-	"github.com/onflow/flowkit/v2/accounts"
-
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/accounts"
+	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/output"
+	"github.com/onflow/flowkit/v2/transactions"
 
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/prompt"
 )
 
 type flagsAddSig struct {
@@ -116,8 +113,6 @@ func addSig(
 	if err != nil {
 		return nil, err
 	}
-
-	payload = []byte(hex.EncodeToString(signed.FlowTransaction().Encode()))
 
 	return &transactionResult{
 		tx:      signed.FlowTransaction(),
