@@ -29,25 +29,21 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 )
 
-type flagsSetup struct {
-	Account string `default:"" flag:"account" info:"Account name from configuration to setup scheduler on"`
-}
+type flagsSetup struct{}
 
 var setupFlags = flagsSetup{}
 
 var setupCommand = command.Command{
 	Cmd: &cobra.Command{
-		Use:   "setup",
+		Use:   "setup <account>",
 		Short: "Create a Flow Transaction Scheduler Manager resource on your account",
 		Long:  "Initialize your account with a Flow Transaction Scheduler Manager resource to enable transaction scheduling capabilities.",
-		Example: `# Setup transaction scheduler on default account
-flow cron setup
-
-# Setup transaction scheduler on specific account
-flow cron setup --account my-account
+		Args:  cobra.ExactArgs(1),
+		Example: `# Setup transaction scheduler on specific account
+flow cron setup 0x123456789abcdef
 
 # Setup transaction scheduler on specific network
-flow cron setup --network testnet --account my-account`,
+flow cron setup 0x123456789abcdef --network testnet`,
 	},
 	Flags: &setupFlags,
 	RunS:  setupRun,
@@ -65,13 +61,11 @@ func setupRun(
 		return nil, fmt.Errorf("flow configuration is required. Run 'flow init' first")
 	}
 
-	if setupFlags.Account == "" {
-		return nil, fmt.Errorf("account is required. Use --account to specify which account to setup")
-	}
+	account := args[0]
 
 	// Log network and account information
 	logger.Info(fmt.Sprintf("Network: %s", globalFlags.Network))
-	logger.Info(fmt.Sprintf("Account: %s", setupFlags.Account))
+	logger.Info(fmt.Sprintf("Account: %s", account))
 	logger.Info("Setting up Flow Transaction Scheduler Manager resource...")
 
 	// TODO: Implement setup logic for Transaction Scheduler Manager resource
