@@ -65,6 +65,10 @@ func setupRun(
 		return nil, fmt.Errorf("flow configuration is required. Run 'flow init' first")
 	}
 
+	if len(args) == 0 {
+		return nil, fmt.Errorf("account is required as an argument")
+	}
+
 	accountInput := args[0]
 
 	// Resolve account address from input (could be address or account name)
