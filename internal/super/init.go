@@ -263,7 +263,7 @@ func startInteractiveInit(
 		return "", err
 	}
 	if installContracts {
-		err := dependencymanager.PromptInstallCoreContracts(logger, state, tempDir, nil)
+		err := dependencymanager.PromptInstallCoreContracts(logger, state, tempDir, nil, dependencymanager.DependencyFlags{})
 		if err != nil {
 			return "", err
 		}

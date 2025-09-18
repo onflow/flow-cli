@@ -529,15 +529,25 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, co
 
 func (di *DependencyInstaller) handleAdditionalDependencyTasks(networkName, contractName string) error {
 	// If the contract is not a core contract and the user does not want to skip deployments, then prompt for a deployment
-	if !di.SkipDeployments && !util.IsCoreContract(contractName) && !isDefiActionsContract(contractName) {
-		err := di.updateDependencyDeployment(contractName)
-		if err != nil {
-			di.Logger.Error(fmt.Sprintf("Error updating deployment: %v", err))
-			return err
+	if !di.SkipDeployments && !util.IsCoreContract(contractName) {
+		// For DeFi Actions contracts, only allow deployment on emulator
+		if isDefiActionsContract(contractName) {
+			err := di.updateDependencyDeployment(contractName, "emulator")
+			if err != nil {
+				di.Logger.Error(fmt.Sprintf("Error updating deployment: %v", err))
+				return err
+			}
+			msg := util.MessageWithEmojiPrefix("✅", fmt.Sprintf("%s added to emulator deployments (DeFi Actions contracts only supported on emulator)", contractName))
+			di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
+		} else {
+			err := di.updateDependencyDeployment(contractName)
+			if err != nil {
+				di.Logger.Error(fmt.Sprintf("Error updating deployment: %v", err))
+				return err
+			}
+			msg := util.MessageWithEmojiPrefix("✅", fmt.Sprintf("%s added to emulator deployments", contractName))
+			di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
 		}
-
-		msg := util.MessageWithEmojiPrefix("✅", fmt.Sprintf("%s added to emulator deployments", contractName))
-		di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
 	}
 
 	// If the contract is not a core contract and the user does not want to skip aliasing, then prompt for an alias
@@ -555,8 +565,14 @@ func (di *DependencyInstaller) handleAdditionalDependencyTasks(networkName, cont
 	return nil
 }
 
-func (di *DependencyInstaller) updateDependencyDeployment(contractName string) error {
+func (di *DependencyInstaller) updateDependencyDeployment(contractName string, forceNetwork ...string) error {
 	var raw *prompt.DeploymentData
+	network := "emulator"
+
+	// If a forced network is specified, use it
+	if len(forceNetwork) > 0 {
+		network = forceNetwork[0]
+	}
 
 	// If deployment account is specified via flag, use it; otherwise prompt
 	if di.DeploymentAccount != "" {
@@ -566,12 +582,12 @@ func (di *DependencyInstaller) updateDependencyDeployment(contractName string) e
 		}
 
 		raw = &prompt.DeploymentData{
-			Network:   "emulator",
+			Network:   network,
 			Account:   di.DeploymentAccount,
 			Contracts: []string{contractName},
 		}
 	} else {
-		raw = prompt.AddContractToDeploymentPrompt("emulator", *di.State.Accounts(), contractName)
+		raw = prompt.AddContractToDeploymentPrompt(network, *di.State.Accounts(), contractName)
 	}
 
 	if raw != nil {
