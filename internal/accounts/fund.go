@@ -34,6 +34,7 @@ import (
 	"github.com/onflow/flow-cli/common/branding"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/prompt"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 type flagsFund struct {
@@ -56,29 +57,23 @@ func getTestnetAccounts(state *flowkit.State) []accounts.Account {
 	return testnetAccounts
 }
 
-// resolveAddressOrAccountName resolves a string that could be either an address or account name
-func resolveAddressOrAccountName(input string, state *flowkit.State) (flowsdk.Address, error) {
-	address := flowsdk.HexToAddress(input)
-
-	if address.IsValid(flowsdk.Mainnet) || address.IsValid(flowsdk.Testnet) || address.IsValid(flowsdk.Emulator) {
-		// For direct addresses, we'll let the caller handle testnet validation
-		return address, nil
-	}
-
-	account, err := state.Accounts().ByName(input)
+// resolveTestnetAccount resolves a string that could be either an address or account name and validates it's testnet-compatible
+func resolveTestnetAccount(input string, state *flowkit.State) (flowsdk.Address, error) {
+	address, err := util.ResolveAddressOrAccountName(input, state)
 	if err != nil {
 		accountName := branding.GrayStyle.Render(input)
 		return flowsdk.EmptyAddress, fmt.Errorf("could not find account with name %s", accountName)
 	}
 
-	if !account.Address.IsValid(flowsdk.Testnet) {
+	// Apply testnet-specific validation for fund command
+	if !address.IsValid(flowsdk.Testnet) {
 		accountName := branding.PurpleStyle.Render(input)
-		addressStr := branding.GrayStyle.Render(account.Address.String())
+		addressStr := branding.GrayStyle.Render(address.String())
 		errorMsg := branding.ErrorStyle.Render("The faucet can only fund testnet addresses")
 		return flowsdk.EmptyAddress, fmt.Errorf("account %s has address %s which is not valid for testnet. %s", accountName, addressStr, errorMsg)
 	}
 
-	return account.Address, nil
+	return address, nil
 }
 
 var fundCommand = &command.Command{
@@ -130,7 +125,7 @@ func fund(
 		}
 	} else {
 		var err error
-		address, err = resolveAddressOrAccountName(args[0], state)
+		address, err = resolveTestnetAccount(args[0], state)
 		if err != nil {
 			return nil, err
 		}

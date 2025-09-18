@@ -112,11 +112,11 @@ func Test_GetTestnetAccounts(t *testing.T) {
 	})
 }
 
-func Test_ResolveAddressOrAccountName(t *testing.T) {
+func Test_ResolveTestnetAccount(t *testing.T) {
 	t.Run("Resolves valid hex address", func(t *testing.T) {
 		_, state, _ := util.TestMocks(t)
 
-		address, err := resolveAddressOrAccountName("8efde57e98c557fa", state)
+		address, err := resolveTestnetAccount("8efde57e98c557fa", state)
 
 		require.NoError(t, err)
 		assert.Equal(t, "8efde57e98c557fa", address.String())
@@ -125,7 +125,7 @@ func Test_ResolveAddressOrAccountName(t *testing.T) {
 	t.Run("Resolves address with 0x prefix", func(t *testing.T) {
 		_, state, _ := util.TestMocks(t)
 
-		address, err := resolveAddressOrAccountName("0x8efde57e98c557fa", state)
+		address, err := resolveTestnetAccount("0x8efde57e98c557fa", state)
 
 		require.NoError(t, err)
 		assert.Equal(t, "8efde57e98c557fa", address.String())
@@ -143,7 +143,7 @@ func Test_ResolveAddressOrAccountName(t *testing.T) {
 		}
 		state.Accounts().AddOrUpdate(testnetAccount)
 
-		address, err := resolveAddressOrAccountName("my-testnet-account", state)
+		address, err := resolveTestnetAccount("my-testnet-account", state)
 
 		require.NoError(t, err)
 		assert.Equal(t, testnetAddr, address)
@@ -152,7 +152,7 @@ func Test_ResolveAddressOrAccountName(t *testing.T) {
 	t.Run("Fails with invalid account name", func(t *testing.T) {
 		_, state, _ := util.TestMocks(t)
 
-		address, err := resolveAddressOrAccountName("non-existent-account", state)
+		address, err := resolveTestnetAccount("non-existent-account", state)
 
 		assert.Equal(t, flow.EmptyAddress, address)
 		assert.Error(t, err)
@@ -161,7 +161,7 @@ func Test_ResolveAddressOrAccountName(t *testing.T) {
 	t.Run("Fails with invalid hex string", func(t *testing.T) {
 		_, state, _ := util.TestMocks(t)
 
-		address, err := resolveAddressOrAccountName("invalid-hex-123", state)
+		address, err := resolveTestnetAccount("invalid-hex-123", state)
 
 		assert.Equal(t, flow.EmptyAddress, address)
 		assert.Error(t, err)
@@ -179,7 +179,7 @@ func Test_ResolveAddressOrAccountName(t *testing.T) {
 		}
 		state.Accounts().AddOrUpdate(emulatorAccount)
 
-		address, err := resolveAddressOrAccountName("emulator-account", state)
+		address, err := resolveTestnetAccount("emulator-account", state)
 
 		assert.Equal(t, flow.EmptyAddress, address)
 		assert.Error(t, err)
