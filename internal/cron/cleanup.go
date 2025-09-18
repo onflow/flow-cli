@@ -37,16 +37,16 @@ var cleanupFlags = flagsCleanup{}
 var cleanupCommand = command.Command{
 	Cmd: &cobra.Command{
 		Use:   "cleanup <account>",
-		Short: "Remove Flow Transaction Scheduler Manager resource from your account",
-		Long:  "Remove the Flow Transaction Scheduler Manager resource from your account to disable transaction scheduling capabilities.",
+		Short: "Clean up invalid transactions from the Transaction Scheduler",
+		Long:  "Clean up transactions that are no longer valid (return nil or Unknown status). This removes and destroys transactions that have been executed, canceled, or are otherwise invalid.",
 		Args:  cobra.ExactArgs(1),
-		Example: `# Cleanup transaction scheduler using account address
+		Example: `# Cleanup invalid transactions using account address
 flow cron cleanup 0x123456789abcdef
 
-# Cleanup transaction scheduler using account name from flow.json
+# Cleanup invalid transactions using account name from flow.json
 flow cron cleanup my-account
 
-# Cleanup transaction scheduler on specific network
+# Cleanup invalid transactions on specific network
 flow cron cleanup my-account --network testnet`,
 	},
 	Flags: &cleanupFlags,
