@@ -87,13 +87,13 @@ func (cl *categorizedLogs) LogAll(logger output.Logger) {
 	}
 }
 
-type Flags struct {
+type DependencyFlags struct {
 	skipDeployments   bool   `default:"false" flag:"skip-deployments" info:"Skip adding the dependency to deployments"`
 	skipAlias         bool   `default:"false" flag:"skip-alias" info:"Skip prompting for an alias"`
 	deploymentAccount string `default:"" flag:"deployment-account,d" info:"Account name to use for deployments (skips deployment account prompt)"`
 }
 
-func (f *Flags) AddToCommand(cmd *cobra.Command) {
+func (f *DependencyFlags) AddToCommand(cmd *cobra.Command) {
 	err := sconfig.New(f).
 		FromEnvironment(util.EnvPrefix).
 		BindFlags(cmd.Flags()).
@@ -119,7 +119,7 @@ type DependencyInstaller struct {
 }
 
 // NewDependencyInstaller creates a new instance of DependencyInstaller
-func NewDependencyInstaller(logger output.Logger, state *flowkit.State, saveState bool, targetDir string, flags Flags) (*DependencyInstaller, error) {
+func NewDependencyInstaller(logger output.Logger, state *flowkit.State, saveState bool, targetDir string, flags DependencyFlags) (*DependencyInstaller, error) {
 	emulatorGateway, err := gateway.NewGrpcGateway(config.EmulatorNetwork)
 	if err != nil {
 		return nil, fmt.Errorf("error creating emulator gateway: %v", err)
@@ -560,8 +560,8 @@ func (di *DependencyInstaller) updateDependencyDeployment(contractName string) e
 
 	// If deployment account is specified via flag, use it; otherwise prompt
 	if di.DeploymentAccount != "" {
-		account := di.State.Accounts().ByName(di.DeploymentAccount)
-		if account == nil {
+		account, err := di.State.Accounts().ByName(di.DeploymentAccount)
+		if err != nil || account == nil {
 			return fmt.Errorf("deployment account '%s' not found in flow.json accounts", di.DeploymentAccount)
 		}
 

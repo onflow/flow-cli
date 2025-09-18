@@ -35,7 +35,7 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 )
 
-var installFlags = Flags{}
+var installFlags = DependencyFlags{}
 
 var installCommand = &command.Command{
 	Cmd: &cobra.Command{
