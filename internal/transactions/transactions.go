@@ -47,7 +47,6 @@ func init() {
 	getCommand.AddToParent(Cmd)
 	sendCommand.AddToParent(Cmd)
 	signCommand.AddToParent(Cmd)
-	addSigCommand.AddToParent(Cmd)
 	buildCommand.AddToParent(Cmd)
 	sendSignedCommand.AddToParent(Cmd)
 	getSystemCommand.AddToParent(Cmd)
