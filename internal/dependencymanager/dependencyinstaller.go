@@ -88,8 +88,9 @@ func (cl *categorizedLogs) LogAll(logger output.Logger) {
 }
 
 type Flags struct {
-	skipDeployments bool `default:"false" flag:"skip-deployments" info:"Skip adding the dependency to deployments"`
-	skipAlias       bool `default:"false" flag:"skip-alias" info:"Skip prompting for an alias"`
+	skipDeployments   bool   `default:"false" flag:"skip-deployments" info:"Skip adding the dependency to deployments"`
+	skipAlias         bool   `default:"false" flag:"skip-alias" info:"Skip prompting for an alias"`
+	deploymentAccount string `default:"" flag:"deployment-account,d" info:"Account name to use for deployments (skips deployment account prompt)"`
 }
 
 func (f *Flags) AddToCommand(cmd *cobra.Command) {
@@ -104,16 +105,17 @@ func (f *Flags) AddToCommand(cmd *cobra.Command) {
 }
 
 type DependencyInstaller struct {
-	Gateways        map[string]gateway.Gateway
-	Logger          output.Logger
-	State           *flowkit.State
-	SaveState       bool
-	TargetDir       string
-	SkipDeployments bool
-	SkipAlias       bool
-	logs            categorizedLogs
-	dependencies    map[string]config.Dependency
-	accountAliases  map[string]map[string]flowsdk.Address // network -> account -> alias
+	Gateways          map[string]gateway.Gateway
+	Logger            output.Logger
+	State             *flowkit.State
+	SaveState         bool
+	TargetDir         string
+	SkipDeployments   bool
+	SkipAlias         bool
+	DeploymentAccount string
+	logs              categorizedLogs
+	dependencies      map[string]config.Dependency
+	accountAliases    map[string]map[string]flowsdk.Address // network -> account -> alias
 }
 
 // NewDependencyInstaller creates a new instance of DependencyInstaller
@@ -140,16 +142,17 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State, saveStat
 	}
 
 	return &DependencyInstaller{
-		Gateways:        gateways,
-		Logger:          logger,
-		State:           state,
-		SaveState:       saveState,
-		TargetDir:       targetDir,
-		SkipDeployments: flags.skipDeployments,
-		SkipAlias:       flags.skipAlias,
-		dependencies:    make(map[string]config.Dependency),
-		logs:            categorizedLogs{},
-		accountAliases:  make(map[string]map[string]flowsdk.Address),
+		Gateways:          gateways,
+		Logger:            logger,
+		State:             state,
+		SaveState:         saveState,
+		TargetDir:         targetDir,
+		SkipDeployments:   flags.skipDeployments,
+		SkipAlias:         flags.skipAlias,
+		DeploymentAccount: flags.deploymentAccount,
+		dependencies:      make(map[string]config.Dependency),
+		logs:              categorizedLogs{},
+		accountAliases:    make(map[string]map[string]flowsdk.Address),
 	}, nil
 }
 
@@ -553,9 +556,23 @@ func (di *DependencyInstaller) handleAdditionalDependencyTasks(networkName, cont
 }
 
 func (di *DependencyInstaller) updateDependencyDeployment(contractName string) error {
-	// Add to deployments
-	// If a deployment already exists for that account, contract, and network, then ignore
-	raw := prompt.AddContractToDeploymentPrompt("emulator", *di.State.Accounts(), contractName)
+	var raw *prompt.DeploymentData
+
+	// If deployment account is specified via flag, use it; otherwise prompt
+	if di.DeploymentAccount != "" {
+		account := di.State.Accounts().ByName(di.DeploymentAccount)
+		if account == nil {
+			return fmt.Errorf("deployment account '%s' not found in flow.json accounts", di.DeploymentAccount)
+		}
+
+		raw = &prompt.DeploymentData{
+			Network:   "emulator",
+			Account:   di.DeploymentAccount,
+			Contracts: []string{contractName},
+		}
+	} else {
+		raw = prompt.AddContractToDeploymentPrompt("emulator", *di.State.Accounts(), contractName)
+	}
 
 	if raw != nil {
 		deployment := di.State.Deployments().ByAccountAndNetwork(raw.Account, raw.Network)
