@@ -70,6 +70,15 @@ Examples:
   6. Install multiple dependencies:
      flow dependencies install FungibleToken NonFungibleToken DeFiActions
 
+  7. Install dependencies with a specific deployment account:
+     flow dependencies install --deployment-account my-account FlowToken
+     flow dependencies install -d my-account FlowToken
+
+Flags:
+• --deployment-account, -d: Specify the account name to use for deployments (skips deployment account prompt)
+• --skip-deployments: Skip adding the dependency to deployments
+• --skip-alias: Skip prompting for an alias
+
 Note:
 • Using 'network://address' will attempt to install all contracts deployed at that address.
 • Using 'network://address.ContractName' will install only the specified contract.
@@ -77,12 +86,15 @@ Note:
   address on Mainnet or Testnet (depending on your project's default network).
 • Specifying a known DeFi actions contract (e.g., DeFiActions) will install it from the
   official DeFi actions address on Mainnet.
+• The deployment account specified with --deployment-account must exist in your flow.json accounts.
 `,
 		Example: `flow dependencies install
 flow dependencies install testnet://0x7e60df042a9c0868.FlowToken
 flow dependencies install FlowToken
 flow dependencies install DeFiActions
-flow dependencies install FlowToken NonFungibleToken DeFiActions`,
+flow dependencies install FlowToken NonFungibleToken DeFiActions
+flow dependencies install --deployment-account my-account FlowToken
+flow dependencies install -d my-account FlowToken`,
 		Args: cobra.ArbitraryArgs,
 	},
 	Flags: &installFlags,
