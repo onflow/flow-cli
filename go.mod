@@ -20,7 +20,7 @@ require (
 	github.com/onflow/flixkit-go/v2 v2.5.1
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.8.1
 	github.com/onflow/flow-emulator v1.7.2
-	github.com/onflow/flow-evm-gateway v1.1.1
+	github.com/onflow/flow-evm-gateway v1.3.2
 	github.com/onflow/flow-go v0.43.0
 	github.com/onflow/flow-go-sdk v1.8.2
 	github.com/onflow/flowkit/v2 v2.5.2
@@ -82,7 +82,6 @@ require (
 	github.com/consensys/gnark-crypto v0.18.0 // indirect
 	github.com/crate-crypto/go-eth-kzg v1.3.0 // indirect
 	github.com/crate-crypto/go-ipa v0.0.0-20240724233137-53bbb0ceb27a // indirect
-	github.com/crate-crypto/go-kzg-4844 v1.1.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/davidlazar/go-crypto v0.0.0-20200604182044-b73af7476f6c // indirect
 	github.com/deckarep/golang-set/v2 v2.6.0 // indirect
@@ -99,7 +98,6 @@ require (
 	github.com/ef-ds/deque v1.0.4 // indirect
 	github.com/emicklei/dot v1.6.2 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
-	github.com/ethereum/c-kzg-4844 v1.0.0 // indirect
 	github.com/ethereum/c-kzg-4844/v2 v2.1.0 // indirect
 	github.com/ethereum/go-verkle v0.2.2 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect

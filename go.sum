@@ -202,8 +202,6 @@ github.com/crate-crypto/go-eth-kzg v1.3.0 h1:05GrhASN9kDAidaFJOda6A4BEvgvuXbazXg
 github.com/crate-crypto/go-eth-kzg v1.3.0/go.mod h1:J9/u5sWfznSObptgfa92Jq8rTswn6ahQWEuiLHOjCUI=
 github.com/crate-crypto/go-ipa v0.0.0-20240724233137-53bbb0ceb27a h1:W8mUrRp6NOVl3J+MYp5kPMoUZPp7aOYHtaua31lwRHg=
 github.com/crate-crypto/go-ipa v0.0.0-20240724233137-53bbb0ceb27a/go.mod h1:sTwzHBvIzm2RfVCGNEBZgRyjwK40bVoun3ZnGOCafNM=
-github.com/crate-crypto/go-kzg-4844 v1.1.0 h1:EN/u9k2TF6OWSHrCCDBBU6GLNMq88OspHHlMnHfoyU4=
-github.com/crate-crypto/go-kzg-4844 v1.1.0/go.mod h1:JolLjpSff1tCCJKaJx4psrlEdlXuJEC996PL3tTAFks=
 github.com/creack/pty v1.1.7/go.mod h1:lj5s0c3V2DBrqTV7llrYr5NG6My20zk30Fl46Y7DoTY=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -269,8 +267,6 @@ github.com/envoyproxy/protoc-gen-validate v1.2.1 h1:DEo3O99U8j4hBFwbJfrz9VtgcDfU
 github.com/envoyproxy/protoc-gen-validate v1.2.1/go.mod h1:d/C80l/jxXLdfEIhX1W2TmLfsJ31lvEjwamM4DxlWXU=
 github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f h1:Y/CXytFA4m6baUTXGLOoWe4PQhGxaX0KpnayAqC48p4=
 github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f/go.mod h1:vw97MGsxSvLiUE2X8qFplwetxpGLQrlU1Q9AUEIzCaM=
-github.com/ethereum/c-kzg-4844 v1.0.0 h1:0X1LBXxaEtYD9xsyj9B9ctQEZIpnvVDeoBx8aHEwTNA=
-github.com/ethereum/c-kzg-4844 v1.0.0/go.mod h1:VewdlzQmpT5QSrVhbBuGoCdFJkpaJlO1aQputP83wc0=
 github.com/ethereum/c-kzg-4844/v2 v2.1.0 h1:gQropX9YFBhl3g4HYhwE70zq3IHFRgbbNPw0Shwzf5w=
 github.com/ethereum/c-kzg-4844/v2 v2.1.0/go.mod h1:TC48kOKjJKPbN7C++qIgt0TJzZ70QznYR7Ob+WXl57E=
 github.com/ethereum/go-ethereum v1.16.3 h1:nDoBSrmsrPbrDIVLTkDQCy1U9KdHN+F2PzvMbDoS42Q=
@@ -797,8 +793,8 @@ github.com/onflow/flow-emulator v1.7.2 h1:1hJ1IZ3AeKaOQ3nsSfcF9Irys0HZLxFYIBbAZr
 github.com/onflow/flow-emulator v1.7.2/go.mod h1:0sx/W4sutaMpDBs60frpJRiYAgQbZcakMH8mWq+k3Js=
 github.com/onflow/flow-evm-bridge v0.1.0 h1:7X2osvo4NnQgHj8aERUmbYtv9FateX8liotoLnPL9nM=
 github.com/onflow/flow-evm-bridge v0.1.0/go.mod h1:5UYwsnu6WcBNrwitGFxphCl5yq7fbWYGYuiCSTVF6pk=
-github.com/onflow/flow-evm-gateway v1.1.1 h1:SsToHtKOINqybxWxR3Mggx89FviYMWCdw8xdUuQpXkk=
-github.com/onflow/flow-evm-gateway v1.1.1/go.mod h1:VYI6JpTC9n64EGCVh4avgt2/Lg36+ZohcrZZmE80xAg=
+github.com/onflow/flow-evm-gateway v1.3.2 h1:As+KPX7sWElvqsVXIZ6Os/OOXjpvbU7bv/DrpllgcXw=
+github.com/onflow/flow-evm-gateway v1.3.2/go.mod h1:WKtVB2G1E1vMYIfDH3BIuNlfMOIfBnvcHsvCJe6N/mA=
 github.com/onflow/flow-ft/lib/go/contracts v1.0.1 h1:Ts5ob+CoCY2EjEd0W6vdLJ7hLL3SsEftzXG2JlmSe24=
 github.com/onflow/flow-ft/lib/go/contracts v1.0.1/go.mod h1:PwsL8fC81cjnUnTfmyL/HOIyHnyaw/JA474Wfj2tl6A=
 github.com/onflow/flow-ft/lib/go/templates v1.0.1 h1:FDYKAiGowABtoMNusLuRCILIZDtVqJ/5tYI4VkF5zfM=

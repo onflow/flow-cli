@@ -369,7 +369,7 @@ func TestExecutingTests(t *testing.T) {
 				"A.0000000000000001.IEVMBridgeTokenMinter",
 				"A.0000000000000001.IFlowEVMNFTBridge",
 				"A.0000000000000001.IFlowEVMTokenBridge",
-				"A.0000000000000001.FlowCallbackScheduler",
+				"A.0000000000000001.FlowTransactionScheduler",
 			},
 			coverageReport.ExcludedLocationIDs(),
 		)
@@ -497,7 +497,7 @@ func TestExecutingTests(t *testing.T) {
 				"A.0000000000000001.IEVMBridgeTokenMinter",
 				"A.0000000000000001.IFlowEVMNFTBridge",
 				"A.0000000000000001.IFlowEVMTokenBridge",
-				"A.0000000000000001.FlowCallbackScheduler",
+				"A.0000000000000001.FlowTransactionScheduler",
 			},
 			coverageReport.ExcludedLocationIDs(),
 		)
