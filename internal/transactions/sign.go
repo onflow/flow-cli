@@ -24,11 +24,16 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"sort"
+	"strconv"
+	"strings"
 
 	"github.com/onflow/flow-cli/internal/prompt"
+	"github.com/onflow/flow-go-sdk/crypto"
 
+	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/transactions"
 
 	"github.com/onflow/flowkit/v2/accounts"
@@ -46,6 +51,7 @@ type flagsSign struct {
 	Signer        []string `default:"emulator-account" flag:"signer" info:"name of a single or multiple comma-separated accounts used to sign"`
 	Include       []string `default:"" flag:"include" info:"Fields to include in the output. Valid values: signatures, code, payload."`
 	FromRemoteUrl string   `default:"" flag:"from-remote-url" info:"server URL where RLP can be fetched, signed RLP will be posted back to remote URL."`
+	RawSig        []string `default:"" flag:"raw-sig" info:"Raw hex-encoded signature to add to the transaction, instead of signing with a private key from an account in the config."`
 }
 
 var signFlags = flagsSign{}
@@ -101,11 +107,28 @@ func sign(
 		return nil, err
 	}
 
+	// Use raw signatures if provided, and if the number of signatures matches the number of signers
+	useRawSig := len(signFlags.RawSig) == len(signFlags.Signer)
+
 	// validate all signers
-	for _, signerName := range signFlags.Signer {
+	for i, signerName := range signFlags.Signer {
 		signer, err := state.Accounts().ByName(signerName)
 		if err != nil {
 			return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signerName)
+		}
+		if useRawSig {
+			sig, err := hex.DecodeString(strings.ReplaceAll(signFlags.RawSig[i], "0x", ""))
+			if err != nil {
+				return nil, fmt.Errorf("invalid message signature: %w", err)
+			}
+			// If a raw signature is provided, use a dummy key that returns the signature instead of signing
+			signer.Key = &sigAddKey{
+				index:    signer.Key.Index(),
+				signer:   crypto.NewAddSignatureSigner(sig, nil),
+				sigAlgo:  signer.Key.SigAlgo(),
+				hashAlgo: signer.Key.HashAlgo(),
+				keyType:  signer.Key.Type(),
+			}
 		}
 		signers = append(signers, signer)
 	}
@@ -180,4 +203,71 @@ func postRLPTransaction(rlpUrl string, tx *flowsdk.Transaction) error {
 	}
 
 	return nil
+}
+
+type sigAddKey struct {
+	keyType  config.KeyType
+	index    uint32
+	sigAlgo  crypto.SignatureAlgorithm
+	hashAlgo crypto.HashAlgorithm
+	signer   crypto.Signer
+}
+
+var _ accounts.Key = &sigAddKey{}
+
+func (a *sigAddKey) Type() config.KeyType {
+	return a.keyType
+}
+
+func (a *sigAddKey) SigAlgo() crypto.SignatureAlgorithm {
+	if a.sigAlgo == crypto.UnknownSignatureAlgorithm {
+		return crypto.ECDSA_P256 // default value
+	}
+	return a.sigAlgo
+}
+
+func (a *sigAddKey) HashAlgo() crypto.HashAlgorithm {
+	if a.hashAlgo == crypto.UnknownHashAlgorithm {
+		return crypto.SHA3_256 // default value
+	}
+	return a.hashAlgo
+}
+
+func (a *sigAddKey) Index() uint32 {
+	return a.index // default to 0
+}
+
+func (a *sigAddKey) Validate() error {
+	return nil
+}
+func (a *sigAddKey) Signer(ctx context.Context) (crypto.Signer, error) {
+	return a.signer, nil
+}
+func (a *sigAddKey) ToConfig() config.AccountKey {
+	return config.AccountKey{
+		Type:           a.keyType,
+		Index:          a.index,
+		SigAlgo:        a.sigAlgo,
+		HashAlgo:       a.hashAlgo,
+		Mnemonic:       "",
+		DerivationPath: "",
+	}
+}
+func (a *sigAddKey) PrivateKey() (*crypto.PrivateKey, error) {
+	return nil, fmt.Errorf("This key type does not support private key retrieval")
+}
+
+func parseKeyIndex(value string) (uint32, error) {
+	v, err := strconv.Atoi(value)
+	if err != nil {
+		return 0, fmt.Errorf("invalid index, must be a number")
+	}
+	if v < 0 {
+		return 0, fmt.Errorf("invalid index, must be positive")
+	}
+	if v > math.MaxUint32 {
+		return 0, fmt.Errorf("invalid index, must be less than %d", math.MaxUint32)
+	}
+
+	return uint32(v), nil
 }

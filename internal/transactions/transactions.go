@@ -171,6 +171,9 @@ func (r *transactionResult) String() string {
 			_, _ = fmt.Fprintf(writer, "    Address\t%s\n", e.Address)
 			_, _ = fmt.Fprintf(writer, "    Signature\t%x\n", e.Signature)
 			_, _ = fmt.Fprintf(writer, "    Key Index\t%d\n", e.KeyIndex)
+			if len(e.ExtensionData) > 0 {
+				_, _ = fmt.Fprintf(writer, "    Extension Data\t%x\n", e.ExtensionData)
+			}
 		} else {
 			_, _ = fmt.Fprintf(writer, "\nPayload Signature %v: %s", i, e.Address)
 		}
@@ -182,6 +185,9 @@ func (r *transactionResult) String() string {
 			_, _ = fmt.Fprintf(writer, "    Address\t%s\n", e.Address)
 			_, _ = fmt.Fprintf(writer, "    Signature\t%x\n", e.Signature)
 			_, _ = fmt.Fprintf(writer, "    Key Index\t%d\n", e.KeyIndex)
+			if len(e.ExtensionData) > 0 {
+				_, _ = fmt.Fprintf(writer, "    Extension Data\t%x\n", e.ExtensionData)
+			}
 		} else {
 			_, _ = fmt.Fprintf(writer, "\nEnvelope Signature %v: %s", i, e.Address)
 		}
