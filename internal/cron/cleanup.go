@@ -71,13 +71,11 @@ func cleanupRun(
 
 	accountInput := args[0]
 
-	// Resolve account address from input (could be address or account name)
 	address, err := util.ResolveAddressOrAccountName(accountInput, state)
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve account: %w", err)
 	}
 
-	// Log network and account information
 	logger.Info(fmt.Sprintf("Network: %s", globalFlags.Network))
 	logger.Info(fmt.Sprintf("Account: %s (%s)", accountInput, address.String()))
 	logger.Info("Removing Flow Transaction Scheduler Manager resource...")
