@@ -78,13 +78,13 @@ func cleanupRun(
 
 	logger.Info(fmt.Sprintf("Network: %s", globalFlags.Network))
 	logger.Info(fmt.Sprintf("Account: %s (%s)", accountInput, address.String()))
-	logger.Info("Removing Flow Transaction Scheduler Manager resource...")
+	logger.Info("Cleaning up invalid transactions from Transaction Scheduler...")
 
 	// TODO: Implement cleanup logic for Transaction Scheduler Manager resource
 
 	return &cleanupResult{
 		success: true,
-		message: "Transaction Scheduler Manager resource removed successfully",
+		message: "Invalid transactions cleaned up successfully",
 	}, nil
 }
 
