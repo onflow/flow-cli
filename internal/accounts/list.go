@@ -96,7 +96,7 @@ func (r *accountsListResult) String() string {
 	// Legend
 	legend := branding.GrayStyle.Render("🌐 Network  🟢 Local (running)  🔴 Local (stopped)  ✓ Found  ✗ Error")
 	separator := branding.GrayStyle.Render("─────────────────────────────────────────────────────")
-	_, _ = fmt.Fprintf(writer, "%s\n%s\n%s\n%s\n\n", header, description, legend, separator)
+	_, _ = fmt.Fprintf(writer, "%s\n\n%s\n%s\n%s\n\n", header, description, legend, separator)
 
 	for _, network := range r.Networks {
 		// Network name with status indicator
