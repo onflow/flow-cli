@@ -23,6 +23,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"sort"
 	"strings"
 	"time"
 
@@ -198,6 +199,17 @@ func formatBalance(balance string) string {
 	return branding.GreenStyle.Render(balance + " FLOW")
 }
 
+var networkOrder = []string{"emulator", "mainnet", "testnet"}
+
+func getNetworkOrder(name string) int {
+	for i, n := range networkOrder {
+		if n == name {
+			return i
+		}
+	}
+	return len(networkOrder) // Unknown networks go last
+}
+
 func validateAccountOnNetwork(account *accounts.Account, network *config.Network, logger output.Logger) accountOnNetwork {
 	result := accountOnNetwork{
 		Name:    account.Name,
@@ -269,12 +281,19 @@ func list(
 		AccountsNotFound: []accountOnNetwork{},
 	}
 
+	// Sort networks to ensure consistent ordering: emulator, mainnet, testnet, others
+	networksList := make([]config.Network, len(*networks))
+	copy(networksList, *networks)
+	sort.Slice(networksList, func(i, j int) bool {
+		return getNetworkOrder(networksList[i].Name) < getNetworkOrder(networksList[j].Name)
+	})
+
 	// Track which accounts have valid addresses for at least one network
 	accountsWithValidAddress := make(map[string]bool)
 
 	// First pass: check which accounts have valid addresses for any network
 	for _, account := range *accounts {
-		for _, network := range *networks {
+		for _, network := range networksList {
 			if util.IsAddressValidForNetwork(account.Address, network.Name) {
 				accountsWithValidAddress[account.Name] = true
 				break
@@ -282,7 +301,7 @@ func list(
 		}
 	}
 
-	for _, network := range *networks {
+	for _, network := range networksList {
 		networkRes := networkResult{
 			Name:     network.Name,
 			Host:     network.Host,
