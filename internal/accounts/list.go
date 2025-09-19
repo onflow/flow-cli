@@ -83,7 +83,8 @@ func (r *accountsListResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 
-	_, _ = fmt.Fprintf(writer, "Accounts by Network:\n\n")
+	_, _ = fmt.Fprintf(writer, "📋 Account Status Across Networks\n")
+	_, _ = fmt.Fprintf(writer, "This shows which networks your configured accounts are accessible on:\n\n")
 
 	for _, network := range r.Networks {
 		_, _ = fmt.Fprintf(writer, "%s:\n", network.Name)
