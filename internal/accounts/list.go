@@ -35,6 +35,7 @@ import (
 	"github.com/onflow/flowkit/v2/gateway"
 	"github.com/onflow/flowkit/v2/output"
 
+	"github.com/onflow/flow-cli/common/branding"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
 )
@@ -83,30 +84,42 @@ func (r *accountsListResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 
-	_, _ = fmt.Fprintf(writer, "📋 Account Status Across Networks\n")
-	_, _ = fmt.Fprintf(writer, "This shows which networks your configured accounts are accessible on:\n\n")
+	// Header with Flow branding
+	header := branding.PurpleStyle.Render("📋 Account Status Across Networks")
+	description := branding.GrayStyle.Render("This shows which networks your configured accounts are accessible on:")
+	_, _ = fmt.Fprintf(writer, "%s\n%s\n\n", header, description)
 
 	for _, network := range r.Networks {
-		_, _ = fmt.Fprintf(writer, "%s:\n", network.Name)
+		// Network name in Flow green
+		networkName := branding.GreenStyle.Render(network.Name + ":")
+		_, _ = fmt.Fprintf(writer, "%s\n", networkName)
 
 		if network.Warning != "" {
-			_, _ = fmt.Fprintf(writer, "  ⚠️  Warning: %s\n", network.Warning)
+			warning := branding.ErrorStyle.Render("  ⚠️  Warning: " + network.Warning)
+			_, _ = fmt.Fprintf(writer, "%s\n", warning)
 		}
 
 		if len(network.Accounts) == 0 {
-			_, _ = fmt.Fprintf(writer, "  No accounts found\n")
+			noAccounts := branding.GrayStyle.Render("  No accounts found")
+			_, _ = fmt.Fprintf(writer, "%s\n", noAccounts)
 		} else {
 			for _, account := range network.Accounts {
 				if account.Exists {
-					_, _ = fmt.Fprintf(writer, "  - %s (%s): %s FLOW\n",
-						account.Name, account.Address, account.Balance)
+					accountName := branding.PurpleStyle.Render(account.Name)
+					address := branding.GrayStyle.Render("(" + account.Address + ")")
+					balance := branding.GreenStyle.Render(account.Balance + " FLOW")
+					_, _ = fmt.Fprintf(writer, "  - %s %s: %s\n",
+						accountName, address, balance)
 				} else {
 					status := "Account not found"
 					if account.Error != "" {
 						status = account.Error
 					}
-					_, _ = fmt.Fprintf(writer, "  - %s (%s): %s\n",
-						account.Name, account.Address, status)
+					accountName := branding.PurpleStyle.Render(account.Name)
+					address := branding.GrayStyle.Render("(" + account.Address + ")")
+					errorMsg := branding.ErrorStyle.Render(status)
+					_, _ = fmt.Fprintf(writer, "  - %s %s: %s\n",
+						accountName, address, errorMsg)
 				}
 			}
 		}
@@ -114,9 +127,12 @@ func (r *accountsListResult) String() string {
 	}
 
 	if len(r.AccountsNotFound) > 0 {
-		_, _ = fmt.Fprintf(writer, "Accounts not found on any network:\n")
+		notFoundHeader := branding.ErrorStyle.Render("Accounts not found on any network:")
+		_, _ = fmt.Fprintf(writer, "%s\n", notFoundHeader)
 		for _, account := range r.AccountsNotFound {
-			_, _ = fmt.Fprintf(writer, "  - %s (%s)\n", account.Name, account.Address)
+			accountName := branding.PurpleStyle.Render(account.Name)
+			address := branding.GrayStyle.Render("(" + account.Address + ")")
+			_, _ = fmt.Fprintf(writer, "  - %s %s\n", accountName, address)
 		}
 	}
 
