@@ -220,7 +220,7 @@ func startInteractiveInit(
 	// Resolve target directory from arguments or user input
 	var userInput string
 	if len(args) < 1 {
-		userInput, err = prompt.RunTextInput("Enter the name of your project (leave blank to use current directory)", "Type your project name here or press Enter for current directory...")
+		userInput, err = prompt.RunTextInput("Enter the name of your project (leave blank to use current directory)", "Project name or Enter for current directory")
 		if err != nil {
 			return "", fmt.Errorf("error running project name: %v", err)
 		}

@@ -50,7 +50,7 @@ func newTextInput(customMsg, placeholder, defaultValue string, validate func(str
 	ti.Placeholder = placeholder
 	ti.Focus()
 	ti.CharLimit = 256
-	ti.Width = 30
+	ti.Width = 50
 
 	// Style the text input with green cursor and text
 	ti.TextStyle = branding.GreenStyle
