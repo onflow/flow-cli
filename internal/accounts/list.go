@@ -153,6 +153,10 @@ func (r *accountsListResult) String() string {
 		}
 	}
 
+	_, _ = fmt.Fprintf(writer, "\n")
+	fundingTip := branding.GrayStyle.Render("💡 Tip: To fund testnet accounts, run: ") + branding.PurpleStyle.Render("flow accounts fund")
+	_, _ = fmt.Fprintf(writer, "%s\n", fundingTip)
+
 	_ = writer.Flush()
 	return b.String()
 }
