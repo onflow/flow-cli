@@ -46,10 +46,15 @@ var listFlags = flagsList{}
 
 var listCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "list",
-		Short:   "List all accounts from flow.json and validate them against networks",
-		Example: "flow accounts list",
-		Args:    cobra.NoArgs,
+		Use:   "list",
+		Short: "Show account status across all configured networks",
+		Long: `Lists all accounts from your flow.json configuration and validates them against each configured network.
+
+This command checks which networks your accounts are accessible on, shows their balances,
+and provides warnings when networks (like the emulator) are not running. Only accounts
+with addresses valid for each specific network are displayed under that network.`,
+		Example: `flow accounts list`,
+		Args: cobra.NoArgs,
 	},
 	Flags: &listFlags,
 	RunS:  list,
