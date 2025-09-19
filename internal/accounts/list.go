@@ -100,15 +100,25 @@ func (r *accountsListResult) String() string {
 		_, _ = fmt.Fprintf(writer, "%s\n", networkName)
 
 		if network.Warning != "" {
-			warning := branding.ErrorStyle.Render("  ⚠️  Warning: " + network.Warning)
+			warning := branding.ErrorStyle.Render("  ⚠️  " + network.Warning)
 			_, _ = fmt.Fprintf(writer, "%s\n", warning)
 		}
 
-		if len(network.Accounts) == 0 {
-			noAccounts := branding.GrayStyle.Render("  No accounts found")
-			_, _ = fmt.Fprintf(writer, "%s\n", noAccounts)
+		// Only show accounts that exist or have specific errors (not network-wide issues)
+		accountsToShow := make([]accountOnNetwork, 0)
+		for _, account := range network.Accounts {
+			if account.Exists || (account.Error != "" && !strings.Contains(account.Error, "Emulator not running")) {
+				accountsToShow = append(accountsToShow, account)
+			}
+		}
+
+		if len(accountsToShow) == 0 {
+			if network.Warning == "" {
+				noAccounts := branding.GrayStyle.Render("  No accounts found")
+				_, _ = fmt.Fprintf(writer, "%s\n", noAccounts)
+			}
 		} else {
-			for _, account := range network.Accounts {
+			for _, account := range accountsToShow {
 				if account.Exists {
 					accountName := branding.PurpleStyle.Render(account.Name)
 					address := branding.GrayStyle.Render("(" + account.Address + ")")
@@ -116,13 +126,9 @@ func (r *accountsListResult) String() string {
 					_, _ = fmt.Fprintf(writer, "  - %s %s: %s\n",
 						accountName, address, balance)
 				} else {
-					status := "Account not found"
-					if account.Error != "" {
-						status = account.Error
-					}
 					accountName := branding.PurpleStyle.Render(account.Name)
 					address := branding.GrayStyle.Render("(" + account.Address + ")")
-					errorMsg := branding.ErrorStyle.Render(status)
+					errorMsg := branding.ErrorStyle.Render(account.Error)
 					_, _ = fmt.Fprintf(writer, "  - %s %s: %s\n",
 						accountName, address, errorMsg)
 				}
@@ -268,7 +274,7 @@ func list(
 			accountResult := validateAccountOnNetwork(&account, &network, logger)
 			networkRes.Accounts = append(networkRes.Accounts, accountResult)
 
-			if accountResult.Exists {
+			if accountResult.Exists || strings.Contains(accountResult.Error, "Emulator not running") {
 				accountsFound[account.Name] = true
 			}
 		}
