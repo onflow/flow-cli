@@ -92,12 +92,17 @@ func (r *accountsListResult) String() string {
 	// Header with Flow branding
 	header := branding.PurpleStyle.Render("📋 Account Status Across Networks")
 	description := branding.GrayStyle.Render("This shows which networks your configured accounts are accessible on:")
-	_, _ = fmt.Fprintf(writer, "%s\n%s\n\n", header, description)
+
+	// Legend
+	legend := branding.GrayStyle.Render("🌐 Network  🟢 Local (running)  🔴 Local (stopped)  ✓ Found  ✗ Error")
+	separator := branding.GrayStyle.Render("─────────────────────────────────────────────────────")
+	_, _ = fmt.Fprintf(writer, "%s\n%s\n%s\n%s\n\n", header, description, legend, separator)
 
 	for _, network := range r.Networks {
-		// Network name in Flow green
-		networkName := branding.GreenStyle.Render(network.Name + ":")
-		_, _ = fmt.Fprintf(writer, "%s\n", networkName)
+		// Network name with status indicator
+		statusIcon := getNetworkStatusIcon(network)
+		networkName := branding.GreenStyle.Render(fmt.Sprintf("%-10s", network.Name))
+		_, _ = fmt.Fprintf(writer, "%s %s\n", statusIcon, networkName)
 
 		if network.Warning != "" {
 			warning := branding.ErrorStyle.Render("  ⚠️  " + network.Warning)
@@ -122,14 +127,14 @@ func (r *accountsListResult) String() string {
 				if account.Exists {
 					accountName := branding.PurpleStyle.Render(account.Name)
 					address := branding.GrayStyle.Render("(" + account.Address + ")")
-					balance := branding.GreenStyle.Render(account.Balance + " FLOW")
-					_, _ = fmt.Fprintf(writer, "  - %s %s: %s\n",
+					balance := formatBalance(account.Balance)
+					_, _ = fmt.Fprintf(writer, "    ✓ %s %s: %s\n",
 						accountName, address, balance)
 				} else {
 					accountName := branding.PurpleStyle.Render(account.Name)
 					address := branding.GrayStyle.Render("(" + account.Address + ")")
 					errorMsg := branding.ErrorStyle.Render(account.Error)
-					_, _ = fmt.Fprintf(writer, "  - %s %s: %s\n",
+					_, _ = fmt.Fprintf(writer, "    ✗ %s %s: %s\n",
 						accountName, address, errorMsg)
 				}
 			}
@@ -173,6 +178,24 @@ func isEmulatorRunning(host string) bool {
 	}
 	conn.Close()
 	return true
+}
+
+func getNetworkStatusIcon(network networkResult) string {
+	if network.Name == "emulator" || strings.Contains(network.Host, "127.0.0.1") || strings.Contains(network.Host, "localhost") {
+		if network.Warning != "" {
+			return branding.ErrorStyle.Render("🔴")
+		}
+		return branding.GreenStyle.Render("🟢")
+	}
+
+	return branding.GreenStyle.Render("🌐")
+}
+
+func formatBalance(balance string) string {
+	if balance == "" {
+		return ""
+	}
+	return branding.GreenStyle.Render(balance + " FLOW")
 }
 
 func validateAccountOnNetwork(account *accounts.Account, network *config.Network, logger output.Logger) accountOnNetwork {
