@@ -68,32 +68,16 @@ func getSystemTransaction(
 		return nil, err
 	}
 
-	var tx *flowsdk.Transaction
-	var result *flowsdk.TransactionResult
-
+	var id flowsdk.Identifier
 	if len(args) == 2 {
-		// Parse transaction ID if provided
-		id := flowsdk.HexToID(strings.TrimPrefix(args[1], "0x"))
-
-		// Fetch transaction and result by ID
-		t, err := flow.GetSystemTransactionWithID(context.Background(), block.ID, id)
-		if err != nil {
-			return nil, err
-		}
-		r, err := flow.GetSystemTransactionResultWithID(context.Background(), block.ID, id)
-		if err != nil {
-			return nil, err
-		}
-		tx = t
-		result = r
+		id = flowsdk.HexToID(strings.TrimPrefix(args[1], "0x"))
 	} else {
-		// Fallback to last system transaction in the block
-		t, r, err := flow.GetSystemTransaction(context.Background(), block.ID)
-		if err != nil {
-			return nil, err
-		}
-		tx = t
-		result = r
+		id = flowsdk.Identifier{}
+	}
+
+	tx, result, err := flow.GetSystemTransactionWithID(context.Background(), block.ID, id)
+	if err != nil {
+		return nil, err
 	}
 
 	return &transactionResult{
