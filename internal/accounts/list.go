@@ -272,7 +272,7 @@ func list(
 		AccountsNotFound: []accountOnNetwork{},
 	}
 
-	// Sort networks to maintain consistent ordering
+	// Sort networks to maintain consistent ordering: emulator, testnet, mainnet
 	networksList := slices.Clone(*networks)
 	slices.SortFunc(networksList, func(a, b config.Network) int {
 		aIndex := slices.Index(networkOrder, a.Name)
