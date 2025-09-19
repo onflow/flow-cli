@@ -151,7 +151,7 @@ func Test_GetSystem(t *testing.T) {
 			assert.Equal(t, uint64(100), args.Get(1).(flowkit.BlockQuery).Height)
 		}).Return(returnBlock, nil)
 
-		srv.GetSystemTransaction.Return(nil, nil, nil)
+		srv.GetSystemTransactionWithID.Return(tests.NewTransaction(), tests.NewTransactionResult(nil), nil)
 
 		res, err := getSystemTransaction(inArgs, command.GlobalFlags{}, util.NoLogger, rw, srv.Mock)
 		assert.NoError(t, err)
@@ -168,7 +168,7 @@ func Test_GetSystem(t *testing.T) {
 			assert.Equal(t, uint64(100), args.Get(1).(flowkit.BlockQuery).Height)
 		}).Return(returnBlock, nil)
 
-		srv.GetSystemTransaction.Return(nil, nil, fmt.Errorf("block not found"))
+		srv.GetSystemTransactionWithID.Return(nil, nil, fmt.Errorf("block not found"))
 
 		res, err := getSystemTransaction(inArgs, command.GlobalFlags{}, util.NoLogger, rw, srv.Mock)
 		assert.Error(t, err)

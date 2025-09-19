@@ -20,7 +20,9 @@ package transactions
 
 import (
 	"context"
+	"strings"
 
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flowkit/v2"
@@ -38,10 +40,10 @@ var getSystemFlags = flagsGetSystem{}
 
 var getSystemCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "get-system <block_id|latest|block_height>",
-		Short:   "Get the system transaction by block info",
-		Example: "flow transactions get-system a1b2c3...",
-		Args:    cobra.ExactArgs(1),
+		Use:     "get-system <block_id|latest|block_height> [tx_id]",
+		Short:   "Get the system transaction by block and optional ID",
+		Example: "flow transactions get-system latest\nflow transactions get-system latest 07a8...b433",
+		Args:    cobra.RangeArgs(1, 2),
 	},
 	Flags: &getSystemFlags,
 	Run:   getSystemTransaction,
@@ -66,7 +68,14 @@ func getSystemTransaction(
 		return nil, err
 	}
 
-	tx, result, err := flow.GetSystemTransaction(context.Background(), block.ID)
+	var id flowsdk.Identifier
+	if len(args) == 2 {
+		id = flowsdk.HexToID(strings.TrimPrefix(args[1], "0x"))
+	} else {
+		id = flowsdk.Identifier{}
+	}
+
+	tx, result, err := flow.GetSystemTransactionWithID(context.Background(), block.ID, id)
 	if err != nil {
 		return nil, err
 	}
