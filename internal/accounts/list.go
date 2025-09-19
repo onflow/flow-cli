@@ -247,7 +247,18 @@ func list(
 		AccountsNotFound: []accountOnNetwork{},
 	}
 
-	accountsFound := make(map[string]bool)
+	// Track which accounts have valid addresses for at least one network
+	accountsWithValidAddress := make(map[string]bool)
+
+	// First pass: check which accounts have valid addresses for any network
+	for _, account := range *accounts {
+		for _, network := range *networks {
+			if util.IsAddressValidForNetwork(account.Address, network.Name) {
+				accountsWithValidAddress[account.Name] = true
+				break
+			}
+		}
+	}
 
 	for _, network := range *networks {
 		networkRes := networkResult{
@@ -273,19 +284,15 @@ func list(
 
 			accountResult := validateAccountOnNetwork(&account, &network, logger)
 			networkRes.Accounts = append(networkRes.Accounts, accountResult)
-
-			if accountResult.Exists || strings.Contains(accountResult.Error, "Emulator not running") {
-				accountsFound[account.Name] = true
-			}
 		}
 
 		logger.StopProgress()
 		result.Networks = append(result.Networks, networkRes)
 	}
 
-	// Find accounts not found on any network
+	// Find accounts with invalid addresses for all networks (truly orphaned accounts)
 	for _, account := range *accounts {
-		if !accountsFound[account.Name] {
+		if !accountsWithValidAddress[account.Name] {
 			result.AccountsNotFound = append(result.AccountsNotFound, accountOnNetwork{
 				Name:    account.Name,
 				Address: account.Address.String(),
