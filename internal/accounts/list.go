@@ -23,7 +23,7 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
@@ -201,15 +201,6 @@ func formatBalance(balance string) string {
 
 var networkOrder = []string{"emulator", "mainnet", "testnet"}
 
-func getNetworkOrder(name string) int {
-	for i, n := range networkOrder {
-		if n == name {
-			return i
-		}
-	}
-	return len(networkOrder) // Unknown networks go last
-}
-
 func validateAccountOnNetwork(account *accounts.Account, network *config.Network, logger output.Logger) accountOnNetwork {
 	result := accountOnNetwork{
 		Name:    account.Name,
@@ -282,10 +273,17 @@ func list(
 	}
 
 	// Sort networks to ensure consistent ordering: emulator, mainnet, testnet, others
-	networksList := make([]config.Network, len(*networks))
-	copy(networksList, *networks)
-	sort.Slice(networksList, func(i, j int) bool {
-		return getNetworkOrder(networksList[i].Name) < getNetworkOrder(networksList[j].Name)
+	networksList := slices.Clone(*networks)
+	slices.SortFunc(networksList, func(a, b config.Network) int {
+		aIndex := slices.Index(networkOrder, a.Name)
+		if aIndex == -1 {
+			aIndex = len(networkOrder)
+		}
+		bIndex := slices.Index(networkOrder, b.Name)
+		if bIndex == -1 {
+			bIndex = len(networkOrder)
+		}
+		return aIndex - bIndex
 	})
 
 	// Track which accounts have valid addresses for at least one network
