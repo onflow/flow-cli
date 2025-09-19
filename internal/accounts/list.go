@@ -54,7 +54,7 @@ This command checks which networks your accounts are accessible on, shows their 
 and provides warnings when networks (like the emulator) are not running. Only accounts
 with addresses valid for each specific network are displayed under that network.`,
 		Example: `flow accounts list`,
-		Args: cobra.NoArgs,
+		Args:    cobra.NoArgs,
 	},
 	Flags: &listFlags,
 	RunS:  list,
@@ -174,7 +174,6 @@ func isEmulatorRunning(host string) bool {
 	conn.Close()
 	return true
 }
-
 
 func validateAccountOnNetwork(account *accounts.Account, network *config.Network, logger output.Logger) accountOnNetwork {
 	result := accountOnNetwork{
