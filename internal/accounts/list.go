@@ -286,10 +286,9 @@ func list(
 		return aIndex - bIndex
 	})
 
-	// Track which accounts have valid addresses for at least one network
 	accountsWithValidAddress := make(map[string]bool)
 
-	// First pass: check which accounts have valid addresses for any network
+	// Check which accounts have valid addresses for any network
 	for _, account := range *accounts {
 		for _, network := range networksList {
 			if util.IsAddressValidForNetwork(account.Address, network.Name) {
@@ -329,7 +328,7 @@ func list(
 		result.Networks = append(result.Networks, networkRes)
 	}
 
-	// Find accounts with invalid addresses for all networks (truly orphaned accounts)
+	// Find accounts with invalid addresses for all networks
 	for _, account := range *accounts {
 		if !accountsWithValidAddress[account.Name] {
 			result.AccountsNotFound = append(result.AccountsNotFound, accountOnNetwork{
