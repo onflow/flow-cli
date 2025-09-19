@@ -147,6 +147,7 @@ func isEmulatorRunning(host string) bool {
 	return true
 }
 
+
 func validateAccountOnNetwork(account *accounts.Account, network *config.Network, logger output.Logger) accountOnNetwork {
 	result := accountOnNetwork{
 		Name:    account.Name,
@@ -243,8 +244,13 @@ func list(
 
 		logger.StartProgress(fmt.Sprintf("Checking accounts on %s...", network.Name))
 
-		// Check each account on this network
+		// Check each account on this network, but only if the address is valid for this network
 		for _, account := range *accounts {
+			if !util.IsAddressValidForNetwork(account.Address, network.Name) {
+				// Skip accounts that aren't valid for this network
+				continue
+			}
+
 			accountResult := validateAccountOnNetwork(&account, &network, logger)
 			networkRes.Accounts = append(networkRes.Accounts, accountResult)
 

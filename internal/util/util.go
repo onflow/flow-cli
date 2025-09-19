@@ -45,6 +45,21 @@ func Exit(code int, msg string) {
 	os.Exit(code)
 }
 
+// IsAddressValidForNetwork checks if an address is valid for a specific network
+func IsAddressValidForNetwork(address flow.Address, networkName string) bool {
+	switch networkName {
+	case "mainnet":
+		return address.IsValid(flow.Mainnet)
+	case "testnet":
+		return address.IsValid(flow.Testnet)
+	case "emulator", "testing":
+		return address.IsValid(flow.Emulator)
+	default:
+		// For custom networks, assume they use the same validation as emulator
+		return address.IsValid(flow.Emulator)
+	}
+}
+
 // entryExists checks if an entry already exists in the content
 func entryExists(content, entry string) bool {
 	lines := strings.SplitSeq(strings.TrimSpace(content), "\n")
