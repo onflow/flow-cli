@@ -23,7 +23,7 @@ require (
 	github.com/onflow/flow-evm-gateway v1.3.2
 	github.com/onflow/flow-go v0.43.0
 	github.com/onflow/flow-go-sdk v1.8.3
-	github.com/onflow/flowkit/v2 v2.5.3-0.20250919164746-7dca2d6ac6cc
+	github.com/onflow/flowkit/v2 v2.5.3-0.20250919180302-8a03642ac61b
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/pkg/errors v0.9.1
