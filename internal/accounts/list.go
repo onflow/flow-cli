@@ -202,15 +202,7 @@ func validateAccountOnNetwork(account *accounts.Account, network *config.Network
 
 	flowAccount, err := flow.GetAccount(ctx, account.Address)
 	if err != nil {
-		if strings.Contains(err.Error(), "invalid address") {
-			result.Error = "Invalid address for this network"
-		} else if strings.Contains(err.Error(), "connection refused") {
-			result.Error = "Network unreachable"
-		} else if strings.Contains(err.Error(), "not found") {
-			result.Error = "Account not found"
-		} else {
-			result.Error = "Connection failed"
-		}
+		result.Error = "Account not found"
 		return result
 	}
 
