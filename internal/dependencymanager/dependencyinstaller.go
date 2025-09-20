@@ -87,12 +87,13 @@ func (cl *categorizedLogs) LogAll(logger output.Logger) {
 	}
 }
 
-type Flags struct {
-	skipDeployments bool `default:"false" flag:"skip-deployments" info:"Skip adding the dependency to deployments"`
-	skipAlias       bool `default:"false" flag:"skip-alias" info:"Skip prompting for an alias"`
+type DependencyFlags struct {
+	skipDeployments   bool   `default:"false" flag:"skip-deployments" info:"Skip adding the dependency to deployments"`
+	skipAlias         bool   `default:"false" flag:"skip-alias" info:"Skip prompting for an alias"`
+	deploymentAccount string `default:"" flag:"deployment-account,d" info:"Account name to use for deployments (skips deployment account prompt)"`
 }
 
-func (f *Flags) AddToCommand(cmd *cobra.Command) {
+func (f *DependencyFlags) AddToCommand(cmd *cobra.Command) {
 	err := sconfig.New(f).
 		FromEnvironment(util.EnvPrefix).
 		BindFlags(cmd.Flags()).
@@ -104,20 +105,21 @@ func (f *Flags) AddToCommand(cmd *cobra.Command) {
 }
 
 type DependencyInstaller struct {
-	Gateways        map[string]gateway.Gateway
-	Logger          output.Logger
-	State           *flowkit.State
-	SaveState       bool
-	TargetDir       string
-	SkipDeployments bool
-	SkipAlias       bool
-	logs            categorizedLogs
-	dependencies    map[string]config.Dependency
-	accountAliases  map[string]map[string]flowsdk.Address // network -> account -> alias
+	Gateways          map[string]gateway.Gateway
+	Logger            output.Logger
+	State             *flowkit.State
+	SaveState         bool
+	TargetDir         string
+	SkipDeployments   bool
+	SkipAlias         bool
+	DeploymentAccount string
+	logs              categorizedLogs
+	dependencies      map[string]config.Dependency
+	accountAliases    map[string]map[string]flowsdk.Address // network -> account -> alias
 }
 
 // NewDependencyInstaller creates a new instance of DependencyInstaller
-func NewDependencyInstaller(logger output.Logger, state *flowkit.State, saveState bool, targetDir string, flags Flags) (*DependencyInstaller, error) {
+func NewDependencyInstaller(logger output.Logger, state *flowkit.State, saveState bool, targetDir string, flags DependencyFlags) (*DependencyInstaller, error) {
 	emulatorGateway, err := gateway.NewGrpcGateway(config.EmulatorNetwork)
 	if err != nil {
 		return nil, fmt.Errorf("error creating emulator gateway: %v", err)
@@ -140,16 +142,17 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State, saveStat
 	}
 
 	return &DependencyInstaller{
-		Gateways:        gateways,
-		Logger:          logger,
-		State:           state,
-		SaveState:       saveState,
-		TargetDir:       targetDir,
-		SkipDeployments: flags.skipDeployments,
-		SkipAlias:       flags.skipAlias,
-		dependencies:    make(map[string]config.Dependency),
-		logs:            categorizedLogs{},
-		accountAliases:  make(map[string]map[string]flowsdk.Address),
+		Gateways:          gateways,
+		Logger:            logger,
+		State:             state,
+		SaveState:         saveState,
+		TargetDir:         targetDir,
+		SkipDeployments:   flags.skipDeployments,
+		SkipAlias:         flags.skipAlias,
+		DeploymentAccount: flags.deploymentAccount,
+		dependencies:      make(map[string]config.Dependency),
+		logs:              categorizedLogs{},
+		accountAliases:    make(map[string]map[string]flowsdk.Address),
 	}, nil
 }
 
@@ -526,15 +529,25 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, co
 
 func (di *DependencyInstaller) handleAdditionalDependencyTasks(networkName, contractName string) error {
 	// If the contract is not a core contract and the user does not want to skip deployments, then prompt for a deployment
-	if !di.SkipDeployments && !util.IsCoreContract(contractName) && !isDefiActionsContract(contractName) {
-		err := di.updateDependencyDeployment(contractName)
-		if err != nil {
-			di.Logger.Error(fmt.Sprintf("Error updating deployment: %v", err))
-			return err
+	if !di.SkipDeployments && !util.IsCoreContract(contractName) {
+		// For DeFi Actions contracts, only allow deployment on emulator
+		if isDefiActionsContract(contractName) {
+			err := di.updateDependencyDeployment(contractName, "emulator")
+			if err != nil {
+				di.Logger.Error(fmt.Sprintf("Error updating deployment: %v", err))
+				return err
+			}
+			msg := util.MessageWithEmojiPrefix("✅", fmt.Sprintf("%s added to emulator deployments (DeFi Actions contracts only supported on emulator)", contractName))
+			di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
+		} else {
+			err := di.updateDependencyDeployment(contractName)
+			if err != nil {
+				di.Logger.Error(fmt.Sprintf("Error updating deployment: %v", err))
+				return err
+			}
+			msg := util.MessageWithEmojiPrefix("✅", fmt.Sprintf("%s added to emulator deployments", contractName))
+			di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
 		}
-
-		msg := util.MessageWithEmojiPrefix("✅", fmt.Sprintf("%s added to emulator deployments", contractName))
-		di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
 	}
 
 	// If the contract is not a core contract and the user does not want to skip aliasing, then prompt for an alias
@@ -552,10 +565,30 @@ func (di *DependencyInstaller) handleAdditionalDependencyTasks(networkName, cont
 	return nil
 }
 
-func (di *DependencyInstaller) updateDependencyDeployment(contractName string) error {
-	// Add to deployments
-	// If a deployment already exists for that account, contract, and network, then ignore
-	raw := prompt.AddContractToDeploymentPrompt("emulator", *di.State.Accounts(), contractName)
+func (di *DependencyInstaller) updateDependencyDeployment(contractName string, forceNetwork ...string) error {
+	var raw *prompt.DeploymentData
+	network := "emulator"
+
+	// If a forced network is specified, use it
+	if len(forceNetwork) > 0 {
+		network = forceNetwork[0]
+	}
+
+	// If deployment account is specified via flag, use it; otherwise prompt
+	if di.DeploymentAccount != "" {
+		account, err := di.State.Accounts().ByName(di.DeploymentAccount)
+		if err != nil || account == nil {
+			return fmt.Errorf("deployment account '%s' not found in flow.json accounts", di.DeploymentAccount)
+		}
+
+		raw = &prompt.DeploymentData{
+			Network:   network,
+			Account:   di.DeploymentAccount,
+			Contracts: []string{contractName},
+		}
+	} else {
+		raw = prompt.AddContractToDeploymentPrompt(network, *di.State.Accounts(), contractName)
+	}
 
 	if raw != nil {
 		deployment := di.State.Deployments().ByAccountAndNetwork(raw.Account, raw.Network)
