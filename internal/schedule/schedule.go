@@ -31,6 +31,5 @@ var Cmd = &cobra.Command{
 
 func init() {
 	setupCommand.AddToParent(Cmd)
-	cleanupCommand.AddToParent(Cmd)
 	cancelCommand.AddToParent(Cmd)
 }
