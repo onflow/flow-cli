@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package cron
+package schedule
 
 import (
 	"fmt"
@@ -41,13 +41,13 @@ var setupCommand = command.Command{
 		Long:  "Initialize your account with a Flow Transaction Scheduler Manager resource to enable transaction scheduling capabilities.",
 		Args:  cobra.ExactArgs(1),
 		Example: `# Setup transaction scheduler using account address
-flow cron setup 0x123456789abcdef
+flow schedule setup 0x123456789abcdef
 
 # Setup transaction scheduler using account name from flow.json
-flow cron setup my-account
+flow schedule setup my-account
 
 # Setup transaction scheduler on specific network
-flow cron setup my-account --network testnet`,
+flow schedule setup my-account --network testnet`,
 	},
 	Flags: &setupFlags,
 	RunS:  setupRun,

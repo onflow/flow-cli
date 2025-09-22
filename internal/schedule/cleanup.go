@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package cron
+package schedule
 
 import (
 	"fmt"
@@ -41,13 +41,13 @@ var cleanupCommand = command.Command{
 		Long:  "Clean up transactions that are no longer valid (return nil or Unknown status). This removes and destroys transactions that have been executed, canceled, or are otherwise invalid.",
 		Args:  cobra.ExactArgs(1),
 		Example: `# Cleanup invalid transactions using account address
-flow cron cleanup 0x123456789abcdef
+flow schedule cleanup 0x123456789abcdef
 
 # Cleanup invalid transactions using account name from flow.json
-flow cron cleanup my-account
+flow schedule cleanup my-account
 
 # Cleanup invalid transactions on specific network
-flow cron cleanup my-account --network testnet`,
+flow schedule cleanup my-account --network testnet`,
 	},
 	Flags: &cleanupFlags,
 	RunS:  cleanupRun,

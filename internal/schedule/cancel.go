@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package cron
+package schedule
 
 import (
 	"fmt"
@@ -40,10 +40,10 @@ var cancelCommand = command.Command{
 		Long:  "Cancel a previously scheduled transaction from the Transaction Scheduler by its transaction ID.",
 		Args:  cobra.ExactArgs(1),
 		Example: `# Cancel scheduled transaction by transaction ID
-flow cron cancel 0x1234567890abcdef
+flow schedule cancel 0x1234567890abcdef
 
 # Cancel scheduled transaction on specific network
-flow cron cancel 0x1234567890abcdef --network testnet`,
+flow schedule cancel 0x1234567890abcdef --network testnet`,
 	},
 	Flags: &cancelFlags,
 	RunS:  cancelRun,
