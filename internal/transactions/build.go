@@ -20,9 +20,11 @@ package transactions
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 
 	"github.com/onflow/flow-cli/internal/prompt"
+	"github.com/onflow/flow-go-sdk/crypto"
 
 	"github.com/onflow/cadence"
 	flowsdk "github.com/onflow/flow-go-sdk"
@@ -124,8 +126,26 @@ func build(
 		return nil, fmt.Errorf("transaction was not approved")
 	}
 
+	flowTx := tx.FlowTransaction()
+
+	payloadHex := hex.EncodeToString(flowTx.PayloadMessage())
+	envelopeHex := hex.EncodeToString(flowTx.EnvelopeMessage())
+	fmt.Println("payloadHex:", payloadHex)
+	fmt.Println("envelopeHex:", envelopeHex)
+
+	messageToBeHashed := append(flowsdk.TransactionDomainTag[:], flowTx.EnvelopeMessage()...)
+
+	hasher, err := crypto.NewHasher(crypto.SHA2_256)
+	if err != nil {
+		return nil, err
+	}
+
+	hashOfMessage := hasher.ComputeHash(messageToBeHashed)
+
+	fmt.Println("hashOfMessage:", hashOfMessage)
+
 	return &transactionResult{
-		tx:      tx.FlowTransaction(),
+		tx:      flowTx,
 		include: []string{"code", "payload", "signatures"},
 		network: flow.Network().Name,
 	}, nil
