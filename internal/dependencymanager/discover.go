@@ -34,6 +34,8 @@ import (
 	"github.com/onflow/flow-cli/internal/util"
 )
 
+var discoverFlags = DependencyFlags{}
+
 type DiscoverResult struct {
 	Contracts []string `json:"contracts"`
 }
@@ -42,11 +44,25 @@ var discoverCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "discover",
 		Short:   "Discover available contracts to add to your project.",
-		Example: "flow dependencies discover",
+		Long: `Discover available contracts to add to your project.
+
+This command shows you a list of popular contracts that you can install as dependencies.
+You can select multiple contracts to install at once.
+
+Flags:
+• --deployment-account, -d: Specify the account name to use for deployments (skips deployment account prompt)
+• --skip-deployments: Skip adding the dependency to deployments
+• --skip-alias: Skip prompting for an alias
+
+Note:
+• The deployment account specified with --deployment-account must exist in your flow.json accounts.`,
+		Example: `flow dependencies discover
+flow dependencies discover --deployment-account my-account
+flow dependencies discover -d my-account`,
 		Args:    cobra.NoArgs,
 	},
 	RunS:  discover,
-	Flags: &struct{}{},
+	Flags: &discoverFlags,
 }
 
 func discover(
@@ -66,7 +82,7 @@ func discover(
 		installedContracts = append(installedContracts, dep.Name)
 	}
 
-	err := PromptInstallCoreContracts(logger, state, "", installedContracts)
+	err := PromptInstallCoreContracts(logger, state, "", installedContracts, discoverFlags)
 	if err != nil {
 		return nil, err
 	}
@@ -75,11 +91,11 @@ func discover(
 	return nil, err
 }
 
-func PromptInstallCoreContracts(logger output.Logger, state *flowkit.State, targetDir string, excludeContracts []string) error {
-	return PromptInstallContracts(logger, state, targetDir, excludeContracts)
+func PromptInstallCoreContracts(logger output.Logger, state *flowkit.State, targetDir string, excludeContracts []string, flags DependencyFlags) error {
+	return PromptInstallContracts(logger, state, targetDir, excludeContracts, flags)
 }
 
-func PromptInstallContracts(logger output.Logger, state *flowkit.State, targetDir string, excludeContracts []string) error {
+func PromptInstallContracts(logger output.Logger, state *flowkit.State, targetDir string, excludeContracts []string, flags DependencyFlags) error {
 	sections := GetAllContractSections()
 	var sectionData []prompt.ListSectionData
 	allDependenciesByName := make(map[string]flowkitConfig.Dependency)
@@ -142,7 +158,7 @@ func PromptInstallContracts(logger output.Logger, state *flowkit.State, targetDi
 	logger.Info(util.MessageWithEmojiPrefix("🔄", "Installing selected contracts and dependencies..."))
 
 	// Add the selected contracts as dependencies
-	installer, err := NewDependencyInstaller(logger, state, false, targetDir, Flags{})
+	installer, err := NewDependencyInstaller(logger, state, false, targetDir, flags)
 	if err != nil {
 		return err
 	}
