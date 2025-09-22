@@ -27,27 +27,28 @@ import (
 	"github.com/onflow/flowkit/v2/output"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/util"
 )
 
-type flagsSetup struct{}
+type flagsSetup struct {
+	Signer string `default:"emulator-account" flag:"signer" info:"account to setup the transaction scheduler on"`
+}
 
 var setupFlags = flagsSetup{}
 
 var setupCommand = command.Command{
 	Cmd: &cobra.Command{
-		Use:   "setup <account>",
+		Use:   "setup",
 		Short: "Create a Flow Transaction Scheduler Manager resource on your account",
 		Long:  "Initialize your account with a Flow Transaction Scheduler Manager resource to enable transaction scheduling capabilities.",
-		Args:  cobra.ExactArgs(1),
-		Example: `# Setup transaction scheduler using account address
-flow schedule setup 0x123456789abcdef
-
-# Setup transaction scheduler using account name from flow.json
-flow schedule setup my-account
+		Args:  cobra.NoArgs,
+		Example: `# Setup transaction scheduler using account name from flow.json
+flow schedule setup --signer my-account
 
 # Setup transaction scheduler on specific network
-flow schedule setup my-account --network testnet`,
+flow schedule setup --signer my-account --network testnet
+
+# Setup transaction scheduler using default signer (emulator-account)
+flow schedule setup`,
 	},
 	Flags: &setupFlags,
 	RunS:  setupRun,
@@ -65,29 +66,19 @@ func setupRun(
 		return nil, fmt.Errorf("flow configuration is required. Run 'flow init' first")
 	}
 
-	if len(args) == 0 {
-		return nil, fmt.Errorf("account is required as an argument")
-	}
-
-	accountInput := args[0]
-
-	// Resolve account address from input (could be address or account name)
-	address, err := util.ResolveAddressOrAccountName(accountInput, state)
+	signer, err := state.Accounts().ByName(setupFlags.Signer)
 	if err != nil {
-		return nil, fmt.Errorf("failed to resolve account: %w", err)
+		return nil, fmt.Errorf("failed to resolve signer account '%s': %w", setupFlags.Signer, err)
 	}
+
+	address := signer.Address
 
 	// Log network and account information
 	logger.Info(fmt.Sprintf("Network: %s", globalFlags.Network))
-	logger.Info(fmt.Sprintf("Account: %s (%s)", accountInput, address.String()))
+	logger.Info(fmt.Sprintf("Signer: %s (%s)", setupFlags.Signer, address.String()))
 	logger.Info("Setting up Flow Transaction Scheduler Manager resource...")
 
 	// TODO: Implement setup logic for Transaction Scheduler Manager resource
-	// This will contain the actual implementation to:
-	// 1. Check if resource already exists on the account
-	// 2. Deploy/create the Manager resource via transaction
-	// 3. Verify successful deployment
-	// 4. Return success result
 
 	return &setupResult{
 		success: true,
