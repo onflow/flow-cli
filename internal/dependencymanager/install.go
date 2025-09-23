@@ -108,7 +108,7 @@ func install(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	// If no arguments provided, automatically enable skip flags
+	// When installing existing dependencies from flow.json (no args), skip prompts for aliases and deployments
 	flags := installFlags
 	if len(args) == 0 {
 		flags.skipDeployments = true
