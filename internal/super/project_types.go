@@ -1,17 +1,32 @@
 package super
 
 import (
-	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flow-cli/internal/super/generator"
+	"github.com/onflow/flowkit/v2"
 )
 
 // ProjectType represents the type of Flow project to create
 type ProjectType string
 
 const (
-	ProjectTypeDefault              ProjectType = "default"
+	ProjectTypeDefault               ProjectType = "default"
 	ProjectTypeScheduledTransactions ProjectType = "scheduledtransactions"
+	ProjectTypeCustom                ProjectType = "custom"
 )
+
+// getProjectTypeDescription returns a user-friendly description for the project type
+func getProjectTypeDescription(projectType ProjectType) string {
+	switch projectType {
+	case ProjectTypeDefault:
+		return "Basic Cadence project (no dependencies)"
+	case ProjectTypeScheduledTransactions:
+		return "Scheduled Transactions project"
+	case ProjectTypeCustom:
+		return "Custom project (select standard Flow contract dependencies)"
+	default:
+		return string(projectType)
+	}
+}
 
 // getProjectTemplates returns a slice of templates based on the project type.
 // Supported types: ProjectTypeDefault, ProjectTypeScheduledTransactions

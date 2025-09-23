@@ -257,16 +257,32 @@ func startInteractiveInit(
 		return "", fmt.Errorf("failed to initialize configuration: %w", err)
 	}
 
-	msg := "Would you like to install any standard Flow contracts and their dependencies?"
-	installContracts, err := prompt.GenericBoolPrompt(msg)
+	projectTypes := []ProjectType{
+		ProjectTypeDefault,
+		ProjectTypeScheduledTransactions,
+		ProjectTypeCustom,
+	}
+	projectOptions := make([]string, len(projectTypes))
+	descriptionToType := make(map[string]ProjectType)
+	for i, pt := range projectTypes {
+		description := getProjectTypeDescription(pt)
+		projectOptions[i] = description
+		descriptionToType[description] = pt
+	}
+
+	msg := "What type of Flow project would you like to create?"
+	selectedProject, err := prompt.RunSingleSelect(projectOptions, msg)
 	if err != nil {
 		return "", err
 	}
-	if installContracts {
+
+	projectType := descriptionToType[selectedProject]
+	if projectType == ProjectTypeCustom {
 		err := dependencymanager.PromptInstallCoreContracts(logger, state, tempDir, nil, dependencymanager.DependencyFlags{})
 		if err != nil {
 			return "", err
 		}
+		projectType = ProjectTypeDefault
 	}
 
 	// Generate standard cadence files & README.md
@@ -276,7 +292,7 @@ func startInteractiveInit(
 	// cadence/tests/DefaultContract_test.cdc
 	// README.md
 
-	templates := getProjectTemplates(ProjectTypeDefault, targetDir, state)
+	templates := getProjectTemplates(projectType, targetDir, state)
 
 	g := generator.NewGenerator(tempDir, state, logger, true, false)
 	err = g.Create(templates...)
