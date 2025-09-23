@@ -45,6 +45,10 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 				Name:         "Counter",
 				TemplatePath: "contract_counter.cdc.tmpl",
 			},
+			generator.ContractTemplate{
+				Name:         "CounterTransactionHandler",
+				TemplatePath: "contract_counter_transaction_handler.cdc.tmpl",
+			},
 			generator.ScriptTemplate{
 				Name:         "GetCounter",
 				TemplatePath: "script_counter.cdc.tmpl",
@@ -74,6 +78,7 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 					})(),
 					"Contracts": []map[string]interface{}{
 						{"Name": "Counter"},
+						{"Name": "CounterTransactionHandler"},
 					},
 					"Scripts": []map[string]interface{}{
 						{"Name": "GetCounter"},
