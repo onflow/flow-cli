@@ -1,6 +1,9 @@
 package super
 
 import (
+	"fmt"
+
+	"github.com/onflow/flow-cli/common/branding"
 	"github.com/onflow/flow-cli/internal/dependencymanager"
 	"github.com/onflow/flow-cli/internal/super/generator"
 	"github.com/onflow/flowkit/v2"
@@ -124,6 +127,8 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 
 // installProjectDependencies installs both core contracts and custom dependencies for a project type
 func installProjectDependencies(logger output.Logger, state *flowkit.State, targetDir string, coreContracts []string, customDependencies []flowkitConfig.Dependency, deploymentAccount string) error {
+	logger.Info("Installing project dependencies...")
+
 	flags := dependencymanager.DependencyFlags{}
 	installer, err := dependencymanager.NewDependencyInstaller(logger, state, false, targetDir, flags)
 	if err != nil {
@@ -138,6 +143,8 @@ func installProjectDependencies(logger output.Logger, state *flowkit.State, targ
 
 	// Install core contracts
 	for _, coreContract := range coreContracts {
+		contractName := branding.PurpleStyle.Render(coreContract)
+		logger.Info(fmt.Sprintf("Installing core contract: %s", contractName))
 		err = installer.AddByCoreContractName(coreContract)
 		if err != nil {
 			return err
@@ -146,11 +153,16 @@ func installProjectDependencies(logger output.Logger, state *flowkit.State, targ
 
 	// Install custom dependencies
 	if len(customDependencies) > 0 {
+		for _, dep := range customDependencies {
+			contractName := branding.PurpleStyle.Render(dep.Name)
+			logger.Info(fmt.Sprintf("Installing dependency: %s", contractName))
+		}
 		err = installer.AddMany(customDependencies)
 		if err != nil {
 			return err
 		}
 	}
 
+	logger.Info("Dependencies installed successfully!")
 	return nil
 }
