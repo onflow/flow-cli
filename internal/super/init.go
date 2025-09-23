@@ -276,9 +276,6 @@ func startInteractiveInit(
 	// cadence/tests/DefaultContract_test.cdc
 	// README.md
 
-	// Determine README filename - avoid conflicts with existing README.md
-	readmeFileName := getReadmeFileName(targetDir)
-
 	templates := []generator.TemplateItem{
 		generator.ContractTemplate{
 			Name:         "Counter",
@@ -296,7 +293,7 @@ func startInteractiveInit(
 		},
 		generator.FileTemplate{
 			TemplatePath: "README.md.tmpl",
-			TargetPath:   readmeFileName,
+			TargetPath:   getReadmeFileName(targetDir),
 			Data: map[string]interface{}{
 				"Dependencies": (func() []map[string]interface{} {
 					contracts := []map[string]interface{}{}
