@@ -41,8 +41,8 @@ import (
 	"github.com/onflow/flow-cli/internal/dependencymanager"
 	"github.com/onflow/flow-cli/internal/super/generator"
 	"github.com/onflow/flow-cli/internal/util"
-	flowkitConfig "github.com/onflow/flowkit/v2/config"
 	flowsdk "github.com/onflow/flow-go-sdk"
+	flowkitConfig "github.com/onflow/flowkit/v2/config"
 )
 
 type flagsInit struct {
@@ -320,18 +320,11 @@ func startInteractiveInit(
 				},
 			},
 		}
-		err := installProjectDependencies(logger, state, tempDir, coreContracts, customDeps, "emulator-account")
+		err := installProjectDependencies(logger, state, tempDir, coreContracts, customDeps, "")
 		if err != nil {
 			return "", err
 		}
 	}
-
-	// Generate standard cadence files & README.md
-	// cadence/contracts/DefaultContract.cdc
-	// cadence/scripts/DefaultScript.cdc
-	// cadence/transactions/DefaultTransaction.cdc
-	// cadence/tests/DefaultContract_test.cdc
-	// README.md
 
 	templates := getProjectTemplates(projectType, targetDir, state)
 
