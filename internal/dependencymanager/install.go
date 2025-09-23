@@ -108,7 +108,14 @@ func install(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	installer, err := NewDependencyInstaller(logger, state, true, "", installFlags)
+	// If no arguments provided, automatically enable skip flags
+	flags := installFlags
+	if len(args) == 0 {
+		flags.skipDeployments = true
+		flags.skipAlias = true
+	}
+
+	installer, err := NewDependencyInstaller(logger, state, true, "", flags)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Error initializing dependency installer: %v", err))
 		return nil, err
