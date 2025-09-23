@@ -320,7 +320,7 @@ func startInteractiveInit(
 				},
 			},
 		}
-		err := installProjectDependencies(logger, state, tempDir, coreContracts, customDeps, "")
+		err := installProjectDependencies(logger, state, tempDir, coreContracts, customDeps)
 		if err != nil {
 			return "", err
 		}

@@ -136,7 +136,7 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 }
 
 // installProjectDependencies installs both core contracts and custom dependencies for a project type
-func installProjectDependencies(logger output.Logger, state *flowkit.State, targetDir string, coreContracts []string, customDependencies []flowkitConfig.Dependency, deploymentAccount string) error {
+func installProjectDependencies(logger output.Logger, state *flowkit.State, targetDir string, coreContracts []string, customDependencies []flowkitConfig.Dependency) error {
 	logger.Info("Installing project dependencies...")
 
 	flags := dependencymanager.DependencyFlags{}
@@ -145,11 +145,8 @@ func installProjectDependencies(logger output.Logger, state *flowkit.State, targ
 		return err
 	}
 
-	if deploymentAccount != "" {
-		installer.DeploymentAccount = deploymentAccount
-	}
-
 	installer.SkipAlias = true
+	installer.SkipDeployments = true
 
 	// Install core contracts
 	for _, coreContract := range coreContracts {
