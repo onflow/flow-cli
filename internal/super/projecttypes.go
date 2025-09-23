@@ -176,3 +176,37 @@ func installProjectDependencies(logger output.Logger, state *flowkit.State, targ
 	logger.Info("Dependencies installed successfully!")
 	return nil
 }
+
+// addContractDeployments adds specific contracts to the deployment configuration
+func addContractDeployments(state *flowkit.State, contractNames []string, deploymentAccount string) error {
+	// Find existing deployment for emulator network and account, or create new one
+	deployment := state.Deployments().ByAccountAndNetwork(deploymentAccount, "emulator")
+	if deployment == nil {
+		// Create new deployment
+		deployment = &flowkitConfig.Deployment{
+			Network: "emulator",
+			Account: deploymentAccount,
+		}
+		state.Deployments().AddOrUpdate(*deployment)
+		deployment = state.Deployments().ByAccountAndNetwork(deploymentAccount, "emulator")
+	}
+
+	// Add contracts to deployment if not already present
+	for _, contractName := range contractNames {
+		found := false
+		for _, existingContract := range deployment.Contracts {
+			if existingContract.Name == contractName {
+				found = true
+				break
+			}
+		}
+		if !found {
+			deployment.Contracts = append(deployment.Contracts, flowkitConfig.ContractDeployment{
+				Name: contractName,
+			})
+		}
+	}
+
+	state.Deployments().AddOrUpdate(*deployment)
+	return nil
+}

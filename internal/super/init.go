@@ -341,6 +341,14 @@ func startInteractiveInit(
 		return "", err
 	}
 
+	// Add project-specific contract deployments for scheduled transactions
+	if projectType == ProjectTypeScheduledTransactions {
+		err = addContractDeployments(state, []string{"CounterTransactionHandler"}, "emulator-account")
+		if err != nil {
+			return "", err
+		}
+	}
+
 	err = state.Save(filepath.Join(tempDir, "flow.json"))
 	if err != nil {
 		return "", err
