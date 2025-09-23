@@ -1,0 +1,54 @@
+import "FlowTransactionScheduler"
+import "FlowToken"
+import "FungibleToken"
+
+/// Schedule an increment of the Counter with a relative delay in seconds
+transaction(
+    delaySeconds: UFix64,
+    priority: UInt8,
+    executionEffort: UInt64,
+    transactionData: AnyStruct?
+) {
+    prepare(signer: auth(Storage, Capabilities) &Account) {
+        let future = getCurrentBlock().timestamp + delaySeconds
+
+        let pr = priority == 0
+            ? FlowTransactionScheduler.Priority.High
+            : priority == 1
+                ? FlowTransactionScheduler.Priority.Medium
+                : FlowTransactionScheduler.Priority.Low
+
+        let est = FlowTransactionScheduler.estimate(
+            data: transactionData,
+            timestamp: future,
+            priority: pr,
+            executionEffort: executionEffort
+        )
+
+        assert(
+            est.timestamp != nil || pr == FlowTransactionScheduler.Priority.Low,
+            message: est.error ?? "estimation failed"
+        )
+
+        let vaultRef = signer.storage
+            .borrow<auth(FungibleToken.Withdraw) &FlowToken.Vault>(from: /storage/flowTokenVault)
+            ?? panic("missing FlowToken vault")
+        let fees <- vaultRef.withdraw(amount: est.flowFee ?? 0.0) as! @FlowToken.Vault
+
+        let handlerCap = signer.capabilities.storage
+            .issue<auth(FlowTransactionScheduler.Execute) &{FlowTransactionScheduler.TransactionHandler}>(/storage/CounterTransactionHandler)
+
+        let receipt <- FlowTransactionScheduler.schedule(
+            handlerCap: handlerCap,
+            data: transactionData,
+            timestamp: future,
+            priority: pr,
+            executionEffort: executionEffort,
+            fees: <-fees
+        )
+
+        log("Scheduled transaction id: ".concat(receipt.id.toString()).concat(" at ").concat(receipt.timestamp.toString()))
+
+        destroy receipt
+    }
+}
