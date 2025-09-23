@@ -276,49 +276,7 @@ func startInteractiveInit(
 	// cadence/tests/DefaultContract_test.cdc
 	// README.md
 
-	templates := []generator.TemplateItem{
-		generator.ContractTemplate{
-			Name:         "Counter",
-			TemplatePath: "contract_counter.cdc.tmpl",
-		},
-		generator.ScriptTemplate{
-			Name:         "GetCounter",
-			TemplatePath: "script_counter.cdc.tmpl",
-			Data:         map[string]interface{}{"ContractName": "Counter"},
-		},
-		generator.TransactionTemplate{
-			Name:         "IncrementCounter",
-			TemplatePath: "transaction_counter.cdc.tmpl",
-			Data:         map[string]interface{}{"ContractName": "Counter"},
-		},
-		generator.FileTemplate{
-			TemplatePath: "README.md.tmpl",
-			TargetPath:   getReadmeFileName(targetDir),
-			Data: map[string]interface{}{
-				"Dependencies": (func() []map[string]interface{} {
-					contracts := []map[string]interface{}{}
-					for _, dep := range *state.Dependencies() {
-						contracts = append(contracts, map[string]interface{}{
-							"Name": dep.Name,
-						})
-					}
-					return contracts
-				})(),
-				"Contracts": []map[string]interface{}{
-					{"Name": "Counter"},
-				},
-				"Scripts": []map[string]interface{}{
-					{"Name": "GetCounter"},
-				},
-				"Transactions": []map[string]interface{}{
-					{"Name": "IncrementCounter"},
-				},
-				"Tests": []map[string]interface{}{
-					{"Name": "Counter_test"},
-				},
-			},
-		},
-	}
+	templates := getProjectTemplates(ProjectTypeDefault, targetDir, state)
 
 	g := generator.NewGenerator(tempDir, state, logger, true, false)
 	err = g.Create(templates...)
