@@ -27,6 +27,7 @@ import (
 	"github.com/onflow/flowkit/v2/output"
 
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 type flagsSetup struct {
@@ -66,9 +67,9 @@ func setupRun(
 		return nil, fmt.Errorf("flow configuration is required. Run 'flow init' first")
 	}
 
-	signer, err := state.Accounts().ByName(setupFlags.Signer)
+	signer, err := util.GetSignerAccount(state, setupFlags.Signer)
 	if err != nil {
-		return nil, fmt.Errorf("failed to resolve signer account '%s': %w", setupFlags.Signer, err)
+		return nil, err
 	}
 
 	address := signer.Address
