@@ -64,7 +64,7 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 				TemplatePath: "transaction_schedule_increment_counter.cdc.tmpl",
 			},
 			generator.FileTemplate{
-				TemplatePath: "README.md.tmpl",
+				TemplatePath: "README_scheduled_transactions.md.tmpl",
 				TargetPath:   getReadmeFileName(targetDir),
 				Data: map[string]interface{}{
 					"Dependencies": (func() []map[string]interface{} {
