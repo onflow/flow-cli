@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package cron
+package schedule
 
 import (
 	"fmt"
@@ -30,30 +30,30 @@ import (
 	"github.com/onflow/flow-cli/internal/util"
 )
 
-type flagsSetup struct{}
+type flagsList struct{}
 
-var setupFlags = flagsSetup{}
+var listFlags = flagsList{}
 
-var setupCommand = command.Command{
+var listCommand = command.Command{
 	Cmd: &cobra.Command{
-		Use:   "setup <account>",
-		Short: "Create a Flow Transaction Scheduler Manager resource on your account",
-		Long:  "Initialize your account with a Flow Transaction Scheduler Manager resource to enable transaction scheduling capabilities.",
+		Use:   "list <account>",
+		Short: "List scheduled transactions for an account",
+		Long:  "List all scheduled transactions for a given account address or account name from flow.json.",
 		Args:  cobra.ExactArgs(1),
-		Example: `# Setup transaction scheduler using account address
-flow cron setup 0x123456789abcdef
+		Example: `# List scheduled transactions using account address
+flow schedule list 0x123456789abcdef
 
-# Setup transaction scheduler using account name from flow.json
-flow cron setup my-account
+# List scheduled transactions using account name from flow.json
+flow schedule list my-account
 
-# Setup transaction scheduler on specific network
-flow cron setup my-account --network testnet`,
+# List scheduled transactions on specific network
+flow schedule list my-account --network testnet`,
 	},
-	Flags: &setupFlags,
-	RunS:  setupRun,
+	Flags: &listFlags,
+	RunS:  listRun,
 }
 
-func setupRun(
+func listRun(
 	args []string,
 	globalFlags command.GlobalFlags,
 	logger output.Logger,
@@ -77,40 +77,48 @@ func setupRun(
 		return nil, fmt.Errorf("failed to resolve account: %w", err)
 	}
 
-	// Log network and account information
 	logger.Info(fmt.Sprintf("Network: %s", globalFlags.Network))
 	logger.Info(fmt.Sprintf("Account: %s (%s)", accountInput, address.String()))
-	logger.Info("Setting up Flow Transaction Scheduler Manager resource...")
+	logger.Info("Retrieving scheduled transactions...")
 
-	// TODO: Implement setup logic for Transaction Scheduler Manager resource
-	// This will contain the actual implementation to:
-	// 1. Check if resource already exists on the account
-	// 2. Deploy/create the Manager resource via transaction
-	// 3. Verify successful deployment
-	// 4. Return success result
+	// TODO: Implement list logic for scheduled transactions
 
-	return &setupResult{
-		success: true,
-		message: "Transaction Scheduler Manager resource created successfully",
+	return &listResult{
+		success:      true,
+		message:      "Scheduled transactions retrieved successfully",
+		transactions: []string{"0x1234567890abcdef", "0xfedcba0987654321"}, // Mock data for now
 	}, nil
 }
 
-type setupResult struct {
-	success bool
-	message string
+type listResult struct {
+	success      bool
+	message      string
+	transactions []string
 }
 
-func (r *setupResult) JSON() any {
+func (r *listResult) JSON() any {
 	return map[string]any{
-		"success": r.success,
-		"message": r.message,
+		"success":      r.success,
+		"message":      r.message,
+		"transactions": r.transactions,
 	}
 }
 
-func (r *setupResult) String() string {
-	return r.message
+func (r *listResult) String() string {
+	if len(r.transactions) == 0 {
+		return "No scheduled transactions found"
+	}
+
+	result := fmt.Sprintf("Found %d scheduled transaction(s):\n", len(r.transactions))
+	for i, txID := range r.transactions {
+		result += fmt.Sprintf("  %d. %s\n", i+1, txID)
+	}
+	return result
 }
 
-func (r *setupResult) Oneliner() string {
-	return r.message
+func (r *listResult) Oneliner() string {
+	if len(r.transactions) == 0 {
+		return "No scheduled transactions found"
+	}
+	return fmt.Sprintf("Found %d scheduled transactions", len(r.transactions))
 }

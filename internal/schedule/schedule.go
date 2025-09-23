@@ -16,21 +16,22 @@
  * limitations under the License.
  */
 
-package cron
+package schedule
 
 import (
 	"github.com/spf13/cobra"
 )
 
 var Cmd = &cobra.Command{
-	Use:              "cron",
+	Use:              "schedule",
 	Short:            "Manage Flow Transaction Scheduling",
 	TraverseChildren: true,
-	GroupID:          "cron",
+	GroupID:          "schedule",
 }
 
 func init() {
 	setupCommand.AddToParent(Cmd)
-	cleanupCommand.AddToParent(Cmd)
+	listCommand.AddToParent(Cmd)
+	getCommand.AddToParent(Cmd)
 	cancelCommand.AddToParent(Cmd)
 }

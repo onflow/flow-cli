@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package cron
+package schedule
 
 import (
 	"fmt"
@@ -27,9 +27,12 @@ import (
 	"github.com/onflow/flowkit/v2/output"
 
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
-type flagsCancel struct{}
+type flagsCancel struct {
+	Signer string `default:"emulator-account" flag:"signer" info:"account to use for canceling the scheduled transaction"`
+}
 
 var cancelFlags = flagsCancel{}
 
@@ -40,10 +43,13 @@ var cancelCommand = command.Command{
 		Long:  "Cancel a previously scheduled transaction from the Transaction Scheduler by its transaction ID.",
 		Args:  cobra.ExactArgs(1),
 		Example: `# Cancel scheduled transaction by transaction ID
-flow cron cancel 0x1234567890abcdef
+flow schedule cancel 0x1234567890abcdef --signer my-account
 
 # Cancel scheduled transaction on specific network
-flow cron cancel 0x1234567890abcdef --network testnet`,
+flow schedule cancel 0x1234567890abcdef --signer my-account --network testnet
+
+# Cancel using default signer (emulator-account)
+flow schedule cancel 0x1234567890abcdef`,
 	},
 	Flags: &cancelFlags,
 	RunS:  cancelRun,
@@ -67,7 +73,13 @@ func cancelRun(
 
 	transactionID := args[0]
 
+	signer, err := util.GetSignerAccount(state, cancelFlags.Signer)
+	if err != nil {
+		return nil, err
+	}
+
 	logger.Info(fmt.Sprintf("Network: %s", globalFlags.Network))
+	logger.Info(fmt.Sprintf("Signer: %s (%s)", cancelFlags.Signer, signer.Address.String()))
 	logger.Info(fmt.Sprintf("Transaction ID: %s", transactionID))
 	logger.Info("Canceling scheduled transaction...")
 

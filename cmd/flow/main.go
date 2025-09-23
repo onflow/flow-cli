@@ -30,7 +30,6 @@ import (
 	"github.com/onflow/flow-cli/internal/collections"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/config"
-	"github.com/onflow/flow-cli/internal/cron"
 	"github.com/onflow/flow-cli/internal/dependencymanager"
 	"github.com/onflow/flow-cli/internal/emulator"
 	"github.com/onflow/flow-cli/internal/events"
@@ -38,6 +37,7 @@ import (
 	"github.com/onflow/flow-cli/internal/keys"
 	"github.com/onflow/flow-cli/internal/project"
 	"github.com/onflow/flow-cli/internal/quick"
+	"github.com/onflow/flow-cli/internal/schedule"
 	"github.com/onflow/flow-cli/internal/scripts"
 	"github.com/onflow/flow-cli/internal/settings"
 	"github.com/onflow/flow-cli/internal/signatures"
@@ -91,7 +91,7 @@ func main() {
 	cmd.AddCommand(super.GenerateCommand)
 	cmd.AddCommand(dependencymanager.Cmd)
 	cmd.AddCommand(evm.Cmd)
-	cmd.AddCommand(cron.Cmd)
+	cmd.AddCommand(schedule.Cmd)
 
 	command.InitFlags(cmd)
 	cmd.AddGroup(&cobra.Group{
@@ -123,7 +123,7 @@ func main() {
 		Title: "🔗 Dependency Manager",
 	})
 	cmd.AddGroup(&cobra.Group{
-		ID:    "cron",
+		ID:    "schedule",
 		Title: "⏰ Transaction Scheduler",
 	})
 

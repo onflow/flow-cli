@@ -325,3 +325,12 @@ func ResolveAddressOrAccountName(input string, state *flowkit.State) (flow.Addre
 
 	return account.Address, nil
 }
+
+// GetSignerAccount resolves and returns the signer account from the state by name
+func GetSignerAccount(state *flowkit.State, signerName string) (*accounts.Account, error) {
+	signer, err := state.Accounts().ByName(signerName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve signer account '%s': %w", signerName, err)
+	}
+	return signer, nil
+}
