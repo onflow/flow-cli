@@ -41,6 +41,8 @@ import (
 	"github.com/onflow/flow-cli/internal/dependencymanager"
 	"github.com/onflow/flow-cli/internal/super/generator"
 	"github.com/onflow/flow-cli/internal/util"
+	flowkitConfig "github.com/onflow/flowkit/v2/config"
+	flowsdk "github.com/onflow/flow-go-sdk"
 )
 
 type flagsInit struct {
@@ -277,12 +279,51 @@ func startInteractiveInit(
 	}
 
 	projectType := descriptionToType[selectedProject]
-	if projectType == ProjectTypeCustom {
+	switch projectType {
+	case ProjectTypeCustom:
 		err := dependencymanager.PromptInstallCoreContracts(logger, state, tempDir, nil, dependencymanager.DependencyFlags{})
 		if err != nil {
 			return "", err
 		}
 		projectType = ProjectTypeDefault
+	case ProjectTypeScheduledTransactions:
+		// TODO: Add FlowTransactionScheduler as core contract once it's available
+		// coreContracts := []string{"FlowTransactionScheduler"}
+		coreContracts := []string{}
+		customDeps := []flowkitConfig.Dependency{
+			{
+				Name: "FlowTransactionScheduler",
+				Source: flowkitConfig.Source{
+					NetworkName:  flowkitConfig.TestnetNetwork.Name,
+					Address:      flowsdk.HexToAddress("8c5303eaa26202d6"),
+					ContractName: "FlowTransactionScheduler",
+				},
+				Aliases: flowkitConfig.Aliases{
+					{
+						Network: "emulator",
+						Address: flowsdk.HexToAddress("f8d6e0586b0a20c7"),
+					},
+				},
+			},
+			{
+				Name: "FlowTransactionSchedulerUtils",
+				Source: flowkitConfig.Source{
+					NetworkName:  flowkitConfig.TestnetNetwork.Name,
+					Address:      flowsdk.HexToAddress("8c5303eaa26202d6"),
+					ContractName: "FlowTransactionSchedulerUtils",
+				},
+				Aliases: flowkitConfig.Aliases{
+					{
+						Network: "emulator",
+						Address: flowsdk.HexToAddress("f8d6e0586b0a20c7"),
+					},
+				},
+			},
+		}
+		err := installProjectDependencies(logger, state, tempDir, coreContracts, customDeps)
+		if err != nil {
+			return "", err
+		}
 	}
 
 	// Generate standard cadence files & README.md

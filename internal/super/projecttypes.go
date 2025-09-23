@@ -1,8 +1,11 @@
 package super
 
 import (
+	"github.com/onflow/flow-cli/internal/dependencymanager"
 	"github.com/onflow/flow-cli/internal/super/generator"
 	"github.com/onflow/flowkit/v2"
+	flowkitConfig "github.com/onflow/flowkit/v2/config"
+	"github.com/onflow/flowkit/v2/output"
 )
 
 // ProjectType represents the type of Flow project to create
@@ -117,4 +120,31 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 			},
 		}
 	}
+}
+
+// installProjectDependencies installs both core contracts and custom dependencies for a project type
+func installProjectDependencies(logger output.Logger, state *flowkit.State, targetDir string, coreContracts []string, customDependencies []flowkitConfig.Dependency) error {
+	flags := dependencymanager.DependencyFlags{}
+	installer, err := dependencymanager.NewDependencyInstaller(logger, state, false, targetDir, flags)
+	if err != nil {
+		return err
+	}
+
+	// Install core contracts
+	for _, coreContract := range coreContracts {
+		err = installer.AddByCoreContractName(coreContract)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Install custom dependencies
+	if len(customDependencies) > 0 {
+		err = installer.AddMany(customDependencies)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
