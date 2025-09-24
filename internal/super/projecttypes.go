@@ -21,10 +21,10 @@ package super
 import (
 	"fmt"
 
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit/v2"
 	flowkitConfig "github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/output"
-	flowsdk "github.com/onflow/flow-go-sdk"
 
 	"github.com/onflow/flow-cli/common/branding"
 	"github.com/onflow/flow-cli/internal/dependencymanager"
@@ -53,11 +53,11 @@ type ProjectTypeConfig struct {
 func getProjectTypeConfigs() map[ProjectType]*ProjectTypeConfig {
 	return map[ProjectType]*ProjectTypeConfig{
 		ProjectTypeDefault: {
-			Description:       "Basic Cadence project (no dependencies)",
-			CoreContracts:     []string{},
+			Description:        "Basic Cadence project (no dependencies)",
+			CoreContracts:      []string{},
 			CustomDependencies: []flowkitConfig.Dependency{},
-			ContractNames:     []string{"Counter"},
-			DeploymentAccount: "emulator-account",
+			ContractNames:      []string{"Counter"},
+			DeploymentAccount:  "emulator-account",
 		},
 		ProjectTypeScheduledTransactions: {
 			Description:   "Scheduled Transactions project",
