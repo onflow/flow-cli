@@ -24,6 +24,7 @@ import (
 	"github.com/onflow/flowkit/v2"
 	flowkitConfig "github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/output"
+	flowsdk "github.com/onflow/flow-go-sdk"
 
 	"github.com/onflow/flow-cli/common/branding"
 	"github.com/onflow/flow-cli/internal/dependencymanager"
@@ -39,18 +40,79 @@ const (
 	ProjectTypeCustom                ProjectType = "custom"
 )
 
-// getProjectTypeDescription returns a user-friendly description for the project type
-func getProjectTypeDescription(projectType ProjectType) string {
-	switch projectType {
-	case ProjectTypeDefault:
-		return "Basic Cadence project (no dependencies)"
-	case ProjectTypeScheduledTransactions:
-		return "Scheduled Transactions project"
-	case ProjectTypeCustom:
-		return "Custom project (select standard Flow contract dependencies)"
-	default:
-		return string(projectType)
+// ProjectTypeConfig holds configuration for a specific project type
+type ProjectTypeConfig struct {
+	Description        string
+	CoreContracts      []string
+	CustomDependencies []flowkitConfig.Dependency
+	ContractNames      []string // For deployments
+	DeploymentAccount  string   // Default deployment account
+}
+
+// getProjectTypeConfigs returns a map of all project type configurations
+func getProjectTypeConfigs() map[ProjectType]*ProjectTypeConfig {
+	return map[ProjectType]*ProjectTypeConfig{
+		ProjectTypeDefault: {
+			Description:       "Basic Cadence project (no dependencies)",
+			CoreContracts:     []string{},
+			CustomDependencies: []flowkitConfig.Dependency{},
+			ContractNames:     []string{"Counter"},
+			DeploymentAccount: "emulator-account",
+		},
+		ProjectTypeScheduledTransactions: {
+			Description:   "Scheduled Transactions project",
+			CoreContracts: []string{}, // TODO: Add FlowTransactionScheduler as core contract once available
+			CustomDependencies: []flowkitConfig.Dependency{
+				{
+					Name: "FlowTransactionScheduler",
+					Source: flowkitConfig.Source{
+						NetworkName:  flowkitConfig.TestnetNetwork.Name,
+						Address:      flowsdk.HexToAddress("8c5303eaa26202d6"),
+						ContractName: "FlowTransactionScheduler",
+					},
+					Aliases: flowkitConfig.Aliases{
+						{
+							Network: "emulator",
+							Address: flowsdk.HexToAddress("f8d6e0586b0a20c7"),
+						},
+					},
+				},
+				{
+					Name: "FlowTransactionSchedulerUtils",
+					Source: flowkitConfig.Source{
+						NetworkName:  flowkitConfig.TestnetNetwork.Name,
+						Address:      flowsdk.HexToAddress("8c5303eaa26202d6"),
+						ContractName: "FlowTransactionSchedulerUtils",
+					},
+					Aliases: flowkitConfig.Aliases{
+						{
+							Network: "emulator",
+							Address: flowsdk.HexToAddress("f8d6e0586b0a20c7"),
+						},
+					},
+				},
+			},
+			ContractNames:     []string{"Counter", "CounterTransactionHandler"},
+			DeploymentAccount: "emulator-account",
+		},
+		ProjectTypeCustom: {
+			Description:        "Custom project (select standard Flow contract dependencies)",
+			CoreContracts:      []string{},
+			CustomDependencies: []flowkitConfig.Dependency{},
+			ContractNames:      []string{"Counter"},
+			DeploymentAccount:  "emulator-account",
+		},
 	}
+}
+
+// getProjectTypeConfig returns the configuration for a given project type
+func getProjectTypeConfig(projectType ProjectType) *ProjectTypeConfig {
+	configs := getProjectTypeConfigs()
+	if config, exists := configs[projectType]; exists {
+		return config
+	}
+	// Return default configuration if not found
+	return configs[ProjectTypeDefault]
 }
 
 // getProjectTemplates returns a slice of templates based on the project type.
@@ -155,7 +217,8 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 }
 
 // installProjectDependencies installs both core contracts and custom dependencies for a project type
-func installProjectDependencies(logger output.Logger, state *flowkit.State, targetDir string, coreContracts []string, customDependencies []flowkitConfig.Dependency) error {
+func installProjectDependencies(logger output.Logger, state *flowkit.State, targetDir string, projectType ProjectType) error {
+	config := getProjectTypeConfig(projectType)
 	logger.Info("Installing project dependencies...")
 
 	flags := dependencymanager.DependencyFlags{}
@@ -168,7 +231,7 @@ func installProjectDependencies(logger output.Logger, state *flowkit.State, targ
 	installer.SkipDeployments = true
 
 	// Install core contracts
-	for _, coreContract := range coreContracts {
+	for _, coreContract := range config.CoreContracts {
 		contractName := branding.PurpleStyle.Render(coreContract)
 		logger.Info(fmt.Sprintf("Installing core contract: %s", contractName))
 		err = installer.AddByCoreContractName(coreContract)
@@ -178,12 +241,12 @@ func installProjectDependencies(logger output.Logger, state *flowkit.State, targ
 	}
 
 	// Install custom dependencies
-	if len(customDependencies) > 0 {
-		for _, dep := range customDependencies {
+	if len(config.CustomDependencies) > 0 {
+		for _, dep := range config.CustomDependencies {
 			contractName := branding.PurpleStyle.Render(dep.Name)
 			logger.Info(fmt.Sprintf("Installing dependency: %s", contractName))
 		}
-		err = installer.AddMany(customDependencies)
+		err = installer.AddMany(config.CustomDependencies)
 		if err != nil {
 			return err
 		}
@@ -194,21 +257,22 @@ func installProjectDependencies(logger output.Logger, state *flowkit.State, targ
 }
 
 // addContractDeployments adds specific contracts to the deployment configuration
-func addContractDeployments(state *flowkit.State, contractNames []string, deploymentAccount string) error {
+func addContractDeployments(state *flowkit.State, projectType ProjectType) error {
+	config := getProjectTypeConfig(projectType)
 	// Find existing deployment for emulator network and account, or create new one
-	deployment := state.Deployments().ByAccountAndNetwork(deploymentAccount, "emulator")
+	deployment := state.Deployments().ByAccountAndNetwork(config.DeploymentAccount, "emulator")
 	if deployment == nil {
 		// Create new deployment
 		deployment = &flowkitConfig.Deployment{
 			Network: "emulator",
-			Account: deploymentAccount,
+			Account: config.DeploymentAccount,
 		}
 		state.Deployments().AddOrUpdate(*deployment)
-		deployment = state.Deployments().ByAccountAndNetwork(deploymentAccount, "emulator")
+		deployment = state.Deployments().ByAccountAndNetwork(config.DeploymentAccount, "emulator")
 	}
 
 	// Add contracts to deployment if not already present
-	for _, contractName := range contractNames {
+	for _, contractName := range config.ContractNames {
 		found := false
 		for _, existingContract := range deployment.Contracts {
 			if existingContract.Name == contractName {

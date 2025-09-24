@@ -36,9 +36,6 @@ import (
 
 	"github.com/onflow/flowkit/v2/output"
 
-	flowsdk "github.com/onflow/flow-go-sdk"
-	flowkitConfig "github.com/onflow/flowkit/v2/config"
-
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/config"
 	"github.com/onflow/flow-cli/internal/dependencymanager"
@@ -268,7 +265,7 @@ func startInteractiveInit(
 	projectOptions := make([]string, len(projectTypes))
 	descriptionToType := make(map[string]ProjectType)
 	for i, pt := range projectTypes {
-		description := getProjectTypeDescription(pt)
+		description := getProjectTypeConfig(pt).Description
 		projectOptions[i] = description
 		descriptionToType[description] = pt
 	}
@@ -288,40 +285,7 @@ func startInteractiveInit(
 		}
 		projectType = ProjectTypeDefault
 	case ProjectTypeScheduledTransactions:
-		// TODO: Add FlowTransactionScheduler as core contract once it's available
-		// coreContracts := []string{"FlowTransactionScheduler"}
-		coreContracts := []string{}
-		customDeps := []flowkitConfig.Dependency{
-			{
-				Name: "FlowTransactionScheduler",
-				Source: flowkitConfig.Source{
-					NetworkName:  flowkitConfig.TestnetNetwork.Name,
-					Address:      flowsdk.HexToAddress("8c5303eaa26202d6"),
-					ContractName: "FlowTransactionScheduler",
-				},
-				Aliases: flowkitConfig.Aliases{
-					{
-						Network: "emulator",
-						Address: flowsdk.HexToAddress("f8d6e0586b0a20c7"),
-					},
-				},
-			},
-			{
-				Name: "FlowTransactionSchedulerUtils",
-				Source: flowkitConfig.Source{
-					NetworkName:  flowkitConfig.TestnetNetwork.Name,
-					Address:      flowsdk.HexToAddress("8c5303eaa26202d6"),
-					ContractName: "FlowTransactionSchedulerUtils",
-				},
-				Aliases: flowkitConfig.Aliases{
-					{
-						Network: "emulator",
-						Address: flowsdk.HexToAddress("f8d6e0586b0a20c7"),
-					},
-				},
-			},
-		}
-		err := installProjectDependencies(logger, state, tempDir, coreContracts, customDeps)
+		err := installProjectDependencies(logger, state, tempDir, projectType)
 		if err != nil {
 			return "", err
 		}
@@ -335,9 +299,9 @@ func startInteractiveInit(
 		return "", err
 	}
 
-	// Add project-specific contract deployments for scheduled transactions
+	// Add project-specific contract deployments
 	if projectType == ProjectTypeScheduledTransactions {
-		err = addContractDeployments(state, []string{"Counter", "CounterTransactionHandler"}, "emulator-account")
+		err = addContractDeployments(state, projectType)
 		if err != nil {
 			return "", err
 		}
