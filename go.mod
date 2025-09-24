@@ -19,9 +19,9 @@ require (
 	github.com/onflow/fcl-dev-wallet v0.8.0
 	github.com/onflow/flixkit-go/v2 v2.5.1
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.9.0
-	github.com/onflow/flow-emulator v1.7.2
+	github.com/onflow/flow-emulator v1.7.3
 	github.com/onflow/flow-evm-gateway v1.3.2
-	github.com/onflow/flow-go v0.43.0
+	github.com/onflow/flow-go v0.43.1-rc.1.0.20250924183344-715803471569
 	github.com/onflow/flow-go-sdk v1.8.3
 	github.com/onflow/flowkit/v2 v2.6.0
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
@@ -199,7 +199,7 @@ require (
 	github.com/onflow/atree v0.10.1 // indirect
 	github.com/onflow/crypto v0.25.3 // indirect
 	github.com/onflow/fixed-point v0.1.1 // indirect
-	github.com/onflow/flow-core-contracts/lib/go/contracts v1.8.1 // indirect
+	github.com/onflow/flow-core-contracts/lib/go/contracts v1.9.0 // indirect
 	github.com/onflow/flow-evm-bridge v0.1.0 // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v1.0.1 // indirect
 	github.com/onflow/flow-ft/lib/go/templates v1.0.1 // indirect
