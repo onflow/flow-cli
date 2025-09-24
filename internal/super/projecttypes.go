@@ -120,7 +120,6 @@ func getProjectTypeConfig(projectType ProjectType) *ProjectTypeConfig {
 func getProjectTemplates(projectType ProjectType, targetDir string, state *flowkit.State) []generator.TemplateItem {
 	switch projectType {
 	case ProjectTypeScheduledTransactions:
-		// Same as default for now - will be customized later
 		return []generator.TemplateItem{
 			generator.ContractTemplate{
 				Name:         "Counter",
