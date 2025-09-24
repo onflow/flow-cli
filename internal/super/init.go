@@ -336,7 +336,7 @@ func startInteractiveInit(
 
 	// Add project-specific contract deployments for scheduled transactions
 	if projectType == ProjectTypeScheduledTransactions {
-		err = addContractDeployments(state, []string{"CounterTransactionHandler"}, "emulator-account")
+		err = addContractDeployments(state, []string{"Counter", "CounterTransactionHandler"}, "emulator-account")
 		if err != nil {
 			return "", err
 		}
