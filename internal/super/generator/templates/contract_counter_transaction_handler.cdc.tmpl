@@ -10,21 +10,6 @@ access(all) contract CounterTransactionHandler {
             let newCount = Counter.getCount()
             log("Transaction executed (id: ".concat(id.toString()).concat(") newCount: ").concat(newCount.toString()))
         }
-
-        access(all) view fun getViews(): [Type] {
-            return [Type<StoragePath>(), Type<PublicPath>()]
-        }
-
-        access(all) fun resolveView(_ view: Type): AnyStruct? {
-            switch view {
-                case Type<StoragePath>():
-                    return /storage/CounterTransactionHandler
-                case Type<PublicPath>():
-                    return /public/CounterTransactionHandler
-                default:
-                    return nil
-            }
-        }
     }
 
     /// Factory for the handler resource
