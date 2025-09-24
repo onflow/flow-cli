@@ -1,64 +1,99 @@
-# Flow Scheduled Transactions Scaffold
+# Scheduled Transactions Demo: Increment the Counter
 
-This project is a starting point for you to test out Scheduled Transactions on the Flow Blockchain. It comes with example contracts, scripts, transactions, and tests to help you get started.
+This example shows how to schedule a transaction that increments the `Counter` in the near future and verify it on the Flow Emulator using the scheduler manager.
 
-## What are Scheduled Transactions?
+## Files used
 
-Scheduled Transactions let smart contracts execute code at (or after) a chosen time without an external transaction. You schedule work now; the network executes it later. This enables recurring jobs, deferred actions, and autonomous workflows.
+- `cadence/contracts/Counter.cdc`
+- `cadence/contracts/CounterTransactionHandler.cdc`
+- `cadence/transactions/InitSchedulerManager.cdc`
+- `cadence/transactions/InitCounterTransactionHandler.cdc`
+- `cadence/transactions/ScheduleIncrementIn.cdc`
+- `cadence/scripts/GetCounter.cdc`
 
-Core pieces:
-
-- Capability to a handler implementing `FlowTransactionScheduler.TransactionHandler`
-- Parameters: `timestamp`, `priority`, `executionEffort`, `fees`, optional `transactionData`
-- Estimate first (`FlowTransactionScheduler.estimate`), then schedule (`FlowTransactionScheduler.schedule`)
-
-## 🔨 Getting Started
-
-Here are some essential resources to help you hit the ground running:
-
-- **[Flow Documentation](https://developers.flow.com/)** - The official Flow Documentation is a great starting point to start learning about about [building](https://developers.flow.com/build/flow) on Flow.
-- **[Cadence Documentation](https://cadence-lang.org/docs/language)** - Cadence is the native language for the Flow Blockchain. It is a resource-oriented programming language that is designed for developing smart contracts. The documentation is a great place to start learning about the language.
-- **[Visual Studio Code](https://code.visualstudio.com/)** and the **[Cadence Extension](https://marketplace.visualstudio.com/items?itemName=onflow.cadence)** - It is recommended to use the Visual Studio Code IDE with the Cadence extension installed. This will provide syntax highlighting, code completion, and other features to support Cadence development.
-- **[Flow Clients](https://developers.flow.com/tools/clients)** - There are clients available in multiple languages to interact with the Flow Blockchain. You can use these clients to interact with your smart contracts, run transactions, and query data from the network.
-- **[Block Explorers](https://developers.flow.com/ecosystem/block-explorers)** - Block explorers are tools that allow you to explore on-chain data. You can use them to view transactions, accounts, events, and other information. [Flowser](https://flowser.dev/) is a powerful block explorer for local development on the Flow Emulator.
-
-## ▶️ Quick Start (Scheduled Transactions Example)
-
-Follow this to run the demo that schedules a transaction to increment the `Counter`.
-
-1. Ensure flow-cli 2.7.1
+## 1) Start the emulator with Scheduled Transactions
 
 ```bash
-flow version
-# If older than 2.7.1, update first: https://developers.flow.com/tools/flow-cli/install
+flow emulator --block-time 1s
 ```
 
-2. Install deps and start emulator
+Keep this running. Open a new terminal for the next steps.
 
-```bash
-flow dependencies install
-flow emulator --scheduled-transactions --block-time 1s
-```
-
-3. In a new terminal, deploy, init, schedule, verify
+## 2) Deploy contracts
 
 ```bash
 flow project deploy --network emulator
+```
 
+This deploys `Counter` and `CounterTransactionHandler` (see `flow.json`).
+
+## 3) Initialize the scheduler manager (if not already done)
+
+The scheduler manager is now integrated into the scheduling transactions, so this step is optional. The manager will be created automatically when you schedule your first transaction.
+
+If you want to initialize it separately:
+
+```bash
+flow transactions send cadence/transactions/InitSchedulerManager.cdc \
+  --network emulator \
+  --signer emulator-account
+```
+
+## 4) Initialize the handler capability
+
+Saves a handler resource at `/storage/CounterTransactionHandler` and issues the correct capability for the scheduler.
+
+```bash
+flow transactions send cadence/transactions/InitCounterTransactionHandler.cdc \
+  --network emulator \
+  --signer emulator-account
+```
+
+## 5) Check the initial counter
+
+```bash
 flow scripts execute cadence/scripts/GetCounter.cdc --network emulator
+```
 
-flow transactions send cadence/transactions/ScheduleIncrementCounter.cdc \
-  --network emulator --signer emulator-account \
+Expected: `Result: 0`
+
+## 6) Schedule an increment in ~2 seconds
+
+Uses `ScheduleIncrementIn.cdc` to compute a future timestamp relative to the current block. This transaction will automatically create the scheduler manager if it doesn't exist.
+
+```bash
+flow transactions send cadence/transactions/ScheduleIncrementIn.cdc \
+  --network emulator \
+  --signer emulator-account \
   --args-json '[
     {"type":"UFix64","value":"2.0"},
     {"type":"UInt8","value":"1"},
     {"type":"UInt64","value":"1000"},
     {"type":"Optional","value":null}
   ]'
+```
 
-# after ~3s
+Notes:
+
+- Priority `1` = Medium. You can use `0` = High or `2` = Low.
+- `executionEffort` must be >= 10 (1000 is a safe example value).
+- With `--block-time 1s`, blocks seal automatically; after ~3 seconds your scheduled transaction should execute.
+- The transaction uses the scheduler manager to track and manage the scheduled transaction.
+
+## 7) Verify the counter incremented
+
+```bash
 flow scripts execute cadence/scripts/GetCounter.cdc --network emulator
 ```
+
+Expected: `Result: 1`
+
+## Troubleshooting
+
+- Invalid timestamp error: use `ScheduleIncrementIn.cdc` with a small delay (e.g., 2.0) so the timestamp is in the future.
+- Missing FlowToken vault: on emulator the default account has a vault; if you use a custom account, initialize it accordingly.
+- Manager not found: The scheduler manager is automatically created in the scheduling transactions. If you see this error, ensure you're using the latest transaction files.
+- More docs: see `/.cursor/rules/scheduledtransactions/index.md`, `agent-rules.mdc`, and `flip.md` in this repo.
 
 ## 📦 Project Structure
 
@@ -82,173 +117,28 @@ Inside the `cadence` folder you will find:
 {{range .Contracts}}  - `{{.Name}}_test.cdc`
 {{end}}
 
-## 👨‍💻 Start Developing
+## 🔧 Additional CLI Commands
 
-If you want to make a new account you can run `flow accounts create`.
+If you need to perform additional setup or management tasks:
 
-### Creating a New Contract
-
-To add a new contract to your project, run the following command:
-
-```shell
-flow generate contract
+**Install dependencies** (if you add new imports that require external contracts):
+```bash
+flow dependencies install
 ```
 
-This command will create a new contract file and add it to the `flow.json` configuration file.
-
-### Creating a New Script
-
-To add a new script to your project, run the following command:
-
-```shell
-flow generate script
-```
-
-This command will create a new script file. Scripts are used to read data from the blockchain and do not modify state (i.e. get the current balance of an account, get a user's NFTs, etc).
-
-You can import any of your own contracts or installed dependencies in your script file using the `import` keyword. For example:
-
-```cadence
-import "Counter"
-```
-
-### Creating a New Transaction
-
-To add a new transaction to your project you can use the following command:
-
-```shell
-flow generate transaction
-```
-
-This command will create a new transaction file. Transactions are used to modify the state of the blockchain (i.e purchase an NFT, transfer tokens, etc).
-
-You can import any dependencies as you would in a script file.
-
-## ⏰ Scheduled Transactions – Quick Reference
-
-- Imports (string imports): `import "FlowTransactionScheduler"`, `import "FlowToken"`, `import "FungibleToken"`
-- Required params when scheduling:
-  - `timestamp: UFix64` (must be in the future; on emulator prefer `getCurrentBlock().timestamp + smallDelta`)
-  - `priority: UInt8` (0 = High, 1 = Medium, 2 = Low)
-  - `executionEffort: UInt64` (minimum 10)
-  - `handlerStoragePath: StoragePath`
-  - `transactionData: AnyStruct?`
-- Flow: Estimate → withdraw fees → issue handler capability → schedule → destroy or save the `ScheduledTransaction` receipt resource.
-
-Minimal scheduling skeleton:
-
-```cadence
-import "FlowToken"
-import "FungibleToken"
-import "FlowTransactionScheduler"
-
-transaction(
-    timestamp: UFix64,
-    priority: UInt8,
-    executionEffort: UInt64,
-    handlerStoragePath: StoragePath,
-    transactionData: AnyStruct?
-) {
-    prepare(signer: auth(Storage, Capabilities) &Account) {
-        let p = priority == 0
-            ? FlowTransactionScheduler.Priority.High
-            : priority == 1
-                ? FlowTransactionScheduler.Priority.Medium
-                : FlowTransactionScheduler.Priority.Low
-
-        let est = FlowTransactionScheduler.estimate(
-            data: transactionData,
-            timestamp: timestamp,
-            priority: p,
-            executionEffort: executionEffort
-        )
-
-        assert(
-            est.timestamp != nil || p == FlowTransactionScheduler.Priority.Low,
-            message: est.error ?? "estimation failed"
-        )
-
-        let vaultRef = signer.storage
-            .borrow<auth(FungibleToken.Withdraw) &FlowToken.Vault>(from: /storage/flowTokenVault)
-            ?? panic("missing FlowToken vault")
-        let fees <- vaultRef.withdraw(amount: est.flowFee ?? 0.0) as! @FlowToken.Vault
-
-        let handlerCap = signer.capabilities.storage
-            .issue<auth(FlowTransactionScheduler.Execute) &{FlowTransactionScheduler.TransactionHandler}>(handlerStoragePath)
-
-        let receipt <- FlowTransactionScheduler.schedule(
-            handlerCap: handlerCap,
-            data: transactionData,
-            timestamp: timestamp,
-            priority: p,
-            executionEffort: executionEffort,
-            fees: <-fees
-        )
-        // Optionally store or log receipt.id
-        destroy receipt
-    }
-}
-```
-
-### 📦 Installing External Dependencies
-
-If you want to use external contract dependencies (such as NonFungibleToken, FlowToken, FungibleToken, etc.) you can install them using [Flow CLI Dependency Manager](https://developers.flow.com/tools/flow-cli/dependency-manager).
-
-For example, to install the NonFungibleToken contract you can use the following command:
-
-```shell
-flow deps add mainnet://1d7e57aa55817448.NonFungibleToken
-```
-
-Contracts can be found using [ContractBrowser](https://contractbrowser.com/), but be sure to verify the authenticity before using third-party contracts in your project.
-
-## 🧪 Testing
-
-To verify that your project is working as expected you can run the tests using the following command:
-
-```shell
-flow test
-```
-
-This command will run all tests with the `_test.cdc` suffix (these can be found in the `cadence/tests` folder). You can add more tests here using the `flow generate test` command (or by creating them manually).
-
-To learn more about testing in Cadence, check out the [Cadence Test Framework Documentation](https://cadence-lang.org/docs/testing-framework).
-
-## 🚀 Deploying Your Project
-
-To deploy your project to the Flow network, you must first have a Flow account and have configured your deployment targets in the `flow.json` configuration file.
-
-You can create a new Flow account using the following command:
-
-```shell
+**Create new accounts**:
+```bash
 flow accounts create
 ```
 
-Learn more about setting up deployment targets in the [Flow CLI documentation](https://developers.flow.com/tools/flow-cli/deployment/project-contracts).
+**See all available CLI commands**: Check out the [Flow CLI Commands Overview](https://developers.flow.com/build/tools/flow-cli/commands)
 
-### Deploying to the Flow Emulator
+## 🔨 Additional Resources
 
-To deploy your project to the Flow Emulator, start the emulator with Scheduled Transactions enabled:
+Here are some essential resources to help you learn more:
 
-```shell
-flow emulator --scheduled-transactions --block-time 1s
-```
-
-To deploy your project, run the following command:
-
-```shell
-flow project deploy --network=emulator
-```
-
-This command will start the Flow Emulator and deploy your project to it. You can now interact with your project using the Flow CLI or alternate [client](https://developers.flow.com/tools/clients).
-
-## 📚 Other Resources
-
-- [Cadence Design Patterns](https://cadence-lang.org/docs/design-patterns)
-- [Cadence Anti-Patterns](https://cadence-lang.org/docs/anti-patterns)
-
-## 🤝 Community
-
-- [Flow Community Forum](https://forum.flow.com/)
-- [Flow Discord](https://discord.gg/flow)
-- [Flow Twitter](https://x.com/flow_blockchain)
+- **[Flow Documentation](https://developers.flow.com/)** - The official Flow Documentation is a great starting point for learning about [building](https://developers.flow.com/build/flow) on Flow.
+- **[Cadence Documentation](https://cadence-lang.org/docs/language)** - Cadence is the native language for the Flow Blockchain. It is a resource-oriented programming language designed for developing smart contracts.
+- **[Visual Studio Code](https://code.visualstudio.com/)** and the **[Cadence Extension](https://marketplace.visualstudio.com/items?itemName=onflow.cadence)** - Recommended IDE with syntax highlighting, code completion, and other features for Cadence development.
+- **[Flow Clients](https://developers.flow.com/tools/clients)** - Clients available in multiple languages to interact with the Flow Blockchain.
+- **[Block Explorers](https://developers.flow.com/ecosystem/block-explorers)** - Tools to explore on-chain data. [Flowser](https://flowser.dev/) is a powerful block explorer for local development.
