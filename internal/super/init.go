@@ -36,13 +36,14 @@ import (
 
 	"github.com/onflow/flowkit/v2/output"
 
+	flowsdk "github.com/onflow/flow-go-sdk"
+	flowkitConfig "github.com/onflow/flowkit/v2/config"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/config"
 	"github.com/onflow/flow-cli/internal/dependencymanager"
 	"github.com/onflow/flow-cli/internal/super/generator"
 	"github.com/onflow/flow-cli/internal/util"
-	flowsdk "github.com/onflow/flow-go-sdk"
-	flowkitConfig "github.com/onflow/flowkit/v2/config"
 )
 
 type flagsInit struct {

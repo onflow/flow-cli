@@ -3,12 +3,13 @@ package super
 import (
 	"fmt"
 
-	"github.com/onflow/flow-cli/common/branding"
-	"github.com/onflow/flow-cli/internal/dependencymanager"
-	"github.com/onflow/flow-cli/internal/super/generator"
 	"github.com/onflow/flowkit/v2"
 	flowkitConfig "github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/output"
+
+	"github.com/onflow/flow-cli/common/branding"
+	"github.com/onflow/flow-cli/internal/dependencymanager"
+	"github.com/onflow/flow-cli/internal/super/generator"
 )
 
 // ProjectType represents the type of Flow project to create
