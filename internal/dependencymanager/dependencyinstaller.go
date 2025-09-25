@@ -57,10 +57,10 @@ type categorizedLogs struct {
 
 // pendingPrompt represents a dependency that needs interactive prompts after tree display
 type pendingPrompt struct {
-	contractName string
-	networkName  string
+	contractName    string
+	networkName     string
 	needsDeployment bool
-	needsAlias   bool
+	needsAlias      bool
 }
 
 func (cl *categorizedLogs) LogAll(logger output.Logger) {
@@ -606,7 +606,7 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 	}
 
 	// Handle additional tasks for new dependencies or when contract file doesn't exist
-	// This ensures prompts are collected for new dependencies regardless of whether contract file exists
+	// This makes sure prompts are collected for new dependencies regardless of whether contract file exists
 	if isNewDep || !di.contractFileExists(contractAddr, contractName) {
 		err := di.handleAdditionalDependencyTasks(networkName, contractName)
 		if err != nil {
