@@ -224,9 +224,10 @@ func (di *DependencyInstaller) AddByCoreContractName(coreContractName string) er
 
 	// Log installation with detailed information and branding colors
 	contractNameStyled := branding.PurpleStyle.Render(coreContractName)
-	addressStyled := branding.GreenStyle.Render(depAddress)
+	shortAddress := depAddress[:4] + "..." + depAddress[len(depAddress)-4:]
+	addressStyled := branding.GreenStyle.Render(shortAddress)
 	networkStyled := branding.GrayStyle.Render(depNetwork)
-	di.Logger.Info(fmt.Sprintf("Installing core contract: %s from %s on %s", contractNameStyled, addressStyled, networkStyled))
+	di.Logger.Info(fmt.Sprintf("%s from %s on %s", contractNameStyled, addressStyled, networkStyled))
 
 	dep := config.Dependency{
 		Name: depContractName,
@@ -411,14 +412,14 @@ func (di *DependencyInstaller) fetchDependenciesWithDepth(networkName string, ad
 
 	// Log installation with visual hierarchy and branding colors
 	indent := ""
-	prefix := "Installing"
+	prefix := ""
 
 	if depth > 0 {
 		// Create indentation with proper tree characters
 		for i := 0; i < depth; i++ {
 			indent += "  "
 		}
-		prefix = "├─ Installing"
+		prefix = "├─ "
 
 		// Add depth limit warning for very deep chains
 		if depth >= 5 {
@@ -427,9 +428,11 @@ func (di *DependencyInstaller) fetchDependenciesWithDepth(networkName string, ad
 	}
 
 	contractNameStyled := branding.PurpleStyle.Render(contractName)
-	addressStyled := branding.GreenStyle.Render(address.String())
+	fullAddress := address.String()
+	shortAddress := fullAddress[:4] + "..." + fullAddress[len(fullAddress)-4:]
+	addressStyled := branding.GreenStyle.Render(shortAddress)
 	networkStyled := branding.GrayStyle.Render(networkName)
-	di.Logger.Info(fmt.Sprintf("%s%s %s from %s on %s", indent, prefix, contractNameStyled, addressStyled, networkStyled))
+	di.Logger.Info(fmt.Sprintf("%s%s%s from %s on %s", indent, prefix, contractNameStyled, addressStyled, networkStyled))
 	di.installCount++
 
 	err := di.addDependency(config.Dependency{
