@@ -19,14 +19,11 @@
 package super
 
 import (
-	"fmt"
-
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit/v2"
 	flowkitConfig "github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/output"
 
-	"github.com/onflow/flow-cli/common/branding"
 	"github.com/onflow/flow-cli/internal/dependencymanager"
 	"github.com/onflow/flow-cli/internal/super/generator"
 )
@@ -251,8 +248,6 @@ func installProjectDependencies(logger output.Logger, state *flowkit.State, targ
 
 	// Install core contracts
 	for _, coreContract := range config.CoreContracts {
-		contractName := branding.PurpleStyle.Render(coreContract)
-		logger.Info(fmt.Sprintf("Installing core contract: %s", contractName))
 		err = installer.AddByCoreContractName(coreContract)
 		if err != nil {
 			return err
@@ -261,10 +256,6 @@ func installProjectDependencies(logger output.Logger, state *flowkit.State, targ
 
 	// Install custom dependencies
 	if len(config.CustomDependencies) > 0 {
-		for _, dep := range config.CustomDependencies {
-			contractName := branding.PurpleStyle.Render(dep.Name)
-			logger.Info(fmt.Sprintf("Installing dependency: %s", contractName))
-		}
 		err = installer.AddMany(config.CustomDependencies)
 		if err != nil {
 			return err

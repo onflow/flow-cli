@@ -28,6 +28,7 @@ import (
 
 	"github.com/psiemens/sconfig"
 
+	"github.com/onflow/flow-cli/common/branding"
 	"github.com/onflow/flow-cli/internal/prompt"
 	"github.com/onflow/flow-cli/internal/util"
 
@@ -220,6 +221,12 @@ func (di *DependencyInstaller) AddByCoreContractName(coreContractName string) er
 		return fmt.Errorf("contract %s not found in core contracts", coreContractName)
 	}
 
+	// Log installation with detailed information and branding colors
+	contractNameStyled := branding.PurpleStyle.Render(coreContractName)
+	addressStyled := branding.GreenStyle.Render(depAddress)
+	networkStyled := branding.GrayStyle.Render(depNetwork)
+	di.Logger.Info(fmt.Sprintf("Installing core contract: %s from %s on %s", contractNameStyled, addressStyled, networkStyled))
+
 	dep := config.Dependency{
 		Name: depContractName,
 		Source: config.Source{
@@ -389,6 +396,12 @@ func (di *DependencyInstaller) fetchDependencies(networkName string, address flo
 	if _, exists := di.dependencies[sourceString]; exists {
 		return nil // Skip already processed dependencies
 	}
+
+	// Log installation with detailed information and branding colors
+	contractNameStyled := branding.PurpleStyle.Render(contractName)
+	addressStyled := branding.GreenStyle.Render(address.String())
+	networkStyled := branding.GrayStyle.Render(networkName)
+	di.Logger.Info(fmt.Sprintf("Installing dependency: %s from %s on %s", contractNameStyled, addressStyled, networkStyled))
 
 	err := di.addDependency(config.Dependency{
 		Name: contractName,
