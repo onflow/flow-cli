@@ -19,7 +19,7 @@ require (
 	github.com/onflow/fcl-dev-wallet v0.8.0
 	github.com/onflow/flixkit-go/v2 v2.5.1
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.9.0
-	github.com/onflow/flow-emulator v1.7.3
+	github.com/onflow/flow-emulator v1.7.4-0.20250925040928-3258e2ea069d
 	github.com/onflow/flow-evm-gateway v1.3.2
 	github.com/onflow/flow-go v0.43.1-rc.1.0.20250924183344-715803471569
 	github.com/onflow/flow-go-sdk v1.8.3
