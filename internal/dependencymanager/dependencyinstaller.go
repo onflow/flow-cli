@@ -224,7 +224,7 @@ func (di *DependencyInstaller) AddByCoreContractName(coreContractName string) er
 
 	// Log installation with detailed information and branding colors
 	contractNameStyled := branding.PurpleStyle.Render(coreContractName)
-	shortAddress := depAddress[:4] + "..." + depAddress[len(depAddress)-4:]
+	shortAddress := "0x..." + depAddress[len(depAddress)-4:]
 	addressStyled := branding.GreenStyle.Render(shortAddress)
 	networkStyled := branding.GrayStyle.Render(depNetwork)
 	di.Logger.Info(fmt.Sprintf("%s @ %s (%s)", contractNameStyled, addressStyled, networkStyled))
@@ -429,7 +429,7 @@ func (di *DependencyInstaller) fetchDependenciesWithDepth(networkName string, ad
 
 	contractNameStyled := branding.PurpleStyle.Render(contractName)
 	fullAddress := address.String()
-	shortAddress := fullAddress[:4] + "..." + fullAddress[len(fullAddress)-4:]
+	shortAddress := "0x..." + fullAddress[len(fullAddress)-4:]
 	addressStyled := branding.GreenStyle.Render(shortAddress)
 	networkStyled := branding.GrayStyle.Render(networkName)
 	di.Logger.Info(fmt.Sprintf("%s%s%s @ %s (%s)", indent, prefix, contractNameStyled, addressStyled, networkStyled))
