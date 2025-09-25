@@ -19,6 +19,8 @@
 package super
 
 import (
+	"fmt"
+
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit/v2"
 	flowkitConfig "github.com/onflow/flowkit/v2/config"
@@ -262,7 +264,13 @@ func installProjectDependencies(logger output.Logger, state *flowkit.State, targ
 		}
 	}
 
-	logger.Info("Dependencies installed successfully!")
+	// Show installation summary
+	count := installer.GetInstallCount()
+	if count > 0 {
+		logger.Info(fmt.Sprintf("\n✅ Successfully installed %d dependencies!", count))
+	} else {
+		logger.Info("No dependencies to install.")
+	}
 	return nil
 }
 

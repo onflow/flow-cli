@@ -117,6 +117,7 @@ type DependencyInstaller struct {
 	logs              categorizedLogs
 	dependencies      map[string]config.Dependency
 	accountAliases    map[string]map[string]flowsdk.Address // network -> account -> alias
+	installCount      int                                    // Track number of dependencies installed
 }
 
 // NewDependencyInstaller creates a new instance of DependencyInstaller
@@ -391,17 +392,29 @@ func (di *DependencyInstaller) getContracts(network string, address flowsdk.Addr
 }
 
 func (di *DependencyInstaller) fetchDependencies(networkName string, address flowsdk.Address, contractName string) error {
+	return di.fetchDependenciesWithDepth(networkName, address, contractName, 0)
+}
+
+func (di *DependencyInstaller) fetchDependenciesWithDepth(networkName string, address flowsdk.Address, contractName string, depth int) error {
 	sourceString := fmt.Sprintf("%s://%s.%s", networkName, address.String(), contractName)
 
 	if _, exists := di.dependencies[sourceString]; exists {
 		return nil // Skip already processed dependencies
 	}
 
-	// Log installation with detailed information and branding colors
+	// Log installation with visual hierarchy and branding colors
+	indent := ""
+	prefix := "Installing dependency:"
+	if depth > 0 {
+		indent = "  " // Two spaces for each level of depth
+		prefix = "├─ Installing subdependency:"
+	}
+
 	contractNameStyled := branding.PurpleStyle.Render(contractName)
 	addressStyled := branding.GreenStyle.Render(address.String())
 	networkStyled := branding.GrayStyle.Render(networkName)
-	di.Logger.Info(fmt.Sprintf("Installing dependency: %s from %s on %s", contractNameStyled, addressStyled, networkStyled))
+	di.Logger.Info(fmt.Sprintf("%s%s %s from %s on %s", indent, prefix, contractNameStyled, addressStyled, networkStyled))
+	di.installCount++
 
 	err := di.addDependency(config.Dependency{
 		Name: contractName,
@@ -438,7 +451,7 @@ func (di *DependencyInstaller) fetchDependencies(networkName string, address flo
 		imports := program.AddressImportDeclarations()
 		for _, imp := range imports {
 			contractName := imp.Imports[0].Identifier.Identifier
-			err := di.fetchDependencies(networkName, flowsdk.HexToAddress(imp.Location.String()), contractName)
+			err := di.fetchDependenciesWithDepth(networkName, flowsdk.HexToAddress(imp.Location.String()), contractName, depth+1)
 			if err != nil {
 				return err
 			}
@@ -720,4 +733,9 @@ func (di *DependencyInstaller) setAccountAlias(accountAddress, networkName strin
 		di.accountAliases[networkName] = make(map[string]flowsdk.Address)
 	}
 	di.accountAliases[networkName][accountAddress] = alias
+}
+
+// GetInstallCount returns the number of dependencies installed
+func (di *DependencyInstaller) GetInstallCount() int {
+	return di.installCount
 }
