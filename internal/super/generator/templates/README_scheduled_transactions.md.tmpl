@@ -62,7 +62,7 @@ Expected: `Result: 0`
 Uses `ScheduleIncrementIn.cdc` to compute a future timestamp relative to the current block. This transaction will automatically create the scheduler manager if it doesn't exist.
 
 ```bash
-flow transactions send cadence/transactions/ScheduleIncrementIn.cdc \
+flow transactions send cadence/transactions/ScheduleIncrementCounter.cdc \
   --network emulator \
   --signer emulator-account \
   --args-json '[
