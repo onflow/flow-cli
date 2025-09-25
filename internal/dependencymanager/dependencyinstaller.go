@@ -823,7 +823,6 @@ func (di *DependencyInstaller) processPendingPrompts() error {
 		}
 	}
 
-	// Ask if user wants to set up deployments
 	setupDeployments := false
 	if hasDeployments {
 		result, err := prompt.GenericBoolPrompt("Do you want to set up deployments for these dependencies?")
@@ -833,7 +832,6 @@ func (di *DependencyInstaller) processPendingPrompts() error {
 		setupDeployments = result
 	}
 
-	// Ask if user wants to set up aliases
 	setupAliases := false
 	if hasAliases {
 		result, err := prompt.GenericBoolPrompt("Do you want to set up aliases for these dependencies?")
