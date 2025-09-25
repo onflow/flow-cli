@@ -375,7 +375,7 @@ func TestExecutingTests(t *testing.T) {
 			coverageReport.ExcludedLocationIDs(),
 		)
 
-		expected := "Coverage: 93.9% of statements"
+		expected := "Coverage: 95.1% of statements"
 
 		assert.Equal(
 			t,
