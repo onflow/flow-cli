@@ -23,7 +23,6 @@ import (
 	"testing"
 
 	"github.com/onflow/flow-go-sdk"
-	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -330,7 +329,7 @@ func TestDependencyInstallerAliasTracking(t *testing.T) {
 			SkipDeployments: true,
 			SkipAlias:       false,
 			dependencies:    make(map[string]config.Dependency),
-			accountAliases:  make(map[string]map[string]flowsdk.Address),
+			accountAliases:  make(map[string]map[string]flow.Address),
 		}
 
 		dep1 := config.Dependency{
@@ -343,7 +342,7 @@ func TestDependencyInstallerAliasTracking(t *testing.T) {
 		}
 		di.dependencies["mainnet://"+serviceAddress.String()+".ContractOne"] = dep1
 
-		aliasAddress := flowsdk.HexToAddress("0x1234567890abcdef")
+		aliasAddress := flow.HexToAddress("0x1234567890abcdef")
 		di.setAccountAlias(serviceAddress.String(), "testnet", aliasAddress)
 
 		// Add second contract - this should automatically use the same alias
@@ -372,7 +371,7 @@ func TestDependencyFlagsDeploymentAccount(t *testing.T) {
 
 	testAccount, _ := accounts.NewEmulatorAccount(state.ReaderWriter(), crypto.ECDSA_P256, crypto.SHA3_256, "")
 	testAccount.Name = "test-account"
-	testAccount.Address = flowsdk.HexToAddress("0x1234567890abcdef")
+	testAccount.Address = flow.HexToAddress("0x1234567890abcdef")
 	state.Accounts().AddOrUpdate(testAccount)
 
 	t.Run("Valid deployment account - skips prompt", func(t *testing.T) {
@@ -401,7 +400,7 @@ func TestDependencyFlagsDeploymentAccount(t *testing.T) {
 			SkipAlias:         true,
 			DeploymentAccount: "test-account",
 			dependencies:      make(map[string]config.Dependency),
-			accountAliases:    make(map[string]map[string]flowsdk.Address),
+			accountAliases:    make(map[string]map[string]flow.Address),
 		}
 
 		err := di.updateDependencyDeployment("TestContract")
@@ -439,7 +438,7 @@ func TestDependencyFlagsDeploymentAccount(t *testing.T) {
 			SkipAlias:         true,
 			DeploymentAccount: "test-account",
 			dependencies:      make(map[string]config.Dependency),
-			accountAliases:    make(map[string]map[string]flowsdk.Address),
+			accountAliases:    make(map[string]map[string]flow.Address),
 		}
 
 		err := di.updateDependencyDeployment("DeFiActions", "emulator")
@@ -477,7 +476,7 @@ func TestDependencyFlagsDeploymentAccount(t *testing.T) {
 			SkipAlias:         true,
 			DeploymentAccount: "non-existent-account",
 			dependencies:      make(map[string]config.Dependency),
-			accountAliases:    make(map[string]map[string]flowsdk.Address),
+			accountAliases:    make(map[string]map[string]flow.Address),
 		}
 
 		err := di.updateDependencyDeployment("TestContract")
@@ -502,7 +501,7 @@ func TestDependencyFlagsDeploymentAccount(t *testing.T) {
 			SkipAlias:         true,
 			DeploymentAccount: "", // Empty - should use prompt behavior
 			dependencies:      make(map[string]config.Dependency),
-			accountAliases:    make(map[string]map[string]flowsdk.Address),
+			accountAliases:    make(map[string]map[string]flow.Address),
 		}
 
 		// This test would normally call the prompt, but since we can't test interactive prompts easily,
@@ -519,7 +518,7 @@ func TestDependencyFlagsIntegration(t *testing.T) {
 
 	testAccount, _ := accounts.NewEmulatorAccount(state.ReaderWriter(), crypto.ECDSA_P256, crypto.SHA3_256, "")
 	testAccount.Name = "test-account"
-	testAccount.Address = flowsdk.HexToAddress("0x1234567890abcdef")
+	testAccount.Address = flow.HexToAddress("0x1234567890abcdef")
 	state.Accounts().AddOrUpdate(testAccount)
 
 	t.Run("NewDependencyInstaller with deployment account flag", func(t *testing.T) {
@@ -565,7 +564,7 @@ func TestDependencyFlagsIntegration(t *testing.T) {
 			SkipAlias:         true,
 			DeploymentAccount: "test-account",
 			dependencies:      make(map[string]config.Dependency),
-			accountAliases:    make(map[string]map[string]flowsdk.Address),
+			accountAliases:    make(map[string]map[string]flow.Address),
 		}
 
 		// Test updateDependencyDeployment with forced emulator network
