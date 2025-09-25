@@ -35,7 +35,7 @@ const (
 	DefaultCadenceDirectory = "cadence"
 )
 
-//go:embed templates/*.tmpl
+//go:embed templates/*.tmpl templates/cursor/*.tmpl
 var templatesFS embed.FS
 
 // TemplateItem is an interface for different template types

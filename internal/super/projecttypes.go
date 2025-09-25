@@ -169,6 +169,26 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 					},
 				},
 			},
+			generator.FileTemplate{
+				TemplatePath: "cursor/agent_rules.mdc.tmpl",
+				TargetPath:   ".cursor/rules/scheduledtransactions/agent-rules.mdc",
+				Data:         map[string]interface{}{},
+			},
+			generator.FileTemplate{
+				TemplatePath: "cursor/flip.md.tmpl",
+				TargetPath:   ".cursor/rules/scheduledtransactions/flip.md",
+				Data:         map[string]interface{}{},
+			},
+			generator.FileTemplate{
+				TemplatePath: "cursor/index.md.tmpl",
+				TargetPath:   ".cursor/rules/scheduledtransactions/index.md",
+				Data:         map[string]interface{}{},
+			},
+			generator.FileTemplate{
+				TemplatePath: "cursor/quick_checklist.md.tmpl",
+				TargetPath:   ".cursor/rules/scheduledtransactions/quick-checklist.md",
+				Data:         map[string]interface{}{},
+			},
 		}
 	default:
 		// Return default templates if unknown project type
