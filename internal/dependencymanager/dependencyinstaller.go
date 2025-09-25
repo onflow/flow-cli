@@ -227,7 +227,7 @@ func (di *DependencyInstaller) AddByCoreContractName(coreContractName string) er
 	shortAddress := depAddress[:4] + "..." + depAddress[len(depAddress)-4:]
 	addressStyled := branding.GreenStyle.Render(shortAddress)
 	networkStyled := branding.GrayStyle.Render(depNetwork)
-	di.Logger.Info(fmt.Sprintf("%s from %s on %s", contractNameStyled, addressStyled, networkStyled))
+	di.Logger.Info(fmt.Sprintf("%s @ %s (%s)", contractNameStyled, addressStyled, networkStyled))
 
 	dep := config.Dependency{
 		Name: depContractName,
@@ -432,7 +432,7 @@ func (di *DependencyInstaller) fetchDependenciesWithDepth(networkName string, ad
 	shortAddress := fullAddress[:4] + "..." + fullAddress[len(fullAddress)-4:]
 	addressStyled := branding.GreenStyle.Render(shortAddress)
 	networkStyled := branding.GrayStyle.Render(networkName)
-	di.Logger.Info(fmt.Sprintf("%s%s%s from %s on %s", indent, prefix, contractNameStyled, addressStyled, networkStyled))
+	di.Logger.Info(fmt.Sprintf("%s%s%s @ %s (%s)", indent, prefix, contractNameStyled, addressStyled, networkStyled))
 	di.installCount++
 
 	err := di.addDependency(config.Dependency{
