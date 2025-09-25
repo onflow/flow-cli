@@ -237,7 +237,7 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 // installProjectDependencies installs both core contracts and custom dependencies for a project type
 func installProjectDependencies(logger output.Logger, state *flowkit.State, targetDir string, projectType ProjectType) error {
 	config := getProjectTypeConfig(projectType)
-	logger.Info("Installing project dependencies...")
+	logger.Info("\nInstalling project dependencies...")
 
 	flags := dependencymanager.DependencyFlags{}
 	installer, err := dependencymanager.NewDependencyInstaller(logger, state, false, targetDir, flags)
@@ -267,9 +267,9 @@ func installProjectDependencies(logger output.Logger, state *flowkit.State, targ
 	// Show installation summary
 	count := installer.GetInstallCount()
 	if count > 0 {
-		logger.Info(fmt.Sprintf("\n✅ Successfully installed %d dependencies!", count))
+		logger.Info(fmt.Sprintf("\n✅ Successfully installed %d dependencies!\n", count))
 	} else {
-		logger.Info("No dependencies to install.")
+		logger.Info("No dependencies to install.\n")
 	}
 	return nil
 }
