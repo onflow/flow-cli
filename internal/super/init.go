@@ -382,7 +382,7 @@ func (s *initResult) String() string {
 	}
 
 	// Colorized footer message
-	readmeMsg := branding.GrayStyle.Render(fmt.Sprintf("You should also read %s to learn more about the development process!", readmeFile))
+	readmeMsg := branding.GrayStyle.Render(fmt.Sprintf("See %s for details on how to run and use your project.", readmeFile))
 	out.WriteString(fmt.Sprintf("%s\n", readmeMsg))
 
 	return out.String()
