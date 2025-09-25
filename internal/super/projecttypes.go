@@ -74,6 +74,14 @@ func getProjectTypeConfigs() map[ProjectType]*ProjectTypeConfig {
 							Network: "emulator",
 							Address: flowsdk.HexToAddress("f8d6e0586b0a20c7"),
 						},
+						{
+							Network: "testnet",
+							Address: flowsdk.HexToAddress("8c5303eaa26202d6"),
+						},
+						{
+							Network: "mainnet",
+							Address: flowsdk.HexToAddress("e467b9dd11fa00df"),
+						},
 					},
 				},
 				{
@@ -87,6 +95,14 @@ func getProjectTypeConfigs() map[ProjectType]*ProjectTypeConfig {
 						{
 							Network: "emulator",
 							Address: flowsdk.HexToAddress("f8d6e0586b0a20c7"),
+						},
+						{
+							Network: "testnet",
+							Address: flowsdk.HexToAddress("8c5303eaa26202d6"),
+						},
+						{
+							Network: "mainnet",
+							Address: flowsdk.HexToAddress("e467b9dd11fa00df"),
 						},
 					},
 				},
