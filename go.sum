@@ -775,8 +775,8 @@ github.com/onflow/cadence-tools/languageserver v1.5.1 h1:4JoOueDnhHikfLKmzehsT51
 github.com/onflow/cadence-tools/languageserver v1.5.1/go.mod h1:0YX8lFneTM0YyDve9rWAhQuJlrbg30nnEPvW7HwPEBo=
 github.com/onflow/cadence-tools/lint v1.4.0 h1:Y0MrpR4f+U8/LHYLVn7t95MIaigbfIcyNq0S4L/8loo=
 github.com/onflow/cadence-tools/lint v1.4.0/go.mod h1:p3GrQ3O6JZOSq76pMAUBZtruKAYXlNlUEaaPHegTwhQ=
-github.com/onflow/cadence-tools/test v1.5.1 h1:JYbisQyfNDgAk4DmaFW5AXdZFKcnq2VmhrFvMQisw98=
-github.com/onflow/cadence-tools/test v1.5.1/go.mod h1:Rhe4qUJ4HgK1AxoDvz30JJfbS4qyWzwpp8CWem6XLnQ=
+github.com/onflow/cadence-tools/test v1.5.2 h1:oloc4j96DDdwy7am5Woewg/BGnufVNmChpEfdMntBJU=
+github.com/onflow/cadence-tools/test v1.5.2/go.mod h1:PZCjAUJW8ndnKFY4nS0BIEn8G03wx+TeNippXbjEp5A=
 github.com/onflow/crypto v0.25.3 h1:XQ3HtLsw8h1+pBN+NQ1JYM9mS2mVXTyg55OldaAIF7U=
 github.com/onflow/crypto v0.25.3/go.mod h1:+1igaXiK6Tjm9wQOBD1EGwW7bYWMUGKtwKJ/2QL/OWs=
 github.com/onflow/fcl-dev-wallet v0.8.0 h1:8TWHhJBWrzS6RCZI3eVjRT+SaUBqO6eygUNDaJV/B7s=
