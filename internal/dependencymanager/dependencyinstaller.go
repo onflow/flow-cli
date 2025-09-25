@@ -396,6 +396,13 @@ func (di *DependencyInstaller) fetchDependencies(networkName string, address flo
 }
 
 func (di *DependencyInstaller) fetchDependenciesWithDepth(networkName string, address flowsdk.Address, contractName string, depth int) error {
+	// Safety limit to prevent excessive recursion
+	const maxDepth = 10
+	if depth > maxDepth {
+		di.Logger.Info(fmt.Sprintf("⚠️  Skipping dependency %s: maximum depth (%d) exceeded", contractName, maxDepth))
+		return nil
+	}
+
 	sourceString := fmt.Sprintf("%s://%s.%s", networkName, address.String(), contractName)
 
 	if _, exists := di.dependencies[sourceString]; exists {
@@ -404,10 +411,19 @@ func (di *DependencyInstaller) fetchDependenciesWithDepth(networkName string, ad
 
 	// Log installation with visual hierarchy and branding colors
 	indent := ""
-	prefix := "Installing dependency:"
+	prefix := "Installing"
+
 	if depth > 0 {
-		indent = "  " // Two spaces for each level of depth
-		prefix = "├─ Installing subdependency:"
+		// Create indentation with proper tree characters
+		for i := 0; i < depth; i++ {
+			indent += "  "
+		}
+		prefix = "├─ Installing"
+
+		// Add depth limit warning for very deep chains
+		if depth >= 5 {
+			di.Logger.Info(fmt.Sprintf("%s⚠️  Deep dependency chain (depth %d)", indent, depth))
+		}
 	}
 
 	contractNameStyled := branding.PurpleStyle.Render(contractName)
