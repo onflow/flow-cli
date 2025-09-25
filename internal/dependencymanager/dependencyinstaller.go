@@ -117,7 +117,7 @@ type DependencyInstaller struct {
 	logs              categorizedLogs
 	dependencies      map[string]config.Dependency
 	accountAliases    map[string]map[string]flowsdk.Address // network -> account -> alias
-	installCount      int                                    // Track number of dependencies installed
+	installCount      int                                   // Track number of dependencies installed
 }
 
 // NewDependencyInstaller creates a new instance of DependencyInstaller
@@ -724,9 +724,9 @@ func (di *DependencyInstaller) updateDependencyAlias(contractName, aliasNetwork 
 func (di *DependencyInstaller) updateDependencyState(originalDependency config.Dependency, contractHash string) error {
 	// Create the dependency to save, preserving aliases from the original
 	dep := config.Dependency{
-		Name: originalDependency.Name,
-		Source: originalDependency.Source,
-		Hash: contractHash,
+		Name:    originalDependency.Name,
+		Source:  originalDependency.Source,
+		Hash:    contractHash,
 		Aliases: originalDependency.Aliases, // Preserve aliases from the original dependency
 	}
 
