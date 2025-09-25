@@ -142,6 +142,14 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 				Name:         "ScheduleIncrementCounter",
 				TemplatePath: "transaction_schedule_increment_counter.cdc.tmpl",
 			},
+			generator.TransactionTemplate{
+				Name:         "InitScheduleManager",
+				TemplatePath: "transaction_init_schedule_manager.cdc.tmpl",
+			},
+			generator.TransactionTemplate{
+				Name:         "InitCounterTransactionHandler",
+				TemplatePath: "transaction_init_counter_transaction_handler.cdc.tmpl",
+			},
 			generator.FileTemplate{
 				TemplatePath: "README_scheduled_transactions.md.tmpl",
 				TargetPath:   getReadmeFileName(targetDir),
@@ -165,6 +173,8 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 					"Transactions": []map[string]interface{}{
 						{"Name": "IncrementCounter"},
 						{"Name": "ScheduleIncrementCounter"},
+						{"Name": "InitScheduleManager"},
+						{"Name": "InitCounterTransactionHandler"},
 					},
 				},
 			},
