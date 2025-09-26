@@ -254,7 +254,6 @@ func removeFromStringArray(s []string, el string) []string {
 	return s
 }
 
-
 func CheckNetwork(network config.Network) error {
 	if network.Name != config.TestnetNetwork.Name && network.Name != config.MainnetNetwork.Name {
 		return fmt.Errorf("staging contracts is only supported on testnet & mainnet networks, see https://cadence-lang.org/docs/cadence-migration-guide for more information")

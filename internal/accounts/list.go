@@ -175,7 +175,6 @@ func (r *accountsListResult) Oneliner() string {
 	return fmt.Sprintf("%d accounts found across %d networks", totalAccounts, totalNetworks)
 }
 
-
 func getNetworkStatusIcon(network networkResult) string {
 	if network.Name == "emulator" || strings.Contains(network.Host, "127.0.0.1") || strings.Contains(network.Host, "localhost") {
 		if network.Warning != "" {

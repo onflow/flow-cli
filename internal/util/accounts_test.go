@@ -100,7 +100,6 @@ func Test_GetTestnetAccounts(t *testing.T) {
 	})
 }
 
-
 func Test_ResolveAddressOrAccountNameForNetworks(t *testing.T) {
 	t.Run("Resolves valid testnet hex address", func(t *testing.T) {
 		_, state, _ := TestMocks(t)

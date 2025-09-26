@@ -242,4 +242,3 @@ transaction(address: Address, amount: UFix64) {
 
 	return nil, nil
 }
-
