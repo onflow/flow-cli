@@ -22,11 +22,13 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 	"slices"
 	"strings"
 	"text/tabwriter"
+	"time"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -280,4 +282,14 @@ func IsCoreContract(contractName string) bool {
 		}
 	}
 	return false
+}
+
+// IsEmulatorRunning checks if the emulator is running on the given host
+func IsEmulatorRunning(host string) bool {
+	conn, err := net.DialTimeout("tcp", host, 2*time.Second)
+	if err != nil {
+		return false
+	}
+	conn.Close()
+	return true
 }

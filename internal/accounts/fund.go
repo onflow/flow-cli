@@ -22,6 +22,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/onflow/cadence"
@@ -50,8 +51,8 @@ var fundFlags = flagsFund{}
 var fundCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "fund [address|name]",
-		Short:   "Funds an account by address or account name through the Testnet Faucet",
-		Example: "flow accounts fund 8e94eaa81771313a\nflow accounts fund testnet-account\nflow accounts fund",
+		Short:   "Funds an account by address or account name (testnet via faucet, emulator via token minting)",
+		Example: "flow accounts fund 8e94eaa81771313a\nflow accounts fund testnet-account\nflow accounts fund emulator-account\nflow accounts fund",
 		Args:    cobra.MaximumNArgs(1),
 	},
 	Flags: &fundFlags,
@@ -138,6 +139,10 @@ func fundTestnetAccount(address flowsdk.Address, logger output.Logger) (command.
 		return nil, err
 	}
 
+	helpText := branding.GrayStyle.Render("After funding completes, you can check your account balance with:")
+	suggestion := branding.GreenStyle.Render("flow accounts list")
+	logger.Info(fmt.Sprintf("%s %s", helpText, suggestion))
+
 	return nil, nil
 }
 
@@ -147,6 +152,24 @@ func fundEmulatorAccount(address flowsdk.Address, logger output.Logger, flow flo
 
 	addressStr := branding.PurpleStyle.Render(address.HexWithPrefix())
 	logger.Info(fmt.Sprintf("Funding emulator account %s with %s FLOW tokens...", addressStr, defaultFundingAmount))
+
+	// Check if emulator is running
+	networks := state.Networks()
+	if networks != nil {
+		for _, network := range *networks {
+			if network.Name == "emulator" || strings.Contains(network.Host, "127.0.0.1") || strings.Contains(network.Host, "localhost") {
+				if !util.IsEmulatorRunning(network.Host) {
+					errorMsg := branding.ErrorStyle.Render("emulator is not running")
+					helpText := branding.GrayStyle.Render("Start the emulator first with:")
+					suggestion := branding.GreenStyle.Render("flow emulator")
+					noteText := branding.GrayStyle.Render("Note: Emulator accounts are destroyed when the emulator is killed unless persisted.")
+					checkText := branding.GrayStyle.Render("Use 'flow accounts list' to verify accounts still exist after restarting.")
+					return nil, fmt.Errorf("%s\n%s %s\n\n%s\n%s", errorMsg, helpText, suggestion, noteText, checkText)
+				}
+				break
+			}
+		}
+	}
 
 	fundingTx := `
 import FlowToken from 0x0ae53cb6e3f42a79
@@ -216,5 +239,10 @@ transaction(address: Address, amount: UFix64) {
 	successMsg := branding.GreenStyle.Render(fmt.Sprintf("✓ Successfully funded %s with %s FLOW tokens", addressStr, defaultFundingAmount))
 	logger.Info(successMsg)
 
+	helpText := branding.GrayStyle.Render("To see your account balance, run:")
+	suggestion := branding.GreenStyle.Render("flow accounts list")
+	logger.Info(fmt.Sprintf("%s %s", helpText, suggestion))
+
 	return nil, nil
 }
+
