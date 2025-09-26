@@ -145,3 +145,4 @@ func TestAddEntriesToIgnoreFile_HelperFunction(t *testing.T) {
 		assert.Equal(t, 1, occurrences, "Expected 1 occurrence of %s, but found %d", entry, occurrences)
 	}
 }
+

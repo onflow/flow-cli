@@ -34,7 +34,6 @@ import (
 	flowGo "github.com/onflow/flow-go/model/flow"
 
 	"github.com/onflow/flowkit/v2"
-	"github.com/onflow/flowkit/v2/accounts"
 	"github.com/onflow/flowkit/v2/config"
 )
 
@@ -253,48 +252,6 @@ func removeFromStringArray(s []string, el string) []string {
 	return s
 }
 
-func GetAccountByContractName(state *flowkit.State, contractName string, network config.Network) (*accounts.Account, error) {
-	deployments := state.Deployments().ByNetwork(network.Name)
-	var accountName string
-	for _, d := range deployments {
-		for _, c := range d.Contracts {
-			if c.Name == contractName {
-				accountName = d.Account
-				break
-			}
-		}
-	}
-	if accountName == "" {
-		return nil, fmt.Errorf("contract not found in state")
-	}
-
-	accs := state.Accounts()
-	if accs == nil {
-		return nil, fmt.Errorf("no accounts found in state")
-	}
-
-	var account *accounts.Account
-	for _, a := range *accs {
-		if accountName == a.Name {
-			account = &a
-			break
-		}
-	}
-	if account == nil {
-		return nil, fmt.Errorf("account %s not found in state", accountName)
-	}
-
-	return account, nil
-}
-
-func GetAddressByContractName(state *flowkit.State, contractName string, network config.Network) (flow.Address, error) {
-	account, err := GetAccountByContractName(state, contractName, network)
-	if err != nil {
-		return flow.Address{}, err
-	}
-
-	return flow.HexToAddress(account.Address.Hex()), nil
-}
 
 func CheckNetwork(network config.Network) error {
 	if network.Name != config.TestnetNetwork.Name && network.Name != config.MainnetNetwork.Name {
