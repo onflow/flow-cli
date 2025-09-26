@@ -19,9 +19,12 @@
 package accounts
 
 import (
+	"context"
 	"fmt"
+	"strconv"
 	"time"
 
+	"github.com/onflow/cadence"
 	flowsdk "github.com/onflow/flow-go-sdk"
 
 	"github.com/pkg/browser"
@@ -30,10 +33,12 @@ import (
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/accounts"
 	"github.com/onflow/flowkit/v2/output"
+	"github.com/onflow/flowkit/v2/transactions"
 
 	"github.com/onflow/flow-cli/common/branding"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/prompt"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 type flagsFund struct {
@@ -41,45 +46,6 @@ type flagsFund struct {
 }
 
 var fundFlags = flagsFund{}
-
-// getTestnetAccounts returns all accounts that have testnet-valid addresses
-func getTestnetAccounts(state *flowkit.State) []accounts.Account {
-	var testnetAccounts []accounts.Account
-
-	allAccounts := *state.Accounts()
-	for _, account := range allAccounts {
-		if account.Address.IsValid(flowsdk.Testnet) {
-			testnetAccounts = append(testnetAccounts, account)
-		}
-	}
-
-	return testnetAccounts
-}
-
-// resolveAddressOrAccountName resolves a string that could be either an address or account name
-func resolveAddressOrAccountName(input string, state *flowkit.State) (flowsdk.Address, error) {
-	address := flowsdk.HexToAddress(input)
-
-	if address.IsValid(flowsdk.Mainnet) || address.IsValid(flowsdk.Testnet) || address.IsValid(flowsdk.Emulator) {
-		// For direct addresses, we'll let the caller handle testnet validation
-		return address, nil
-	}
-
-	account, err := state.Accounts().ByName(input)
-	if err != nil {
-		accountName := branding.GrayStyle.Render(input)
-		return flowsdk.EmptyAddress, fmt.Errorf("could not find account with name %s", accountName)
-	}
-
-	if !account.Address.IsValid(flowsdk.Testnet) {
-		accountName := branding.PurpleStyle.Render(input)
-		addressStr := branding.GrayStyle.Render(account.Address.String())
-		errorMsg := branding.ErrorStyle.Render("The faucet can only fund testnet addresses")
-		return flowsdk.EmptyAddress, fmt.Errorf("account %s has address %s which is not valid for testnet. %s", accountName, addressStr, errorMsg)
-	}
-
-	return account.Address, nil
-}
 
 var fundCommand = &command.Command{
 	Cmd: &cobra.Command{
@@ -102,21 +68,27 @@ func fund(
 	var address flowsdk.Address
 
 	if len(args) == 0 {
-		// No address provided, prompt user to select from testnet accounts
-		testnetAccounts := getTestnetAccounts(state)
-		if len(testnetAccounts) == 0 {
-			errorMsg := branding.ErrorStyle.Render("no testnet accounts found in flow.json.")
-			helpText := branding.GrayStyle.Render("Create a testnet account first with:")
-			suggestion := branding.GreenStyle.Render("flow accounts create --network testnet")
+		// No address provided, prompt user to select from available accounts
+		availableAccounts := util.GetAccountsByNetworks(state, []string{"testnet", "emulator"})
+		if len(availableAccounts) == 0 {
+			errorMsg := branding.ErrorStyle.Render("no accounts found in flow.json.")
+			helpText := branding.GrayStyle.Render("Create an account first with:")
+			suggestion := branding.GreenStyle.Render("flow accounts create")
 			return nil, fmt.Errorf("%s\n%s %s", errorMsg, helpText, suggestion)
 		}
 
-		options := make([]string, len(testnetAccounts))
-		for i, account := range testnetAccounts {
-			options[i] = fmt.Sprintf("%s (%s)", account.Address.HexWithPrefix(), account.Name)
+		options := make([]string, len(availableAccounts))
+		for i, account := range availableAccounts {
+			network := "emulator"
+			if util.IsAddressValidForNetwork(account.Address, "testnet") {
+				network = "testnet"
+			} else if util.IsAddressValidForNetwork(account.Address, "mainnet") {
+				network = "mainnet"
+			}
+			options[i] = fmt.Sprintf("%s (%s) [%s]", account.Address.HexWithPrefix(), account.Name, network)
 		}
 
-		selected, err := prompt.RunSingleSelect(options, "Select a testnet account to fund:")
+		selected, err := prompt.RunSingleSelect(options, "Select an account to fund:")
 		if err != nil {
 			errorMsg := branding.ErrorStyle.Render("account selection cancelled")
 			return nil, fmt.Errorf("%s: %w", errorMsg, err)
@@ -124,24 +96,31 @@ func fund(
 
 		for i, option := range options {
 			if option == selected {
-				address = testnetAccounts[i].Address
+				address = availableAccounts[i].Address
 				break
 			}
 		}
 	} else {
 		var err error
-		address, err = resolveAddressOrAccountName(args[0], state)
+		address, err = util.ResolveAddressOrAccountNameForNetworks(args[0], state, []string{"testnet", "emulator"})
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	if !address.IsValid(flowsdk.Testnet) {
+	if address.IsValid(flowsdk.Testnet) {
+		return fundTestnetAccount(address, logger)
+	} else if address.IsValid(flowsdk.Emulator) {
+		return fundEmulatorAccount(address, logger, flow, state)
+	} else {
 		addressStr := branding.GrayStyle.Render(address.String())
-		errorMsg := branding.ErrorStyle.Render("faucet can only work for valid Testnet addresses")
+		errorMsg := branding.ErrorStyle.Render("funding is only supported for testnet and emulator addresses")
 		return nil, fmt.Errorf("unsupported address %s, %s", addressStr, errorMsg)
 	}
+}
 
+// fundTestnetAccount funds a testnet account using the web faucet
+func fundTestnetAccount(address flowsdk.Address, logger output.Logger) (command.Result, error) {
 	addressStr := branding.PurpleStyle.Render(address.HexWithPrefix())
 	linkStr := branding.GreenStyle.Render(testnetFaucetURL(address))
 
@@ -158,6 +137,84 @@ func fund(
 	if err := browser.OpenURL(testnetFaucetURL(address)); err != nil {
 		return nil, err
 	}
+
+	return nil, nil
+}
+
+// fundEmulatorAccount funds an emulator account by minting tokens directly
+func fundEmulatorAccount(address flowsdk.Address, logger output.Logger, flow flowkit.Services, state *flowkit.State) (command.Result, error) {
+	const defaultFundingAmount = "1000"
+
+	addressStr := branding.PurpleStyle.Render(address.HexWithPrefix())
+	logger.Info(fmt.Sprintf("Funding emulator account %s with %s FLOW tokens...", addressStr, defaultFundingAmount))
+
+	fundingTx := `
+import FlowToken from 0x0ae53cb6e3f42a79
+import FungibleToken from 0xee82856bf20e2aa6
+
+transaction(address: Address, amount: UFix64) {
+    let tokenAdmin: &FlowToken.Administrator
+    let tokenReceiver: &{FungibleToken.Receiver}
+
+    prepare(signer: auth(BorrowValue) &Account) {
+        self.tokenAdmin = signer.storage.borrow<&FlowToken.Administrator>(from: /storage/flowTokenAdmin)
+            ?? panic("Signer is not the token admin")
+
+        self.tokenReceiver = getAccount(address).capabilities.borrow<&{FungibleToken.Receiver}>(
+                /public/flowTokenReceiver
+            ) ?? panic("Could not borrow receiver reference to the recipient's Vault")
+    }
+
+    execute {
+        let minter <- self.tokenAdmin.createNewMinter(allowedAmount: amount)
+        let mintedVault <- minter.mintTokens(amount: amount)
+
+        self.tokenReceiver.deposit(from: <-mintedVault)
+
+        destroy minter
+    }
+}`
+
+	// Get the emulator service account to sign the transaction
+	serviceAccount, err := state.EmulatorServiceAccount()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get emulator service account: %w", err)
+	}
+
+	amount, err := strconv.ParseFloat(defaultFundingAmount, 64)
+	if err != nil {
+		return nil, fmt.Errorf("invalid funding amount: %w", err)
+	}
+
+	transactionArgs := []cadence.Value{
+		cadence.NewAddress(address),
+		cadence.UFix64(amount),
+	}
+
+	_, txResult, err := flow.SendTransaction(
+		context.Background(),
+		transactions.AccountRoles{
+			Proposer:    *serviceAccount,
+			Authorizers: []accounts.Account{*serviceAccount},
+			Payer:       *serviceAccount,
+		},
+		flowkit.Script{
+			Code: []byte(fundingTx),
+			Args: transactionArgs,
+		},
+		1000,
+	)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to fund emulator account: %w", err)
+	}
+
+	if txResult.Error != nil {
+		return nil, fmt.Errorf("funding transaction failed: %s", txResult.Error.Error())
+	}
+
+	successMsg := branding.GreenStyle.Render(fmt.Sprintf("✓ Successfully funded %s with %s FLOW tokens", addressStr, defaultFundingAmount))
+	logger.Info(successMsg)
 
 	return nil, nil
 }
