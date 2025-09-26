@@ -21,7 +21,6 @@ package accounts
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -148,10 +147,10 @@ func fundTestnetAccount(address flowsdk.Address, logger output.Logger) (command.
 
 // fundEmulatorAccount funds an emulator account by minting tokens directly
 func fundEmulatorAccount(address flowsdk.Address, logger output.Logger, flow flowkit.Services, state *flowkit.State) (command.Result, error) {
-	const defaultFundingAmount = "1000"
+	const fundingAmountFlow = 1000.0
 
 	addressStr := branding.PurpleStyle.Render(address.HexWithPrefix())
-	logger.Info(fmt.Sprintf("Funding emulator account %s with %s FLOW tokens...", addressStr, defaultFundingAmount))
+	logger.Info(fmt.Sprintf("Funding emulator account %s with %.0f FLOW tokens...", addressStr, fundingAmountFlow))
 
 	// Check if emulator is running
 	networks := state.Networks()
@@ -204,14 +203,12 @@ transaction(address: Address, amount: UFix64) {
 		return nil, fmt.Errorf("failed to get emulator service account: %w", err)
 	}
 
-	amount, err := strconv.ParseFloat(defaultFundingAmount, 64)
-	if err != nil {
-		return nil, fmt.Errorf("invalid funding amount: %w", err)
-	}
+	// Convert FLOW amount to UFix64 raw units (multiply by 10^8)
+	fundingAmountRaw := fundingAmountFlow * 100000000
 
 	transactionArgs := []cadence.Value{
 		cadence.NewAddress(address),
-		cadence.UFix64(amount),
+		cadence.UFix64(fundingAmountRaw),
 	}
 
 	_, txResult, err := flow.SendTransaction(
@@ -236,7 +233,7 @@ transaction(address: Address, amount: UFix64) {
 		return nil, fmt.Errorf("funding transaction failed: %s", txResult.Error.Error())
 	}
 
-	successMsg := branding.GreenStyle.Render(fmt.Sprintf("✓ Successfully funded %s with %s FLOW tokens", addressStr, defaultFundingAmount))
+	successMsg := branding.GreenStyle.Render(fmt.Sprintf("✓ Successfully funded %s with %.0f FLOW tokens", addressStr, fundingAmountFlow))
 	logger.Info(successMsg)
 
 	helpText := branding.GrayStyle.Render("To see your account balance, run:")
