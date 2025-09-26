@@ -50,7 +50,7 @@ var fundFlags = flagsFund{}
 var fundCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "fund [address|name]",
-		Short:   "Funds an account by address or account name (testnet via faucet, emulator via token minting)",
+		Short:   "Funds an account by address or account name (emulator or testnet)",
 		Example: "flow accounts fund 8e94eaa81771313a\nflow accounts fund testnet-account\nflow accounts fund emulator-account\nflow accounts fund",
 		Args:    cobra.MaximumNArgs(1),
 	},
