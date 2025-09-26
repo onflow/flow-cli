@@ -102,6 +102,6 @@ func Test_Fund(t *testing.T) {
 
 		assert.Nil(t, result)
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "no accounts found")
+		assert.Contains(t, err.Error(), "No fundable accounts found")
 	})
 }

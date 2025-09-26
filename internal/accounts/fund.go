@@ -71,10 +71,12 @@ func fund(
 		// No address provided, prompt user to select from available accounts
 		availableAccounts := util.GetAccountsByNetworks(state, []string{"testnet", "emulator"})
 		if len(availableAccounts) == 0 {
-			errorMsg := branding.ErrorStyle.Render("no accounts found in flow.json.")
+			errorIcon := branding.ErrorStyle.Render("❌")
+			errorMsg := branding.ErrorStyle.Render("No fundable accounts found in flow.json")
+			helpIcon := branding.GrayStyle.Render("✨")
 			helpText := branding.GrayStyle.Render("Create an account first with:")
 			suggestion := branding.GreenStyle.Render("flow accounts create")
-			return nil, fmt.Errorf("%s\n%s %s", errorMsg, helpText, suggestion)
+			return nil, fmt.Errorf("%s %s\n\n%s %s %s", errorIcon, errorMsg, helpIcon, helpText, suggestion)
 		}
 
 		options := make([]string, len(availableAccounts))
@@ -114,8 +116,9 @@ func fund(
 		return fundEmulatorAccount(address, logger, flow, state)
 	} else {
 		addressStr := branding.GrayStyle.Render(address.String())
-		errorMsg := branding.ErrorStyle.Render("funding is only supported for testnet and emulator addresses")
-		return nil, fmt.Errorf("unsupported address %s, %s", addressStr, errorMsg)
+		errorIcon := branding.ErrorStyle.Render("❌")
+		errorMsg := branding.ErrorStyle.Render("Funding is only supported for testnet and emulator addresses")
+		return nil, fmt.Errorf("%s %s: %s", errorIcon, errorMsg, addressStr)
 	}
 }
 
@@ -124,13 +127,9 @@ func fundTestnetAccount(address flowsdk.Address, logger output.Logger) (command.
 	addressStr := branding.PurpleStyle.Render(address.HexWithPrefix())
 	linkStr := branding.GreenStyle.Render(testnetFaucetURL(address))
 
-	logger.Info(
-		fmt.Sprintf(
-			"Opening the Testnet faucet to fund %s on your native browser."+
-				"\n\nIf there is an issue, please use this link instead: %s",
-			addressStr,
-			linkStr,
-		))
+	logger.Info(fmt.Sprintf("🌐 Opening Testnet faucet to fund %s...", addressStr))
+	logger.Info("")
+	logger.Info(fmt.Sprintf("🔗 If there's an issue, use this link instead: %s", linkStr))
 	// wait for the user to read the message
 	time.Sleep(5 * time.Second)
 
@@ -138,9 +137,11 @@ func fundTestnetAccount(address flowsdk.Address, logger output.Logger) (command.
 		return nil, err
 	}
 
-	helpText := branding.GrayStyle.Render("After funding completes, you can check your account balance with:")
+	logger.Info("")
+	helpIcon := branding.GrayStyle.Render("💡")
+	helpText := branding.GrayStyle.Render("After funding completes, check your balance with:")
 	suggestion := branding.GreenStyle.Render("flow accounts list")
-	logger.Info(fmt.Sprintf("%s %s", helpText, suggestion))
+	logger.Info(fmt.Sprintf("%s %s %s", helpIcon, helpText, suggestion))
 
 	return nil, nil
 }
@@ -150,7 +151,6 @@ func fundEmulatorAccount(address flowsdk.Address, logger output.Logger, flow flo
 	const fundingAmountFlow = 1000.0
 
 	addressStr := branding.PurpleStyle.Render(address.HexWithPrefix())
-	logger.Info(fmt.Sprintf("Funding emulator account %s with %.0f FLOW tokens...", addressStr, fundingAmountFlow))
 
 	// Check if emulator is running
 	networks := state.Networks()
@@ -158,12 +158,12 @@ func fundEmulatorAccount(address flowsdk.Address, logger output.Logger, flow flo
 		for _, network := range *networks {
 			if network.Name == "emulator" || strings.Contains(network.Host, "127.0.0.1") || strings.Contains(network.Host, "localhost") {
 				if !util.IsEmulatorRunning(network.Host) {
-					errorMsg := branding.ErrorStyle.Render("emulator is not running")
+					errorIcon := branding.ErrorStyle.Render("❌")
+					errorMsg := branding.ErrorStyle.Render("Emulator is not running")
+					helpIcon := branding.GrayStyle.Render("🚀")
 					helpText := branding.GrayStyle.Render("Start the emulator first with:")
 					suggestion := branding.GreenStyle.Render("flow emulator")
-					noteText := branding.GrayStyle.Render("Note: Emulator accounts are destroyed when the emulator is killed unless persisted.")
-					checkText := branding.GrayStyle.Render("Use 'flow accounts list' to verify accounts still exist after restarting.")
-					return nil, fmt.Errorf("%s\n%s %s\n\n%s\n%s", errorMsg, helpText, suggestion, noteText, checkText)
+					return nil, fmt.Errorf("%s %s\n\n%s %s %s", errorIcon, errorMsg, helpIcon, helpText, suggestion)
 				}
 				break
 			}
@@ -233,12 +233,26 @@ transaction(address: Address, amount: UFix64) {
 		return nil, fmt.Errorf("funding transaction failed: %s", txResult.Error.Error())
 	}
 
-	successMsg := branding.GreenStyle.Render(fmt.Sprintf("✓ Successfully funded %s with %.0f FLOW tokens", addressStr, fundingAmountFlow))
-	logger.Info(successMsg)
+	logger.Info("")
+	successIcon := branding.GreenStyle.Render("🎉")
+	successMsg := branding.GreenStyle.Render(fmt.Sprintf("Successfully funded %s with %.0f FLOW tokens!", addressStr, fundingAmountFlow))
+	logger.Info(fmt.Sprintf("%s %s", successIcon, successMsg))
 
+	if txResult.TransactionID.String() != "" {
+		txIdStr := branding.GrayStyle.Render(fmt.Sprintf("Transaction ID: %s", txResult.TransactionID.String()))
+		logger.Info(fmt.Sprintf("📋 %s", txIdStr))
+	}
+
+	logger.Info("")
+	helpIcon := branding.GrayStyle.Render("💡")
 	helpText := branding.GrayStyle.Render("To see your account balance, run:")
 	suggestion := branding.GreenStyle.Render("flow accounts list")
-	logger.Info(fmt.Sprintf("%s %s", helpText, suggestion))
+	logger.Info(fmt.Sprintf("%s %s %s", helpIcon, helpText, suggestion))
+
+	logger.Info("")
+	noteIcon := branding.GrayStyle.Render("📝")
+	noteText := branding.GrayStyle.Render("Note: Emulator accounts are destroyed when emulator is killed unless persisted.")
+	logger.Info(fmt.Sprintf("%s %s", noteIcon, noteText))
 
 	return nil, nil
 }
