@@ -42,8 +42,8 @@ type DiscoverResult struct {
 
 var discoverCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "discover",
-		Short:   "Discover available contracts to add to your project.",
+		Use:   "discover",
+		Short: "Discover available contracts to add to your project.",
 		Long: `Discover available contracts to add to your project.
 
 This command shows you a list of popular contracts that you can install as dependencies.
@@ -59,7 +59,7 @@ Note:
 		Example: `flow dependencies discover
 flow dependencies discover --deployment-account my-account
 flow dependencies discover -d my-account`,
-		Args:    cobra.NoArgs,
+		Args: cobra.NoArgs,
 	},
 	RunS:  discover,
 	Flags: &discoverFlags,
