@@ -28,6 +28,7 @@ import (
 
 	"github.com/psiemens/sconfig"
 
+	"github.com/onflow/flow-cli/common/branding"
 	"github.com/onflow/flow-cli/internal/prompt"
 	"github.com/onflow/flow-cli/internal/util"
 
@@ -116,6 +117,7 @@ type DependencyInstaller struct {
 	logs              categorizedLogs
 	dependencies      map[string]config.Dependency
 	accountAliases    map[string]map[string]flowsdk.Address // network -> account -> alias
+	installCount      int                                   // Track number of dependencies installed
 }
 
 // NewDependencyInstaller creates a new instance of DependencyInstaller
@@ -219,6 +221,13 @@ func (di *DependencyInstaller) AddByCoreContractName(coreContractName string) er
 	if depAddress == "" {
 		return fmt.Errorf("contract %s not found in core contracts", coreContractName)
 	}
+
+	// Log installation with detailed information and branding colors
+	contractNameStyled := branding.PurpleStyle.Render(coreContractName)
+	shortAddress := "0x..." + depAddress[len(depAddress)-4:]
+	addressStyled := branding.GreenStyle.Render(shortAddress)
+	networkStyled := branding.GrayStyle.Render(depNetwork)
+	di.Logger.Info(fmt.Sprintf("%s @ %s (%s)", contractNameStyled, addressStyled, networkStyled))
 
 	dep := config.Dependency{
 		Name: depContractName,
@@ -356,8 +365,7 @@ func (di *DependencyInstaller) checkForConflictingContracts() {
 }
 
 func (di *DependencyInstaller) processDependency(dependency config.Dependency) error {
-	depAddress := flowsdk.HexToAddress(dependency.Source.Address.String())
-	return di.fetchDependencies(dependency.Source.NetworkName, depAddress, dependency.Source.ContractName)
+	return di.processDependencies(dependency)
 }
 
 func (di *DependencyInstaller) getContracts(network string, address flowsdk.Address) (map[string][]byte, error) {
@@ -383,21 +391,53 @@ func (di *DependencyInstaller) getContracts(network string, address flowsdk.Addr
 	return acct.Contracts, nil
 }
 
-func (di *DependencyInstaller) fetchDependencies(networkName string, address flowsdk.Address, contractName string) error {
+func (di *DependencyInstaller) processDependencies(dependency config.Dependency) error {
+	return di.fetchDependenciesWithDepth(dependency, 0)
+}
+
+func (di *DependencyInstaller) fetchDependenciesWithDepth(dependency config.Dependency, depth int) error {
+	networkName := dependency.Source.NetworkName
+	address := dependency.Source.Address
+	contractName := dependency.Source.ContractName
+	// Safety limit to prevent excessive recursion
+	const maxDepth = 10
+	if depth > maxDepth {
+		di.Logger.Info(fmt.Sprintf("⚠️  Skipping dependency %s: maximum depth (%d) exceeded", contractName, maxDepth))
+		return nil
+	}
+
 	sourceString := fmt.Sprintf("%s://%s.%s", networkName, address.String(), contractName)
 
 	if _, exists := di.dependencies[sourceString]; exists {
 		return nil // Skip already processed dependencies
 	}
 
-	err := di.addDependency(config.Dependency{
-		Name: contractName,
-		Source: config.Source{
-			NetworkName:  networkName,
-			Address:      address,
-			ContractName: contractName,
-		},
-	})
+	// Log installation with visual hierarchy and branding colors
+	indent := ""
+	prefix := ""
+
+	if depth > 0 {
+		// Create indentation with proper tree characters
+		for i := 0; i < depth; i++ {
+			indent += "  "
+		}
+		prefix = "├─ "
+
+		// Add depth limit warning for very deep chains
+		if depth >= 5 {
+			di.Logger.Info(fmt.Sprintf("%s⚠️  Deep dependency chain (depth %d)", indent, depth))
+		}
+	}
+
+	contractNameStyled := branding.PurpleStyle.Render(contractName)
+	fullAddress := address.String()
+	shortAddress := "0x..." + fullAddress[len(fullAddress)-4:]
+	addressStyled := branding.GreenStyle.Render(shortAddress)
+	networkStyled := branding.GrayStyle.Render(networkName)
+	di.Logger.Info(fmt.Sprintf("%s%s%s @ %s (%s)", indent, prefix, contractNameStyled, addressStyled, networkStyled))
+	di.installCount++
+
+	err := di.addDependency(dependency)
 	if err != nil {
 		return fmt.Errorf("error adding dependency: %w", err)
 	}
@@ -417,15 +457,36 @@ func (di *DependencyInstaller) fetchDependencies(networkName string, address flo
 		return fmt.Errorf("failed to parse program: %w", err)
 	}
 
-	if err := di.handleFoundContract(networkName, address.String(), contractName, program); err != nil {
+	if err := di.handleFoundContract(dependency, program); err != nil {
 		return fmt.Errorf("failed to handle found contract: %w", err)
 	}
 
 	if program.HasAddressImports() {
 		imports := program.AddressImportDeclarations()
 		for _, imp := range imports {
-			contractName := imp.Imports[0].Identifier.Identifier
-			err := di.fetchDependencies(networkName, flowsdk.HexToAddress(imp.Location.String()), contractName)
+			importContractName := imp.Imports[0].Identifier.Identifier
+			importAddress := flowsdk.HexToAddress(imp.Location.String())
+
+			// Check if we already have this dependency with aliases
+			importSourceString := fmt.Sprintf("%s://%s.%s", networkName, importAddress.String(), importContractName)
+			var importDependency config.Dependency
+
+			if existingDep, exists := di.dependencies[importSourceString]; exists {
+				// Use the existing dependency (which may have aliases)
+				importDependency = existingDep
+			} else {
+				// Create a new dependency for the import
+				importDependency = config.Dependency{
+					Name: importContractName,
+					Source: config.Source{
+						NetworkName:  networkName,
+						Address:      importAddress,
+						ContractName: importContractName,
+					},
+				}
+			}
+
+			err := di.fetchDependenciesWithDepth(importDependency, depth+1)
 			if err != nil {
 				return err
 			}
@@ -473,7 +534,10 @@ func (di *DependencyInstaller) handleFileSystem(contractAddr, contractName, cont
 	return nil
 }
 
-func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, contractName string, program *project.Program) error {
+func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency, program *project.Program) error {
+	networkName := dependency.Source.NetworkName
+	contractAddr := dependency.Source.Address.String()
+	contractName := dependency.Source.ContractName
 	hash := sha256.New()
 	hash.Write(program.CodeWithUnprocessedImports())
 	originalContractDataHash := hex.EncodeToString(hash.Sum(nil))
@@ -481,10 +545,10 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, co
 	program.ConvertAddressImports()
 	contractData := string(program.CodeWithUnprocessedImports())
 
-	dependency := di.State.Dependencies().ByName(contractName)
+	existingDependency := di.State.Dependencies().ByName(contractName)
 
 	// If a dependency by this name already exists and its remote source network or address does not match, then give option to stop or continue
-	if dependency != nil && (dependency.Source.NetworkName != networkName || dependency.Source.Address.String() != contractAddr) {
+	if existingDependency != nil && (existingDependency.Source.NetworkName != networkName || existingDependency.Source.Address.String() != contractAddr) {
 		di.Logger.Info(fmt.Sprintf("%s A dependency named %s already exists with a different remote source. Please fix the conflict and retry.", util.PrintEmoji("🚫"), contractName))
 		os.Exit(0)
 		return nil
@@ -493,7 +557,7 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, co
 	// Check if remote source version is different from local version
 	// If it is, ask if they want to update
 	// If no hash, ignore
-	if dependency != nil && dependency.Hash != "" && dependency.Hash != originalContractDataHash {
+	if existingDependency != nil && existingDependency.Hash != "" && existingDependency.Hash != originalContractDataHash {
 		msg := fmt.Sprintf("The latest version of %s is different from the one you have locally. Do you want to update it?", contractName)
 		shouldUpdate, err := prompt.GenericBoolPrompt(msg)
 		if err != nil {
@@ -504,7 +568,7 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, co
 		}
 	}
 
-	err := di.updateDependencyState(networkName, contractAddr, contractName, originalContractDataHash)
+	err := di.updateDependencyState(dependency, originalContractDataHash)
 	if err != nil {
 		di.Logger.Error(fmt.Sprintf("Error updating state: %v", err))
 		return err
@@ -657,21 +721,19 @@ func (di *DependencyInstaller) updateDependencyAlias(contractName, aliasNetwork 
 	return nil
 }
 
-func (di *DependencyInstaller) updateDependencyState(networkName, contractAddress, contractName, contractHash string) error {
+func (di *DependencyInstaller) updateDependencyState(originalDependency config.Dependency, contractHash string) error {
+	// Create the dependency to save, preserving aliases from the original
 	dep := config.Dependency{
-		Name: contractName,
-		Source: config.Source{
-			NetworkName:  networkName,
-			Address:      flowsdk.HexToAddress(contractAddress),
-			ContractName: contractName,
-		},
-		Hash: contractHash,
+		Name:    originalDependency.Name,
+		Source:  originalDependency.Source,
+		Hash:    contractHash,
+		Aliases: originalDependency.Aliases, // Preserve aliases from the original dependency
 	}
 
 	isNewDep := di.State.Dependencies().ByName(dep.Name) == nil
 
 	di.State.Dependencies().AddOrUpdate(dep)
-	di.State.Contracts().AddDependencyAsContract(dep, networkName)
+	di.State.Contracts().AddDependencyAsContract(dep, originalDependency.Source.NetworkName)
 
 	if isNewDep {
 		msg := util.MessageWithEmojiPrefix("✅", fmt.Sprintf("%s added to flow.json", dep.Name))
@@ -707,4 +769,9 @@ func (di *DependencyInstaller) setAccountAlias(accountAddress, networkName strin
 		di.accountAliases[networkName] = make(map[string]flowsdk.Address)
 	}
 	di.accountAliases[networkName][accountAddress] = alias
+}
+
+// GetInstallCount returns the number of dependencies installed
+func (di *DependencyInstaller) GetInstallCount() int {
+	return di.installCount
 }

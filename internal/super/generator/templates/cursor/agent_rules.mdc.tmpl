@@ -1,0 +1,102 @@
+---
+alwaysApply: true
+---
+
+# Cursor Agent Rules
+
+These rules guide AI agents to generate correct, safe Cadence transactions using Scheduled Transactions.
+
+## Required flow-cli version
+
+Required: flow-cli 2.7.1 (scheduled transactions support)
+
+- Verify:
+
+```bash
+flow version
+```
+
+- If your version is older than 2.7.1, update before proceeding:
+
+```bash
+# macOS (Homebrew)
+brew update && brew upgrade flow-cli
+
+# Or reinstall per docs
+# https://developers.flow.com/tools/flow-cli/install
+```
+
+Proceed only when `flow version` reports 2.7.1.
+
+## Imports
+
+Always use string imports:
+
+```cadence
+import "FungibleToken"
+import "FlowTransactionScheduler"
+```
+
+## Required Params (Scheduled Transactions)
+
+- `timestamp: UFix64` (0 for immediate execution)
+- `priority: UInt8` (0=High, 1=Medium, 2=Low)
+- `executionEffort: UInt64` (minimum 10)
+- `handlerStoragePath: StoragePath`
+- `transactionData: AnyStruct?` (max 100 bytes)
+
+## Transaction Skeleton (Scheduled Transactions)
+
+- Prepare:
+  - Convert priority number to `FlowTransactionScheduler.Priority` enum.
+  - Validate timestamp (future or 0 for immediate).
+  - Estimate fees with `FlowTransactionScheduler.estimate()`.
+  - Withdraw fees from user's FlowToken vault.
+- Issue handler capability: `Capability<auth(FlowTransactionScheduler.Execute) &{FlowTransactionScheduler.TransactionHandler}>`.
+- Execute:
+  - Call `FlowTransactionScheduler.schedule()` with all parameters.
+  - Optionally save `ScheduledTransaction` receipt for future reference/cancellation.
+- Post:
+  - Verify transaction scheduled successfully (check events or receipt ID).
+
+## Prompt-to-Params Examples
+
+- "Schedule transaction to execute in 1 hour with high priority" →
+
+  - `timestamp = getCurrentBlock().timestamp + 3600.0`
+  - `priority = 0` (High)
+  - `executionEffort = 1000` (moderate effort)
+  - `handlerStoragePath` from user specification
+  - `transactionData = nil` unless user provides specific data.
+
+- "Schedule recurring payments every day for a week" →
+  - Multiple transaction transactions with `timestamp` incremented by 86400.0 (1 day)
+  - `priority = 1` (Medium) for cost efficiency
+  - `transactionData` containing payment details.
+
+## Code Style
+
+- Use named arguments.
+- Prefer early returns and minimal nesting inside connector implementations (transactions use assertions instead).
+
+## Sanity Checklist
+
+- Imports present and string-based.
+- Capability issuance and borrows succeed or `panic` with context.
+- For scheduled transactions: fee estimation before scheduling, timestamp validation, handler capability verification.
+- For recurring transactions: consider fee accumulation and batch scheduling efficiency.
+
+## Development Guidelines
+
+- Use string imports: `import "FlowTransactionScheduler"`, `import "FlowToken"`, `import "FungibleToken"`
+- Emulator only; start with: `flow emulator --scheduled-transactions`
+- Estimate before schedule: `FlowTransactionScheduler.estimate(...)`
+- Issue handler capability with correct entitlement: `auth(FlowTransactionScheduler.Execute) &{FlowTransactionScheduler.TransactionHandler}`
+- Save `ScheduledTransaction` if you will need to cancel later; call `FlowTransactionScheduler.cancel(transaction: receipt)` to cancel
+
+## Key Documentation
+
+- **Index**: [`index.md`](./index.md) – Navigation and core contracts reference
+- **Agent Rules**: [`agent-rules.mdc`](./agent-rules.mdc) – Cursor agent guidance for generating transactions
+- **Quick Checklist**: [`quick-checklist.md`](./quick-checklist.md) – Essential implementation checklist
+- **FLIP 330**: [`flip.md`](./flip.md) – Scheduled Transactions specification and details

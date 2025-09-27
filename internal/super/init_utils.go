@@ -25,7 +25,9 @@ import (
 	"path/filepath"
 )
 
-// getReadmeFileName returns the appropriate README filename, avoiding conflicts
+// getReadmeFileName returns the appropriate README filename to avoid file conflicts.
+// If README.md already exists in the target directory, it returns "README_flow.md"
+// to prevent overwriting the existing file. Otherwise, it returns "README.md".
 func getReadmeFileName(targetDir string) string {
 	if _, err := os.Stat(filepath.Join(targetDir, defaultReadmeFile)); err == nil {
 		return flowReadmeFile
