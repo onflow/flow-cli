@@ -425,7 +425,8 @@ func (di *DependencyInstaller) fetchDependencies(networkName string, address flo
 		imports := program.AddressImportDeclarations()
 		for _, imp := range imports {
 			contractName := imp.Imports[0].Identifier.Identifier
-			err := di.fetchDependencies(networkName, flowsdk.HexToAddress(imp.Location.String()), contractName)
+			importedAddress := flowsdk.HexToAddress(imp.Location.String())
+			err := di.fetchDependencies(networkName, importedAddress, contractName)
 			if err != nil {
 				return err
 			}
@@ -481,19 +482,22 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, co
 	program.ConvertAddressImports()
 	contractData := string(program.CodeWithUnprocessedImports())
 
-	dependency := di.State.Dependencies().ByName(contractName)
+	existingDependency := di.State.Dependencies().ByName(contractName)
 
-	// If a dependency by this name already exists and its remote source network or address does not match, then give option to stop or continue
-	if dependency != nil && (dependency.Source.NetworkName != networkName || dependency.Source.Address.String() != contractAddr) {
-		di.Logger.Info(fmt.Sprintf("%s A dependency named %s already exists with a different remote source. Please fix the conflict and retry.", util.PrintEmoji("🚫"), contractName))
-		os.Exit(0)
-		return nil
+	// If a dependency by this name already exists and its remote source network or address does not match,
+	// allow it only if an existing alias matches the incoming network+address; otherwise terminate.
+	if existingDependency != nil && (existingDependency.Source.NetworkName != networkName || existingDependency.Source.Address.String() != contractAddr) {
+		if !di.existingAliasMatches(contractName, networkName, contractAddr) {
+			di.Logger.Info(fmt.Sprintf("%s A dependency named %s already exists with a different remote source. Please fix the conflict and retry.", util.PrintEmoji("🚫"), contractName))
+			os.Exit(0)
+			return nil
+		}
 	}
 
 	// Check if remote source version is different from local version
 	// If it is, ask if they want to update
 	// If no hash, ignore
-	if dependency != nil && dependency.Hash != "" && dependency.Hash != originalContractDataHash {
+	if existingDependency != nil && existingDependency.Hash != "" && existingDependency.Hash != originalContractDataHash {
 		msg := fmt.Sprintf("The latest version of %s is different from the one you have locally. Do you want to update it?", contractName)
 		shouldUpdate, err := prompt.GenericBoolPrompt(msg)
 		if err != nil {
@@ -525,6 +529,23 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, co
 	}
 
 	return nil
+}
+
+// existingAliasMatches returns true if an existing contract with the given name has an alias
+// for the provided network that matches the specified address.
+func (di *DependencyInstaller) existingAliasMatches(contractName, networkName, contractAddr string) bool {
+	if di.State == nil || di.State.Contracts() == nil {
+		return false
+	}
+	contract, err := di.State.Contracts().ByName(contractName)
+	if err != nil || contract == nil {
+		return false
+	}
+	alias := contract.Aliases.ByNetwork(networkName)
+	if alias == nil {
+		return false
+	}
+	return alias.Address.String() == contractAddr
 }
 
 func (di *DependencyInstaller) handleAdditionalDependencyTasks(networkName, contractName string) error {
