@@ -293,6 +293,90 @@ func TestDependencyInstallerAddMany(t *testing.T) {
 	})
 }
 
+func TestTransitiveConflictAllowedWithMatchingAlias(t *testing.T) {
+	logger := output.NewStdoutLogger(output.NoneLog)
+	_, state, _ := util.TestMocks(t)
+
+	// Pre-install Foo as a mainnet dependency and add alias for testnet to match incoming
+	state.Dependencies().AddOrUpdate(config.Dependency{
+		Name: "Foo",
+		Source: config.Source{
+			NetworkName:  config.MainnetNetwork.Name,
+			Address:      flow.HexToAddress("0x0a"),
+			ContractName: "Foo",
+		},
+	})
+	// Ensure contract entry exists and add alias for testnet address 0x0b
+	state.Contracts().AddDependencyAsContract(config.Dependency{
+		Name: "Foo",
+		Source: config.Source{
+			NetworkName:  config.MainnetNetwork.Name,
+			Address:      flow.HexToAddress("0x0a"),
+			ContractName: "Foo",
+		},
+	}, config.MainnetNetwork.Name)
+	c, _ := state.Contracts().ByName("Foo")
+	c.Aliases.Add(config.TestnetNetwork.Name, flow.HexToAddress("0x0b"))
+
+	// Gateways per network
+	gwTestnet := mocks.DefaultMockGateway()
+	gwMainnet := mocks.DefaultMockGateway()
+	gwEmulator := mocks.DefaultMockGateway()
+
+	// Addresses
+	barAddr := flow.HexToAddress("0x0c")     // testnet address hosting Bar
+	fooTestAddr := flow.HexToAddress("0x0b") // testnet Foo address (transitive)
+
+	// Testnet GetAccount returns Bar at barAddr and Foo at fooTestAddr
+	gwTestnet.GetAccount.Run(func(args mock.Arguments) {
+		addr := args.Get(1).(flow.Address)
+		switch addr.String() {
+		case barAddr.String():
+			acc := tests.NewAccountWithAddress(addr.String())
+			acc.Contracts = map[string][]byte{
+				"Bar": []byte("import Foo from 0x0b\naccess(all) contract Bar {}"),
+			}
+			gwTestnet.GetAccount.Return(acc, nil)
+		case fooTestAddr.String():
+			acc := tests.NewAccountWithAddress(addr.String())
+			acc.Contracts = map[string][]byte{
+				"Foo": []byte("access(all) contract Foo {}"),
+			}
+			gwTestnet.GetAccount.Return(acc, nil)
+		default:
+			gwTestnet.GetAccount.Return(nil, fmt.Errorf("not found"))
+		}
+	})
+
+	// Mainnet/emulator not used for these addresses
+	gwMainnet.GetAccount.Run(func(args mock.Arguments) {
+		gwMainnet.GetAccount.Return(nil, fmt.Errorf("not found"))
+	})
+	gwEmulator.GetAccount.Run(func(args mock.Arguments) {
+		gwEmulator.GetAccount.Return(nil, fmt.Errorf("not found"))
+	})
+
+	di := &DependencyInstaller{
+		Gateways: map[string]gateway.Gateway{
+			config.EmulatorNetwork.Name: gwEmulator.Mock,
+			config.TestnetNetwork.Name:  gwTestnet.Mock,
+			config.MainnetNetwork.Name:  gwMainnet.Mock,
+		},
+		Logger:          logger,
+		State:           state,
+		SaveState:       true,
+		TargetDir:       "",
+		SkipDeployments: true,
+		SkipAlias:       true,
+		dependencies:    make(map[string]config.Dependency),
+	}
+
+	// Attempt to install Bar from testnet, which imports Foo from testnet transitively
+	// With matching alias, this should be allowed (no error)
+	err := di.AddBySourceString(fmt.Sprintf("%s://%s.%s", config.TestnetNetwork.Name, barAddr.String(), "Bar"))
+	assert.NoError(t, err)
+}
+
 func TestDependencyInstallerAliasTracking(t *testing.T) {
 	logger := output.NewStdoutLogger(output.NoneLog)
 	_, state, _ := util.TestMocks(t)
