@@ -55,6 +55,14 @@ type categorizedLogs struct {
 	issues            []string
 }
 
+// pendingPrompt represents a dependency that needs interactive prompts after tree display
+type pendingPrompt struct {
+	contractName    string
+	networkName     string
+	needsDeployment bool
+	needsAlias      bool
+}
+
 func (cl *categorizedLogs) LogAll(logger output.Logger) {
 	logger.Info(util.MessageWithEmojiPrefix("📝", "Dependency Manager Actions Summary"))
 	logger.Info("") // Add a line break after the section
@@ -118,6 +126,7 @@ type DependencyInstaller struct {
 	dependencies      map[string]config.Dependency
 	accountAliases    map[string]map[string]flowsdk.Address // network -> account -> alias
 	installCount      int                                   // Track number of dependencies installed
+	pendingPrompts    []pendingPrompt                       // Dependencies that need prompts after tree display
 }
 
 // NewDependencyInstaller creates a new instance of DependencyInstaller
@@ -155,6 +164,7 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State, saveStat
 		dependencies:      make(map[string]config.Dependency),
 		logs:              categorizedLogs{},
 		accountAliases:    make(map[string]map[string]flowsdk.Address),
+		pendingPrompts:    make([]pendingPrompt, 0),
 	}, nil
 }
 
@@ -171,11 +181,17 @@ func (di *DependencyInstaller) saveState() error {
 
 // Install processes all the dependencies in the state and installs them and any dependencies they have
 func (di *DependencyInstaller) Install() error {
+	// Phase 1: Process all dependencies and display tree (no prompts)
 	for _, dependency := range *di.State.Dependencies() {
 		if err := di.processDependency(dependency); err != nil {
 			di.Logger.Error(fmt.Sprintf("Error processing dependency: %v", err))
 			return err
 		}
+	}
+
+	// Phase 2: Handle all collected prompts after tree is complete
+	if err := di.processPendingPrompts(); err != nil {
+		return err
 	}
 
 	di.checkForConflictingContracts()
@@ -271,8 +287,14 @@ func isDefiActionsContract(contractName string) bool {
 
 // Add processes a single dependency and installs it and any dependencies it has, as well as adding it to the state
 func (di *DependencyInstaller) Add(dep config.Dependency) error {
+	// Phase 1: Process dependency and display tree (no prompts)
 	if err := di.processDependency(dep); err != nil {
 		return fmt.Errorf("error processing dependency: %w", err)
+	}
+
+	// Phase 2: Handle all collected prompts after tree is complete
+	if err := di.processPendingPrompts(); err != nil {
+		return err
 	}
 
 	di.checkForConflictingContracts()
@@ -286,10 +308,16 @@ func (di *DependencyInstaller) Add(dep config.Dependency) error {
 
 // AddMany processes multiple dependencies and installs them as well as adding them to the state
 func (di *DependencyInstaller) AddMany(dependencies []config.Dependency) error {
+	// Phase 1: Process all dependencies and display tree (no prompts)
 	for _, dep := range dependencies {
 		if err := di.processDependency(dep); err != nil {
 			return fmt.Errorf("error processing dependency: %w", err)
 		}
+	}
+
+	// Phase 2: Handle all collected prompts after tree is complete
+	if err := di.processPendingPrompts(); err != nil {
+		return err
 	}
 
 	di.checkForConflictingContracts()
@@ -568,14 +596,18 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 		}
 	}
 
+	// Check if this is a new dependency before updating state
+	isNewDep := di.State.Dependencies().ByName(contractName) == nil
+
 	err := di.updateDependencyState(dependency, originalContractDataHash)
 	if err != nil {
 		di.Logger.Error(fmt.Sprintf("Error updating state: %v", err))
 		return err
 	}
 
-	// Needs to happen before handleFileSystem
-	if !di.contractFileExists(contractAddr, contractName) {
+	// Handle additional tasks for new dependencies or when contract file doesn't exist
+	// This makes sure prompts are collected for new dependencies regardless of whether contract file exists
+	if isNewDep || !di.contractFileExists(contractAddr, contractName) {
 		err := di.handleAdditionalDependencyTasks(networkName, contractName)
 		if err != nil {
 			di.Logger.Error(fmt.Sprintf("Error handling additional dependency tasks: %v", err))
@@ -592,38 +624,32 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 }
 
 func (di *DependencyInstaller) handleAdditionalDependencyTasks(networkName, contractName string) error {
-	// If the contract is not a core contract and the user does not want to skip deployments, then prompt for a deployment
-	if !di.SkipDeployments && !util.IsCoreContract(contractName) {
-		// For DeFi Actions contracts, only allow deployment on emulator
-		if isDefiActionsContract(contractName) {
-			err := di.updateDependencyDeployment(contractName, "emulator")
-			if err != nil {
-				di.Logger.Error(fmt.Sprintf("Error updating deployment: %v", err))
-				return err
-			}
-			msg := util.MessageWithEmojiPrefix("✅", fmt.Sprintf("%s added to emulator deployments (DeFi Actions contracts only supported on emulator)", contractName))
-			di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
-		} else {
-			err := di.updateDependencyDeployment(contractName)
-			if err != nil {
-				di.Logger.Error(fmt.Sprintf("Error updating deployment: %v", err))
-				return err
-			}
-			msg := util.MessageWithEmojiPrefix("✅", fmt.Sprintf("%s added to emulator deployments", contractName))
-			di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
-		}
-	}
+	// If the contract is not a core contract and the user does not want to skip deployments, then collect for prompting later
+	needsDeployment := !di.SkipDeployments && !util.IsCoreContract(contractName)
 
-	// If the contract is not a core contract and the user does not want to skip aliasing, then prompt for an alias
-	if !di.SkipAlias && !util.IsCoreContract(contractName) && !isDefiActionsContract(contractName) {
-		err := di.updateDependencyAlias(contractName, networkName)
+	// For DeFi Actions contracts, only allow deployment on emulator (handle immediately since no prompt needed)
+	if needsDeployment && isDefiActionsContract(contractName) {
+		err := di.updateDependencyDeployment(contractName, "emulator")
 		if err != nil {
-			di.Logger.Error(fmt.Sprintf("Error updating alias: %v", err))
+			di.Logger.Error(fmt.Sprintf("Error updating deployment: %v", err))
 			return err
 		}
-
-		msg := util.MessageWithEmojiPrefix("✅", fmt.Sprintf("Alias added for %s on %s", contractName, networkName))
+		msg := util.MessageWithEmojiPrefix("✅", fmt.Sprintf("%s added to emulator deployments (DeFi Actions contracts only supported on emulator)", contractName))
 		di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
+		needsDeployment = false // Already handled
+	}
+
+	// If the contract is not a core contract and the user does not want to skip aliasing, then collect for prompting later
+	needsAlias := !di.SkipAlias && !util.IsCoreContract(contractName) && !isDefiActionsContract(contractName)
+
+	// Only add to pending prompts if we need to prompt for something
+	if needsDeployment || needsAlias {
+		di.pendingPrompts = append(di.pendingPrompts, pendingPrompt{
+			contractName:    contractName,
+			networkName:     networkName,
+			needsDeployment: needsDeployment,
+			needsAlias:      needsAlias,
+		})
 	}
 
 	return nil
@@ -769,6 +795,79 @@ func (di *DependencyInstaller) setAccountAlias(accountAddress, networkName strin
 		di.accountAliases[networkName] = make(map[string]flowsdk.Address)
 	}
 	di.accountAliases[networkName][accountAddress] = alias
+}
+
+// processPendingPrompts handles all collected prompts after the dependency tree is displayed
+func (di *DependencyInstaller) processPendingPrompts() error {
+	if len(di.pendingPrompts) == 0 {
+		return nil
+	}
+
+	di.Logger.Info("") // Add spacing after tree display
+
+	// Check if we have any dependencies that need deployments
+	hasDeployments := false
+	for _, pending := range di.pendingPrompts {
+		if pending.needsDeployment {
+			hasDeployments = true
+			break
+		}
+	}
+
+	// Check if we have any dependencies that need aliases
+	hasAliases := false
+	for _, pending := range di.pendingPrompts {
+		if pending.needsAlias {
+			hasAliases = true
+			break
+		}
+	}
+
+	setupDeployments := false
+	if hasDeployments {
+		result, err := prompt.GenericBoolPrompt("Do you want to set up deployments for these dependencies?")
+		if err != nil {
+			return err
+		}
+		setupDeployments = result
+	}
+
+	setupAliases := false
+	if hasAliases {
+		result, err := prompt.GenericBoolPrompt("Do you want to set up aliases for these dependencies?")
+		if err != nil {
+			return err
+		}
+		setupAliases = result
+	}
+
+	// Process prompts based on user choices
+	for _, pending := range di.pendingPrompts {
+		if pending.needsDeployment && setupDeployments {
+			err := di.updateDependencyDeployment(pending.contractName)
+			if err != nil {
+				di.Logger.Error(fmt.Sprintf("Error updating deployment: %v", err))
+				return err
+			}
+			msg := util.MessageWithEmojiPrefix("✅", fmt.Sprintf("%s added to emulator deployments", pending.contractName))
+			di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
+		}
+
+		if pending.needsAlias && setupAliases {
+			err := di.updateDependencyAlias(pending.contractName, pending.networkName)
+			if err != nil {
+				di.Logger.Error(fmt.Sprintf("Error updating alias: %v", err))
+				return err
+			}
+			msg := util.MessageWithEmojiPrefix("✅", fmt.Sprintf("Alias added for %s on %s", pending.contractName, pending.networkName))
+			di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
+		}
+	}
+
+	// Clear pending prompts after processing
+	di.pendingPrompts = make([]pendingPrompt, 0)
+
+	return nil
 }
 
 // GetInstallCount returns the number of dependencies installed
