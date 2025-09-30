@@ -22,7 +22,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"net"
 	"slices"
 	"strings"
 	"time"
@@ -176,15 +175,6 @@ func (r *accountsListResult) Oneliner() string {
 	return fmt.Sprintf("%d accounts found across %d networks", totalAccounts, totalNetworks)
 }
 
-func isEmulatorRunning(host string) bool {
-	conn, err := net.DialTimeout("tcp", host, 2*time.Second)
-	if err != nil {
-		return false
-	}
-	conn.Close()
-	return true
-}
-
 func getNetworkStatusIcon(network networkResult) string {
 	if network.Name == "emulator" || strings.Contains(network.Host, "127.0.0.1") || strings.Contains(network.Host, "localhost") {
 		if network.Warning != "" {
@@ -214,7 +204,7 @@ func validateAccountOnNetwork(account *accounts.Account, network *config.Network
 
 	// Check if emulator is running before trying to connect
 	if network.Name == "emulator" || strings.Contains(network.Host, "127.0.0.1") || strings.Contains(network.Host, "localhost") {
-		if !isEmulatorRunning(network.Host) {
+		if !util.IsEmulatorRunning(network.Host) {
 			result.Error = fmt.Sprintf("Emulator not running on %s", network.Host)
 			return result
 		}
@@ -310,7 +300,7 @@ func list(
 		}
 
 		if network.Name == "emulator" || strings.Contains(network.Host, "127.0.0.1") || strings.Contains(network.Host, "localhost") {
-			if !isEmulatorRunning(network.Host) {
+			if !util.IsEmulatorRunning(network.Host) {
 				networkRes.Warning = fmt.Sprintf("Emulator not running on %s", network.Host)
 			}
 		}
