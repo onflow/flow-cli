@@ -144,6 +144,11 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 				Name:         "CounterTransactionHandler",
 				TemplatePath: "contract_counter_transaction_handler.cdc.tmpl",
 				SkipTests:    true,
+				AddTestAlias: true,
+			},
+			generator.TestTemplate{
+				Name:         "CounterTransactionHandler",
+				TemplatePath: "contract_counter_transaction_handler_test.cdc.tmpl",
 			},
 			generator.ScriptTemplate{
 				Name:         "GetCounter",
