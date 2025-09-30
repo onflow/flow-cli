@@ -123,12 +123,11 @@ func (g *Generator) generate(item TemplateItem) error {
 		return fmt.Errorf("file already exists: %s", targetPath)
 	}
 
-	// Ensure the directory exists
+	// Make the directory exists
 	if err := g.state.ReaderWriter().MkdirAll(targetDirectory, 0755); err != nil {
 		return fmt.Errorf("error creating directories: %w", err)
 	}
 
-	// Write files
 	err = g.state.ReaderWriter().WriteFile(targetPath, []byte(outputContent), 0644)
 	if err != nil {
 		return fmt.Errorf("error writing file: %w", err)
