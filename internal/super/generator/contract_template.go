@@ -42,6 +42,7 @@ type ContractTemplate struct {
 	TemplatePath string
 	Data         map[string]interface{}
 	SkipTests    bool
+	AddTestAlias bool
 	SaveState    bool
 }
 
@@ -76,7 +77,7 @@ func (c ContractTemplate) GetTargetPath() string {
 func (c ContractTemplate) UpdateState(state *flowkit.State) error {
 	var aliases config.Aliases
 
-	if c.SkipTests != true {
+	if c.SkipTests != true || c.AddTestAlias {
 		aliases = config.Aliases{{
 			Network: config.TestingNetwork.Name,
 			Address: flowsdk.HexToAddress(DefaultTestAddress),
