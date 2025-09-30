@@ -495,23 +495,14 @@ func (di *DependencyInstaller) fetchDependenciesWithDepth(dependency config.Depe
 			importContractName := imp.Imports[0].Identifier.Identifier
 			importAddress := flowsdk.HexToAddress(imp.Location.String())
 
-			// Check if we already have this dependency with aliases
-			importSourceString := fmt.Sprintf("%s://%s.%s", networkName, importAddress.String(), importContractName)
-			var importDependency config.Dependency
-
-			if existingDep, exists := di.dependencies[importSourceString]; exists {
-				// Use the existing dependency (which may have aliases)
-				importDependency = existingDep
-			} else {
-				// Create a new dependency for the import
-				importDependency = config.Dependency{
-					Name: importContractName,
-					Source: config.Source{
-						NetworkName:  networkName,
-						Address:      importAddress,
-						ContractName: importContractName,
-					},
-				}
+			// Create a dependency for the import
+			importDependency := config.Dependency{
+				Name: importContractName,
+				Source: config.Source{
+					NetworkName:  networkName,
+					Address:      importAddress,
+					ContractName: importContractName,
+				},
 			}
 
 			err := di.fetchDependenciesWithDepth(importDependency, depth+1)
@@ -575,11 +566,14 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 
 	existingDependency := di.State.Dependencies().ByName(contractName)
 
-	// If a dependency by this name already exists and its remote source network or address does not match, then give option to stop or continue
+	// If a dependency by this name already exists and its remote source network or address does not match,
+	// allow it only if an existing alias matches the incoming network+address; otherwise terminate.
 	if existingDependency != nil && (existingDependency.Source.NetworkName != networkName || existingDependency.Source.Address.String() != contractAddr) {
-		di.Logger.Info(fmt.Sprintf("%s A dependency named %s already exists with a different remote source. Please fix the conflict and retry.", util.PrintEmoji("🚫"), contractName))
-		os.Exit(0)
-		return nil
+		if !di.existingAliasMatches(contractName, networkName, contractAddr) {
+			di.Logger.Info(fmt.Sprintf("%s A dependency named %s already exists with a different remote source. Please fix the conflict and retry.", util.PrintEmoji("🚫"), contractName))
+			os.Exit(0)
+			return nil
+		}
 	}
 
 	// Check if remote source version is different from local version
@@ -621,6 +615,23 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 	}
 
 	return nil
+}
+
+// existingAliasMatches returns true if an existing contract with the given name has an alias
+// for the provided network that matches the specified address.
+func (di *DependencyInstaller) existingAliasMatches(contractName, networkName, contractAddr string) bool {
+	if di.State == nil || di.State.Contracts() == nil {
+		return false
+	}
+	contract, err := di.State.Contracts().ByName(contractName)
+	if err != nil || contract == nil {
+		return false
+	}
+	alias := contract.Aliases.ByNetwork(networkName)
+	if alias == nil {
+		return false
+	}
+	return alias.Address.String() == contractAddr
 }
 
 func (di *DependencyInstaller) handleAdditionalDependencyTasks(networkName, contractName string) error {
