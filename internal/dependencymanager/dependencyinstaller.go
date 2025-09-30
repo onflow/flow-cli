@@ -99,10 +99,10 @@ func (cl *categorizedLogs) LogAll(logger output.Logger) {
 }
 
 type DependencyFlags struct {
-	skipDeployments    bool   `default:"false" flag:"skip-deployments" info:"Skip adding the dependency to deployments"`
-	skipAlias          bool   `default:"false" flag:"skip-alias" info:"Skip prompting for an alias"`
-	skipUpdatePrompts  bool   `default:"false" flag:"skip-update-prompts" info:"Skip prompting to update existing dependencies"`
-	deploymentAccount  string `default:"" flag:"deployment-account,d" info:"Account name to use for deployments (skips deployment account prompt)"`
+	skipDeployments   bool   `default:"false" flag:"skip-deployments" info:"Skip adding the dependency to deployments"`
+	skipAlias         bool   `default:"false" flag:"skip-alias" info:"Skip prompting for an alias"`
+	skipUpdatePrompts bool   `default:"false" flag:"skip-update-prompts" info:"Skip prompting to update existing dependencies"`
+	deploymentAccount string `default:"" flag:"deployment-account,d" info:"Account name to use for deployments (skips deployment account prompt)"`
 }
 
 func (f *DependencyFlags) AddToCommand(cmd *cobra.Command) {
