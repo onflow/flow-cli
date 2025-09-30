@@ -61,6 +61,8 @@ type pendingPrompt struct {
 	networkName     string
 	needsDeployment bool
 	needsAlias      bool
+	needsUpdate     bool
+	updateHash      string
 }
 
 func (cl *categorizedLogs) LogAll(logger output.Logger) {
@@ -97,9 +99,10 @@ func (cl *categorizedLogs) LogAll(logger output.Logger) {
 }
 
 type DependencyFlags struct {
-	skipDeployments   bool   `default:"false" flag:"skip-deployments" info:"Skip adding the dependency to deployments"`
-	skipAlias         bool   `default:"false" flag:"skip-alias" info:"Skip prompting for an alias"`
-	deploymentAccount string `default:"" flag:"deployment-account,d" info:"Account name to use for deployments (skips deployment account prompt)"`
+	skipDeployments    bool   `default:"false" flag:"skip-deployments" info:"Skip adding the dependency to deployments"`
+	skipAlias          bool   `default:"false" flag:"skip-alias" info:"Skip prompting for an alias"`
+	skipUpdatePrompts  bool   `default:"false" flag:"skip-update-prompts" info:"Skip prompting to update existing dependencies"`
+	deploymentAccount  string `default:"" flag:"deployment-account,d" info:"Account name to use for deployments (skips deployment account prompt)"`
 }
 
 func (f *DependencyFlags) AddToCommand(cmd *cobra.Command) {
@@ -577,17 +580,28 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 	}
 
 	// Check if remote source version is different from local version
-	// If it is, ask if they want to update
+	// If it is, defer the prompt until after the tree is displayed
 	// If no hash, ignore
 	if existingDependency != nil && existingDependency.Hash != "" && existingDependency.Hash != originalContractDataHash {
-		msg := fmt.Sprintf("The latest version of %s is different from the one you have locally. Do you want to update it?", contractName)
-		shouldUpdate, err := prompt.GenericBoolPrompt(msg)
-		if err != nil {
-			return err
+		// Find existing pending prompt for this contract or create new one
+		found := false
+		for i := range di.pendingPrompts {
+			if di.pendingPrompts[i].contractName == contractName {
+				di.pendingPrompts[i].needsUpdate = true
+				di.pendingPrompts[i].updateHash = originalContractDataHash
+				found = true
+				break
+			}
 		}
-		if !shouldUpdate {
-			return nil
+		if !found {
+			di.pendingPrompts = append(di.pendingPrompts, pendingPrompt{
+				contractName: contractName,
+				networkName:  networkName,
+				needsUpdate:  true,
+				updateHash:   originalContractDataHash,
+			})
 		}
+		return nil
 	}
 
 	// Check if this is a new dependency before updating state
@@ -853,6 +867,28 @@ func (di *DependencyInstaller) processPendingPrompts() error {
 	}
 
 	// Process prompts based on user choices
+	for _, pending := range di.pendingPrompts {
+		if pending.needsUpdate {
+			msg := fmt.Sprintf("The latest version of %s is different from the one you have locally. Do you want to update it?", pending.contractName)
+			shouldUpdate, err := prompt.GenericBoolPrompt(msg)
+			if err != nil {
+				return err
+			}
+			if shouldUpdate {
+				dependency := di.State.Dependencies().ByName(pending.contractName)
+				if dependency != nil {
+					err := di.updateDependencyState(*dependency, pending.updateHash)
+					if err != nil {
+						di.Logger.Error(fmt.Sprintf("Error updating dependency: %v", err))
+						return err
+					}
+					msg := util.MessageWithEmojiPrefix("✅", fmt.Sprintf("%s updated to latest version", pending.contractName))
+					di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
+				}
+			}
+		}
+	}
+
 	for _, pending := range di.pendingPrompts {
 		if pending.needsDeployment && setupDeployments {
 			err := di.updateDependencyDeployment(pending.contractName)
