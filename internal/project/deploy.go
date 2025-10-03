@@ -22,6 +22,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+    "strings"
 
 	"github.com/onflow/flow-cli/internal/prompt"
 
@@ -81,14 +82,21 @@ func deploy(
 	if err != nil {
 		var projectErr *flowkit.ProjectDeploymentError
 		if errors.As(err, &projectErr) {
-			for name, err := range projectErr.Contracts() {
+            showUpdateHint := false
+            for name, err := range projectErr.Contracts() {
 				logger.Info(fmt.Sprintf(
 					"%s Failed to deploy contract %s: %s",
 					output.ErrorEmoji(),
 					name,
 					err.Error(),
 				))
+                if !deployFlags.Update && (strings.Contains(err.Error(), "exists in account") || strings.Contains(err.Error(), "already exists")) {
+                    showUpdateHint = true
+                }
 			}
+            if showUpdateHint {
+                logger.Info(fmt.Sprintf("%s Contract already exists. To update it, run: flow project deploy --update", output.TryEmoji()))
+            }
 			return nil, fmt.Errorf("failed deploying all contracts")
 		}
 		return nil, err
