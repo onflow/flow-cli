@@ -284,6 +284,22 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 				Name:         "GetUSDFMockInfo",
 				TemplatePath: "script_get_usdf_mock_info.cdc.tmpl",
 			},
+			generator.TransactionTemplate{
+				Name:         "DepositToPiggyBank",
+				TemplatePath: "transaction_deposit_to_piggybank.cdc.tmpl",
+			},
+			generator.TransactionTemplate{
+				Name:         "MintUSDFMock",
+				TemplatePath: "transaction_mint_usdf_mock.cdc.tmpl",
+			},
+			generator.TransactionTemplate{
+				Name:         "SetupUSDFMockVault",
+				TemplatePath: "transaction_setup_usdf_mock_vault.cdc.tmpl",
+			},
+			generator.TransactionTemplate{
+				Name:         "WithdrawFromPiggyBank",
+				TemplatePath: "transaction_withdraw_from_piggybank.cdc.tmpl",
+			},
 		}
 	default:
 		// Return default templates if unknown project type
