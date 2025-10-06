@@ -268,6 +268,22 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 				Name:         "PiggyBank",
 				TemplatePath: "contract_piggybank_test.cdc.tmpl",
 			},
+			generator.ScriptTemplate{
+				Name:         "GetPiggyBankBalance",
+				TemplatePath: "script_get_piggybank_balance.cdc.tmpl",
+			},
+			generator.ScriptTemplate{
+				Name:         "GetUserUSDFBalance",
+				TemplatePath: "script_get_user_usdf_balance.cdc.tmpl",
+			},
+			generator.ScriptTemplate{
+				Name:         "GetUSDFMockBalance",
+				TemplatePath: "script_get_usdf_mock_balance.cdc.tmpl",
+			},
+			generator.ScriptTemplate{
+				Name:         "GetUSDFMockInfo",
+				TemplatePath: "script_get_usdf_mock_info.cdc.tmpl",
+			},
 		}
 	default:
 		// Return default templates if unknown project type
