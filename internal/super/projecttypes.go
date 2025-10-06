@@ -257,10 +257,16 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 			generator.ContractTemplate{
 				Name:         "PiggyBank",
 				TemplatePath: "contract_piggybank.cdc.tmpl",
+				SkipTests:    true,
+				AddTestAlias: true,
 			},
 			generator.ContractTemplate{
 				Name:         "USDFMock",
 				TemplatePath: "contract_usdfmock.cdc.tmpl",
+			},
+			generator.TestTemplate{
+				Name:         "PiggyBank",
+				TemplatePath: "contract_piggybank_test.cdc.tmpl",
 			},
 		}
 	default:
