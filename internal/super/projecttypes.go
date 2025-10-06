@@ -36,6 +36,7 @@ type ProjectType string
 const (
 	ProjectTypeDefault               ProjectType = "default"
 	ProjectTypeScheduledTransactions ProjectType = "scheduledtransactions"
+	ProjectTypeStablecoin            ProjectType = "stablecoin"
 	ProjectTypeCustom                ProjectType = "custom"
 )
 
@@ -108,6 +109,36 @@ func getProjectTypeConfigs() map[ProjectType]*ProjectTypeConfig {
 				},
 			},
 			ContractNames:     []string{"Counter", "CounterTransactionHandler"},
+			DeploymentAccount: "emulator-account",
+		},
+		ProjectTypeStablecoin: {
+			Description:   "Stablecoin USDF project",
+			CoreContracts: []string{"FungibleToken"},
+			CustomDependencies: []flowkitConfig.Dependency{
+				{
+					Name:   "EVMVMBridgedToken_2aabea2058b5ac2d339b163c6ab6f2b6d53aabed",
+					Source: flowkitConfig.Source{String: "cadence/contracts/USDF_MOCK.cdc"},
+					Aliases: flowkitConfig.Aliases{
+						{
+							Network: "emulator",
+							Address: flowsdk.HexToAddress("f8d6e0586b0a20c7"),
+						},
+						{
+							Network: "mainnet",
+							Address: flowsdk.HexToAddress("1e4aa0b87d10b141"),
+						},
+						{
+							Network: "testing",
+							Address: flowsdk.HexToAddress("0000000000000007"),
+						},
+						{
+							Network: "testnet",
+							Address: flowsdk.HexToAddress("b7ace0a920d2c37d"),
+						},
+					},
+				},
+			},
+			ContractNames:     []string{"PiggyBank", "USDFMock"},
 			DeploymentAccount: "emulator-account",
 		},
 		ProjectTypeCustom: {
@@ -219,6 +250,17 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 				TemplatePath: "cursor/quick_checklist.md.tmpl",
 				TargetPath:   ".cursor/rules/scheduledtransactions/quick-checklist.md",
 				Data:         map[string]interface{}{},
+			},
+		}
+	case ProjectTypeStablecoin:
+		return []generator.TemplateItem{
+			generator.ContractTemplate{
+				Name:         "PiggyBank",
+				TemplatePath: "contract_piggybank.cdc.tmpl",
+			},
+			generator.ContractTemplate{
+				Name:         "USDFMock",
+				TemplatePath: "contract_usdfmock.cdc.tmpl",
 			},
 		}
 	default:
