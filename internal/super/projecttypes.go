@@ -142,7 +142,7 @@ func getProjectTypeConfigs() map[ProjectType]*ProjectTypeConfig {
 					},
 				},
 			},
-			ContractNames:     []string{"PiggyBank", "USDFMock"},
+			ContractNames:     []string{"PiggyBank", "EVMVMBridgedToken_2aabea2058b5ac2d339b163c6ab6f2b6d53aabed"},
 			DeploymentAccount: "emulator-account",
 		},
 		ProjectTypeCustom: {
