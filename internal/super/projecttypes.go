@@ -112,8 +112,8 @@ func getProjectTypeConfigs() map[ProjectType]*ProjectTypeConfig {
 			DeploymentAccount: "emulator-account",
 		},
 		ProjectTypeStablecoin: {
-			Description:   "Stablecoin USDF project",
-			CoreContracts: []string{"FungibleToken"},
+			Description:   "Stablecoin project",
+			CoreContracts: []string{},
 			CustomDependencies: []flowkitConfig.Dependency{
 				{
 					Name: "EVMVMBridgedToken_2aabea2058b5ac2d339b163c6ab6f2b6d53aabed",
