@@ -116,8 +116,12 @@ func getProjectTypeConfigs() map[ProjectType]*ProjectTypeConfig {
 			CoreContracts: []string{"FungibleToken"},
 			CustomDependencies: []flowkitConfig.Dependency{
 				{
-					Name:   "EVMVMBridgedToken_2aabea2058b5ac2d339b163c6ab6f2b6d53aabed",
-					Source: flowkitConfig.Source{String: "cadence/contracts/USDF_MOCK.cdc"},
+					Name: "EVMVMBridgedToken_2aabea2058b5ac2d339b163c6ab6f2b6d53aabed",
+					Source: flowkitConfig.Source{
+						NetworkName:  flowkitConfig.TestnetNetwork.Name,
+						Address:      flowsdk.HexToAddress("b7ace0a920d2c37d"),
+						ContractName: "EVMVMBridgedToken_2aabea2058b5ac2d339b163c6ab6f2b6d53aabed",
+					},
 					Aliases: flowkitConfig.Aliases{
 						{
 							Network: "emulator",
