@@ -38,6 +38,7 @@ const (
 // Contract contains properties for contracts
 type ContractTemplate struct {
 	Name         string
+	FileName     string // Optional: If set, use this for the file name instead of Name
 	Account      string
 	TemplatePath string
 	Data         map[string]interface{}
@@ -71,7 +72,11 @@ func (c ContractTemplate) GetData() map[string]interface{} {
 }
 
 func (c ContractTemplate) GetTargetPath() string {
-	return filepath.Join(DefaultCadenceDirectory, DefaultContractDirectory, c.Account, util.AddCDCExtension(c.Name))
+	fileName := c.Name
+	if c.FileName != "" {
+		fileName = c.FileName
+	}
+	return filepath.Join(DefaultCadenceDirectory, DefaultContractDirectory, c.Account, util.AddCDCExtension(fileName))
 }
 
 func (c ContractTemplate) UpdateState(state *flowkit.State) error {

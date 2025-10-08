@@ -265,7 +265,8 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 				AddTestAlias: true,
 			},
 			generator.ContractTemplate{
-				Name:         "USDFMock",
+				Name:         "EVMVMBridgedToken_2aabea2058b5ac2d339b163c6ab6f2b6d53aabed",
+				FileName:     "USDFMock",
 				TemplatePath: "contract_usdfmock.cdc.tmpl",
 			},
 			generator.TestTemplate{
