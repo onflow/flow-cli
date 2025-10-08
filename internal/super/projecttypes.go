@@ -300,6 +300,11 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 				Name:         "WithdrawFromPiggyBank",
 				TemplatePath: "transaction_withdraw_from_piggybank.cdc.tmpl",
 			},
+			generator.FileTemplate{
+				TemplatePath: "README_stablecoin.md.tmpl",
+				TargetPath:   getReadmeFileName(targetDir),
+				Data:         map[string]interface{}{},
+			},
 		}
 	default:
 		// Return default templates if unknown project type
