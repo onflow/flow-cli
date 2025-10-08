@@ -112,38 +112,11 @@ func getProjectTypeConfigs() map[ProjectType]*ProjectTypeConfig {
 			DeploymentAccount: "emulator-account",
 		},
 		ProjectTypeStablecoin: {
-			Description:   "Stablecoin project",
-			CoreContracts: []string{},
-			CustomDependencies: []flowkitConfig.Dependency{
-				{
-					Name: "EVMVMBridgedToken_2aabea2058b5ac2d339b163c6ab6f2b6d53aabed",
-					Source: flowkitConfig.Source{
-						NetworkName:  flowkitConfig.TestnetNetwork.Name,
-						Address:      flowsdk.HexToAddress("b7ace0a920d2c37d"),
-						ContractName: "EVMVMBridgedToken_2aabea2058b5ac2d339b163c6ab6f2b6d53aabed",
-					},
-					Aliases: flowkitConfig.Aliases{
-						{
-							Network: "emulator",
-							Address: flowsdk.HexToAddress("f8d6e0586b0a20c7"),
-						},
-						{
-							Network: "mainnet",
-							Address: flowsdk.HexToAddress("1e4aa0b87d10b141"),
-						},
-						{
-							Network: "testing",
-							Address: flowsdk.HexToAddress("0000000000000007"),
-						},
-						{
-							Network: "testnet",
-							Address: flowsdk.HexToAddress("b7ace0a920d2c37d"),
-						},
-					},
-				},
-			},
-			ContractNames:     []string{"PiggyBank", "EVMVMBridgedToken_2aabea2058b5ac2d339b163c6ab6f2b6d53aabed"},
-			DeploymentAccount: "emulator-account",
+			Description:        "Stablecoin project",
+			CoreContracts:      []string{"FungibleToken"},
+			CustomDependencies: []flowkitConfig.Dependency{},
+			ContractNames:      []string{"PiggyBank", "EVMVMBridgedToken_2aabea2058b5ac2d339b163c6ab6f2b6d53aabed"},
+			DeploymentAccount:  "emulator-account",
 		},
 		ProjectTypeCustom: {
 			Description:        "Custom project (select standard Flow contract dependencies)",
@@ -268,6 +241,24 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 				Name:         "EVMVMBridgedToken_2aabea2058b5ac2d339b163c6ab6f2b6d53aabed",
 				FileName:     "USDFMock",
 				TemplatePath: "contract_usdfmock.cdc.tmpl",
+				Aliases: flowkitConfig.Aliases{
+					{
+						Network: "emulator",
+						Address: flowsdk.HexToAddress("f8d6e0586b0a20c7"),
+					},
+					{
+						Network: "mainnet",
+						Address: flowsdk.HexToAddress("1e4aa0b87d10b141"),
+					},
+					{
+						Network: "testing",
+						Address: flowsdk.HexToAddress("0000000000000007"),
+					},
+					{
+						Network: "testnet",
+						Address: flowsdk.HexToAddress("b7ace0a920d2c37d"),
+					},
+				},
 			},
 			generator.TestTemplate{
 				Name:         "PiggyBank",
