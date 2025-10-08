@@ -12,17 +12,17 @@ require (
 	github.com/getsentry/sentry-go v0.35.3
 	github.com/gosuri/uilive v0.0.4
 	github.com/logrusorgru/aurora/v4 v4.0.0
-	github.com/onflow/cadence v1.7.0
+	github.com/onflow/cadence v1.7.1
 	github.com/onflow/cadence-tools/languageserver v1.6.0
 	github.com/onflow/cadence-tools/lint v1.4.0
 	github.com/onflow/cadence-tools/test v1.5.2
 	github.com/onflow/fcl-dev-wallet v0.8.0
 	github.com/onflow/flixkit-go/v2 v2.5.1
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.9.0
-	github.com/onflow/flow-emulator v1.7.4
+	github.com/onflow/flow-emulator v1.8.0
 	github.com/onflow/flow-evm-gateway v1.3.3
-	github.com/onflow/flow-go v0.43.1-rc.1.0.20250924183344-715803471569
-	github.com/onflow/flow-go-sdk v1.8.3
+	github.com/onflow/flow-go v0.43.1-rc.5-pr8007.0.20251007165614-c6967df18fa9
+	github.com/onflow/flow-go-sdk v1.8.4
 	github.com/onflow/flowkit/v2 v2.6.0
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
@@ -105,6 +105,7 @@ require (
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.8.1-0.20250402194037-6f932b086829 // indirect
 	github.com/fxamacker/circlehash v0.3.0 // indirect
+	github.com/fxamacker/golang-lru/v2 v2.0.0-20250716153046-22c8d17dc4ee // indirect
 	github.com/glebarez/go-sqlite v1.22.0 // indirect
 	github.com/go-kit/kit v0.12.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
@@ -213,7 +214,7 @@ require (
 	github.com/onsi/gomega v1.34.1 // indirect
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
-	github.com/pierrec/lz4 v2.6.1+incompatible // indirect
+	github.com/pierrec/lz4/v4 v4.1.22 // indirect
 	github.com/pion/dtls/v2 v2.2.12 // indirect
 	github.com/pion/logging v0.2.2 // indirect
 	github.com/pion/stun/v2 v2.0.0 // indirect
