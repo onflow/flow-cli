@@ -38,11 +38,13 @@ const (
 // Contract contains properties for contracts
 type ContractTemplate struct {
 	Name         string
+	FileName     string // Optional: If set, use this for the file name instead of Name
 	Account      string
 	TemplatePath string
 	Data         map[string]interface{}
 	SkipTests    bool
 	AddTestAlias bool
+	Aliases      config.Aliases // Optional: Custom aliases for the contract
 	SaveState    bool
 }
 
@@ -71,13 +73,20 @@ func (c ContractTemplate) GetData() map[string]interface{} {
 }
 
 func (c ContractTemplate) GetTargetPath() string {
-	return filepath.Join(DefaultCadenceDirectory, DefaultContractDirectory, c.Account, util.AddCDCExtension(c.Name))
+	fileName := c.Name
+	if c.FileName != "" {
+		fileName = c.FileName
+	}
+	return filepath.Join(DefaultCadenceDirectory, DefaultContractDirectory, c.Account, util.AddCDCExtension(fileName))
 }
 
 func (c ContractTemplate) UpdateState(state *flowkit.State) error {
 	var aliases config.Aliases
 
-	if c.SkipTests != true || c.AddTestAlias {
+	// Use custom aliases if provided, otherwise use default test alias behavior
+	if len(c.Aliases) > 0 {
+		aliases = c.Aliases
+	} else if c.SkipTests != true || c.AddTestAlias {
 		aliases = config.Aliases{{
 			Network: config.TestingNetwork.Name,
 			Address: flowsdk.HexToAddress(DefaultTestAddress),

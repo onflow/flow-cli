@@ -36,6 +36,7 @@ type ProjectType string
 const (
 	ProjectTypeDefault               ProjectType = "default"
 	ProjectTypeScheduledTransactions ProjectType = "scheduledtransactions"
+	ProjectTypeStablecoin            ProjectType = "stablecoin"
 	ProjectTypeCustom                ProjectType = "custom"
 )
 
@@ -109,6 +110,13 @@ func getProjectTypeConfigs() map[ProjectType]*ProjectTypeConfig {
 			},
 			ContractNames:     []string{"Counter", "CounterTransactionHandler"},
 			DeploymentAccount: "emulator-account",
+		},
+		ProjectTypeStablecoin: {
+			Description:        "Stablecoin project",
+			CoreContracts:      []string{"FungibleToken", "FungibleTokenMetadataViews", "MetadataViews"},
+			CustomDependencies: []flowkitConfig.Dependency{},
+			ContractNames:      []string{"PiggyBank", "EVMVMBridgedToken_2aabea2058b5ac2d339b163c6ab6f2b6d53aabed"},
+			DeploymentAccount:  "emulator-account",
 		},
 		ProjectTypeCustom: {
 			Description:        "Custom project (select standard Flow contract dependencies)",
@@ -218,6 +226,79 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 			generator.FileTemplate{
 				TemplatePath: "cursor/quick_checklist.md.tmpl",
 				TargetPath:   ".cursor/rules/scheduledtransactions/quick-checklist.md",
+				Data:         map[string]interface{}{},
+			},
+		}
+	case ProjectTypeStablecoin:
+		return []generator.TemplateItem{
+			generator.ContractTemplate{
+				Name:         "PiggyBank",
+				TemplatePath: "contract_piggybank.cdc.tmpl",
+				SkipTests:    true,
+				AddTestAlias: true,
+			},
+			generator.ContractTemplate{
+				Name:         "EVMVMBridgedToken_2aabea2058b5ac2d339b163c6ab6f2b6d53aabed",
+				FileName:     "USDFMock",
+				TemplatePath: "contract_usdfmock.cdc.tmpl",
+				Aliases: flowkitConfig.Aliases{
+					{
+						Network: "emulator",
+						Address: flowsdk.HexToAddress("f8d6e0586b0a20c7"),
+					},
+					{
+						Network: "mainnet",
+						Address: flowsdk.HexToAddress("1e4aa0b87d10b141"),
+					},
+					{
+						Network: "testing",
+						Address: flowsdk.HexToAddress("0000000000000007"),
+					},
+					{
+						Network: "testnet",
+						Address: flowsdk.HexToAddress("b7ace0a920d2c37d"),
+					},
+				},
+			},
+			generator.TestTemplate{
+				Name:         "PiggyBank",
+				TemplatePath: "contract_piggybank_test.cdc.tmpl",
+			},
+			generator.ScriptTemplate{
+				Name:         "GetPiggyBankBalance",
+				TemplatePath: "script_get_piggybank_balance.cdc.tmpl",
+			},
+			generator.ScriptTemplate{
+				Name:         "GetUserUSDFBalance",
+				TemplatePath: "script_get_user_usdf_balance.cdc.tmpl",
+			},
+			generator.ScriptTemplate{
+				Name:         "GetUSDFMockBalance",
+				TemplatePath: "script_get_usdf_mock_balance.cdc.tmpl",
+			},
+			generator.ScriptTemplate{
+				Name:         "GetUSDFMockInfo",
+				TemplatePath: "script_get_usdf_mock_info.cdc.tmpl",
+			},
+			generator.TransactionTemplate{
+				Name:         "DepositToPiggyBank",
+				TemplatePath: "transaction_deposit_to_piggybank.cdc.tmpl",
+			},
+			generator.TransactionTemplate{
+				Name:         "MintUSDFMock",
+				TemplatePath: "transaction_mint_usdf_mock.cdc.tmpl",
+			},
+			generator.TransactionTemplate{
+				Name:         "SetupUSDFMockVault",
+				TemplatePath: "transaction_setup_usdf_mock_vault.cdc.tmpl",
+			},
+			generator.TransactionTemplate{
+				Name:         "WithdrawFromPiggyBank",
+				TemplatePath: "transaction_withdraw_from_piggybank.cdc.tmpl",
+			},
+			generator.FileTemplate{
+				TemplatePath: "README_stablecoin.md.tmpl",
+				TargetPath:   getReadmeFileName(targetDir),
 				Data:         map[string]interface{}{},
 			},
 		}
