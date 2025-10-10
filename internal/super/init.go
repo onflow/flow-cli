@@ -23,12 +23,14 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/onflow/flowkit/v2"
 
 	"github.com/spf13/afero"
 
+	"github.com/onflow/flow-cli/build"
 	"github.com/onflow/flow-cli/common/branding"
 	"github.com/onflow/flow-cli/internal/prompt"
 
@@ -278,6 +280,14 @@ func startInteractiveInit(
 	}
 
 	projectType := descriptionToType[selectedProject]
+
+	// Track the selected project type for analytics
+	command.TrackEvent("project-init", map[string]any{
+		"project_type": string(projectType),
+		"version":      build.Semver(),
+		"os":           runtime.GOOS,
+	})
+
 	switch projectType {
 	case ProjectTypeCustom:
 		err := dependencymanager.PromptInstallCoreContracts(logger, state, tempDir, nil, dependencymanager.DependencyFlags{})
