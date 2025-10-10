@@ -60,7 +60,7 @@ type gatewayFlag struct {
 	RPCPort           int    `flag:"rpc-port" default:"3000" info:"port for the RPC API server"`
 	AccessNodeHost    string `flag:"access-node-host" default:"localhost:3569" info:"host to the flow access node gRPC API"`
 	InitCadenceHeight uint64 `flag:"init-cadence-height" default:"0" info:"init cadence block height from where the event ingestion will start. WARNING: you should only provide this if there are no existing values in the database, otherwise an error will be thrown"`
-	EVMNetworkID      string `flag:"evm-network-id" default:"testnet" info:"EVM network ID (testnet, mainnet)"`
+	EVMNetworkID      string `flag:"evm-network-id" default:"testnet" info:"EVM network ID (preview, testnet, mainnet)"`
 	FlowNetworkID     string `flag:"flow-network-id" default:"emulator" info:"EVM network ID (emulator, testnet, mainnet)"`
 	Coinbase          string `flag:"coinbase" default:"" info:"coinbase address to use for fee collection"`
 	GasPrice          string `flag:"gas-price" default:"1" info:"static gas price used for EVM transactions"`
@@ -126,6 +126,8 @@ var gatewayCommand = &command.Command{
 		switch flagGateway.EVMNetworkID {
 		case "testnet":
 			cfg.EVMNetworkID = types.FlowEVMTestNetChainID
+		case "preview":
+			cfg.EVMNetworkID = types.FlowEVMPreviewNetChainID
 		case "mainnet":
 			cfg.EVMNetworkID = types.FlowEVMMainNetChainID
 		default:
