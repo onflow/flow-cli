@@ -24,7 +24,7 @@ import "github.com/charmbracelet/lipgloss"
 var (
 	FlowGreen  = lipgloss.Color("#02D87E")
 	GrayText   = lipgloss.Color("8")
-	PurpleText = lipgloss.Color("#50268C")
+	PurpleText = lipgloss.Color("#823EE4")
 	ErrorRed   = lipgloss.Color("#E55555")
 )
 

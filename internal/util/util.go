@@ -22,11 +22,13 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 	"slices"
 	"strings"
 	"text/tabwriter"
+	"time"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -43,6 +45,21 @@ const EnvPrefix = "FLOW"
 func Exit(code int, msg string) {
 	fmt.Fprintln(os.Stderr, msg)
 	os.Exit(code)
+}
+
+// IsAddressValidForNetwork checks if an address is valid for a specific network
+func IsAddressValidForNetwork(address flow.Address, networkName string) bool {
+	switch networkName {
+	case "mainnet":
+		return address.IsValid(flow.Mainnet)
+	case "testnet":
+		return address.IsValid(flow.Testnet)
+	case "emulator", "testing":
+		return address.IsValid(flow.Emulator)
+	default:
+		// For custom networks, assume they use the same validation as emulator
+		return address.IsValid(flow.Emulator)
+	}
 }
 
 // entryExists checks if an entry already exists in the content
@@ -238,49 +255,6 @@ func removeFromStringArray(s []string, el string) []string {
 	return s
 }
 
-func GetAccountByContractName(state *flowkit.State, contractName string, network config.Network) (*accounts.Account, error) {
-	deployments := state.Deployments().ByNetwork(network.Name)
-	var accountName string
-	for _, d := range deployments {
-		for _, c := range d.Contracts {
-			if c.Name == contractName {
-				accountName = d.Account
-				break
-			}
-		}
-	}
-	if accountName == "" {
-		return nil, fmt.Errorf("contract not found in state")
-	}
-
-	accs := state.Accounts()
-	if accs == nil {
-		return nil, fmt.Errorf("no accounts found in state")
-	}
-
-	var account *accounts.Account
-	for _, a := range *accs {
-		if accountName == a.Name {
-			account = &a
-			break
-		}
-	}
-	if account == nil {
-		return nil, fmt.Errorf("account %s not found in state", accountName)
-	}
-
-	return account, nil
-}
-
-func GetAddressByContractName(state *flowkit.State, contractName string, network config.Network) (flow.Address, error) {
-	account, err := GetAccountByContractName(state, contractName, network)
-	if err != nil {
-		return flow.Address{}, err
-	}
-
-	return flow.HexToAddress(account.Address.Hex()), nil
-}
-
 func CheckNetwork(network config.Network) error {
 	if network.Name != config.TestnetNetwork.Name && network.Name != config.MainnetNetwork.Name {
 		return fmt.Errorf("staging contracts is only supported on testnet & mainnet networks, see https://cadence-lang.org/docs/cadence-migration-guide for more information")
@@ -333,4 +307,14 @@ func GetSignerAccount(state *flowkit.State, signerName string) (*accounts.Accoun
 		return nil, fmt.Errorf("failed to resolve signer account '%s': %w", signerName, err)
 	}
 	return signer, nil
+}
+
+// IsEmulatorRunning checks if the emulator is running on the given host
+func IsEmulatorRunning(host string) bool {
+	conn, err := net.DialTimeout("tcp", host, 2*time.Second)
+	if err != nil {
+		return false
+	}
+	conn.Close()
+	return true
 }

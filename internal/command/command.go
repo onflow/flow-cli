@@ -366,11 +366,13 @@ func initCrashReporting() {
 // The token is injected at build-time using ldflags
 var MixpanelToken = ""
 
-func UsageMetrics(command *cobra.Command, wg *sync.WaitGroup) {
+// TrackEvent sends an analytics event to Mixpanel with the given event name and properties.
+// It automatically handles user ID hashing and respects metrics settings.
+func TrackEvent(eventName string, properties map[string]any) {
 	if !settings.MetricsEnabled() || MixpanelToken == "" {
 		return
 	}
-	wg.Add(1)
+
 	client := mixpanel.New(MixpanelToken, "")
 
 	// calculates a user ID that doesn't leak any personal information
@@ -378,16 +380,26 @@ func UsageMetrics(command *cobra.Command, wg *sync.WaitGroup) {
 	hash := sha256.Sum256(fmt.Appendf(nil, "%s%s", usr.Username, usr.Uid))
 	userID := base64.StdEncoding.EncodeToString(hash[:])
 
-	_ = client.Track(userID, "cli-command", &mixpanel.Event{
-		IP: "0", // do not track IPs
-		Properties: map[string]any{
-			"command": command.CommandPath(),
-			"network": Flags.Network,
-			"version": build.Semver(),
-			"os":      runtime.GOOS,
-			"ci":      os.Getenv("CI") != "", // CI is commonly set by CI providers
-		},
+	_ = client.Track(userID, eventName, &mixpanel.Event{
+		IP:         "0", // do not track IPs
+		Properties: properties,
 	})
+}
+
+func UsageMetrics(command *cobra.Command, wg *sync.WaitGroup) {
+	if !settings.MetricsEnabled() || MixpanelToken == "" {
+		return
+	}
+	wg.Add(1)
+
+	TrackEvent("cli-command", map[string]any{
+		"command": command.CommandPath(),
+		"network": Flags.Network,
+		"version": build.Semver(),
+		"os":      runtime.GOOS,
+		"ci":      os.Getenv("CI") != "", // CI is commonly set by CI providers
+	})
+
 	wg.Done()
 }
 

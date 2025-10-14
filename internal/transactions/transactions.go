@@ -38,6 +38,7 @@ import (
 
 var Cmd = &cobra.Command{
 	Use:              "transactions",
+	Aliases:          []string{"tx"},
 	Short:            "Build, sign, send and retrieve transactions",
 	TraverseChildren: true,
 	GroupID:          "interactions",
