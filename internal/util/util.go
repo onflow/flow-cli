@@ -36,7 +36,6 @@ import (
 	flowGo "github.com/onflow/flow-go/model/flow"
 
 	"github.com/onflow/flowkit/v2"
-	"github.com/onflow/flowkit/v2/accounts"
 	"github.com/onflow/flowkit/v2/config"
 )
 
@@ -282,31 +281,6 @@ func IsCoreContract(contractName string) bool {
 		}
 	}
 	return false
-}
-
-// ResolveAddressOrAccountName resolves a string that could be either an address or account name
-func ResolveAddressOrAccountName(input string, state *flowkit.State) (flow.Address, error) {
-	address := flow.HexToAddress(input)
-
-	if address.IsValid(flow.Mainnet) || address.IsValid(flow.Testnet) || address.IsValid(flow.Emulator) {
-		return address, nil
-	}
-
-	account, err := state.Accounts().ByName(input)
-	if err != nil {
-		return flow.EmptyAddress, fmt.Errorf("could not find account with name %s", input)
-	}
-
-	return account.Address, nil
-}
-
-// GetSignerAccount resolves and returns the signer account from the state by name
-func GetSignerAccount(state *flowkit.State, signerName string) (*accounts.Account, error) {
-	signer, err := state.Accounts().ByName(signerName)
-	if err != nil {
-		return nil, fmt.Errorf("failed to resolve signer account '%s': %w", signerName, err)
-	}
-	return signer, nil
 }
 
 // IsEmulatorRunning checks if the emulator is running on the given host

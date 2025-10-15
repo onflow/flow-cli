@@ -145,3 +145,12 @@ func ResolveAddressOrAccountNameForNetworks(input string, state *flowkit.State, 
 	networksStr := strings.Join(supportedNetworks, " and ")
 	return flow.EmptyAddress, fmt.Errorf("account %s has address %s which is not valid for %s addresses", input, account.Address.String(), networksStr)
 }
+
+// GetSignerAccount resolves and returns the signer account from the state by name
+func GetSignerAccount(state *flowkit.State, signerName string) (*accounts.Account, error) {
+	signer, err := state.Accounts().ByName(signerName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve signer account '%s': %w", signerName, err)
+	}
+	return signer, nil
+}

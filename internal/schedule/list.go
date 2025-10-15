@@ -72,7 +72,7 @@ func listRun(
 	accountInput := args[0]
 
 	// Resolve account address from input (could be address or account name)
-	address, err := util.ResolveAddressOrAccountName(accountInput, state)
+	address, err := util.ResolveAddressOrAccountNameForNetworks(accountInput, state, []string{"mainnet", "testnet", "emulator"})
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve account: %w", err)
 	}
