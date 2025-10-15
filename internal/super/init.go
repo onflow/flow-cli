@@ -23,12 +23,14 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/onflow/flowkit/v2"
 
 	"github.com/spf13/afero"
 
+	"github.com/onflow/flow-cli/build"
 	"github.com/onflow/flow-cli/common/branding"
 	"github.com/onflow/flow-cli/internal/prompt"
 
@@ -220,7 +222,7 @@ func startInteractiveInit(
 	// Resolve target directory from arguments or user input
 	var userInput string
 	if len(args) < 1 {
-		userInput, err = prompt.RunTextInput("Enter the name of your project (leave blank to use current directory)", "Type your project name here or press Enter for current directory...")
+		userInput, err = prompt.RunTextInput("Enter the name of your project (leave blank to use current directory)", "Project name or Enter for current directory")
 		if err != nil {
 			return "", fmt.Errorf("error running project name: %v", err)
 		}
@@ -257,76 +259,63 @@ func startInteractiveInit(
 		return "", fmt.Errorf("failed to initialize configuration: %w", err)
 	}
 
-	msg := "Would you like to install any standard Flow contracts and their dependencies?"
-	installContracts, err := prompt.GenericBoolPrompt(msg)
+	projectTypes := []ProjectType{
+		ProjectTypeDefault,
+		ProjectTypeScheduledTransactions,
+		ProjectTypeStablecoin,
+		ProjectTypeCustom,
+	}
+	projectOptions := make([]string, len(projectTypes))
+	descriptionToType := make(map[string]ProjectType)
+	for i, pt := range projectTypes {
+		description := getProjectTypeConfig(pt).Description
+		projectOptions[i] = description
+		descriptionToType[description] = pt
+	}
+
+	msg := "What type of Flow project would you like to create?"
+	selectedProject, err := prompt.RunSingleSelect(projectOptions, msg)
 	if err != nil {
 		return "", err
 	}
-	if installContracts {
-		err := dependencymanager.PromptInstallCoreContracts(logger, state, tempDir, nil)
+
+	projectType := descriptionToType[selectedProject]
+
+	// Track the selected project type for analytics
+	command.TrackEvent("project-init", map[string]any{
+		"project_type": string(projectType),
+		"version":      build.Semver(),
+		"os":           runtime.GOOS,
+	})
+
+	switch projectType {
+	case ProjectTypeCustom:
+		err := dependencymanager.PromptInstallCoreContracts(logger, state, tempDir, nil, dependencymanager.DependencyFlags{})
+		if err != nil {
+			return "", err
+		}
+		projectType = ProjectTypeDefault
+	case ProjectTypeScheduledTransactions, ProjectTypeStablecoin:
+		err := installProjectDependencies(logger, state, tempDir, projectType)
 		if err != nil {
 			return "", err
 		}
 	}
 
-	// Generate standard cadence files & README.md
-	// cadence/contracts/DefaultContract.cdc
-	// cadence/scripts/DefaultScript.cdc
-	// cadence/transactions/DefaultTransaction.cdc
-	// cadence/tests/DefaultContract_test.cdc
-	// README.md
-
-	// Determine README filename - avoid conflicts with existing README.md
-	readmeFileName := getReadmeFileName(targetDir)
-
-	templates := []generator.TemplateItem{
-		generator.ContractTemplate{
-			Name:         "Counter",
-			TemplatePath: "contract_counter.cdc.tmpl",
-		},
-		generator.ScriptTemplate{
-			Name:         "GetCounter",
-			TemplatePath: "script_counter.cdc.tmpl",
-			Data:         map[string]interface{}{"ContractName": "Counter"},
-		},
-		generator.TransactionTemplate{
-			Name:         "IncrementCounter",
-			TemplatePath: "transaction_counter.cdc.tmpl",
-			Data:         map[string]interface{}{"ContractName": "Counter"},
-		},
-		generator.FileTemplate{
-			TemplatePath: "README.md.tmpl",
-			TargetPath:   readmeFileName,
-			Data: map[string]interface{}{
-				"Dependencies": (func() []map[string]interface{} {
-					contracts := []map[string]interface{}{}
-					for _, dep := range *state.Dependencies() {
-						contracts = append(contracts, map[string]interface{}{
-							"Name": dep.Name,
-						})
-					}
-					return contracts
-				})(),
-				"Contracts": []map[string]interface{}{
-					{"Name": "Counter"},
-				},
-				"Scripts": []map[string]interface{}{
-					{"Name": "GetCounter"},
-				},
-				"Transactions": []map[string]interface{}{
-					{"Name": "IncrementCounter"},
-				},
-				"Tests": []map[string]interface{}{
-					{"Name": "Counter_test"},
-				},
-			},
-		},
-	}
+	templates := getProjectTemplates(projectType, targetDir, state)
 
 	g := generator.NewGenerator(tempDir, state, logger, true, false)
 	err = g.Create(templates...)
 	if err != nil {
 		return "", err
+	}
+
+	// Add project-specific contract deployments
+	if projectType == ProjectTypeScheduledTransactions || projectType == ProjectTypeStablecoin {
+		err = addContractDeployments(state, projectType)
+		if err != nil {
+			return "", err
+		}
 	}
 
 	err = state.Save(filepath.Join(tempDir, "flow.json"))
@@ -404,7 +393,7 @@ func (s *initResult) String() string {
 	}
 
 	// Colorized footer message
-	readmeMsg := branding.GrayStyle.Render(fmt.Sprintf("You should also read %s to learn more about the development process!", readmeFile))
+	readmeMsg := branding.GrayStyle.Render(fmt.Sprintf("See %s for details on how to run and use your project.", readmeFile))
 	out.WriteString(fmt.Sprintf("%s\n", readmeMsg))
 
 	return out.String()
