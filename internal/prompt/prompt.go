@@ -374,6 +374,34 @@ func NewNetworkPrompt() map[string]string {
 	return networkData
 }
 
+func NewAliasPrompt() *AliasData {
+	alias := &AliasData{
+		Contract: NamePrompt(),
+	}
+
+	alias.Network, _ = RunTextInputWithValidation(
+		"Enter network name",
+		"testnet",
+		"",
+		func(s string) error {
+			if len(s) < 1 {
+				return fmt.Errorf("network name cannot be empty")
+			}
+			return nil
+		},
+	)
+
+	alias.Address = addressPrompt("Enter address for alias", "invalid address", false)
+
+	return alias
+}
+
+type AliasData struct {
+	Contract string
+	Network  string
+	Address  string
+}
+
 type DeploymentData struct {
 	Network   string
 	Account   string
