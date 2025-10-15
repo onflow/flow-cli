@@ -30,6 +30,7 @@ import (
 	"github.com/onflow/flowkit/v2/output"
 	"github.com/onflow/flowkit/v2/transactions"
 
+	"github.com/onflow/flow-cli/common/branding"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
 )
@@ -93,9 +94,15 @@ func setupRun(
 		return nil, err
 	}
 
-	logger.Info(fmt.Sprintf("Network: %s", globalFlags.Network))
-	logger.Info(fmt.Sprintf("Signer: %s (%s)", setupFlags.Signer, address.String()))
-	logger.Info("Setting up Flow Transaction Scheduler Manager resource...")
+	// Log setup information with styled output
+	networkStr := branding.GrayStyle.Render(globalFlags.Network)
+	addressStr := branding.PurpleStyle.Render(address.HexWithPrefix())
+	signerStr := branding.GrayStyle.Render(setupFlags.Signer)
+
+	logger.Info(fmt.Sprintf("🌐 Network: %s", networkStr))
+	logger.Info(fmt.Sprintf("📝 Signer: %s (%s)", signerStr, addressStr))
+	logger.Info("")
+	logger.Info("⚡ Setting up Transaction Scheduler Manager...")
 
 	setupTx := fmt.Sprintf(`import FlowTransactionSchedulerUtils from %s
 
@@ -134,31 +141,42 @@ transaction() {
 		return nil, fmt.Errorf("setup transaction failed: %s", txResult.Error.Error())
 	}
 
+	// Log success with styled output
 	logger.Info("")
-	logger.Info(fmt.Sprintf("Transaction ID: %s", txResult.TransactionID.String()))
+	successIcon := branding.GreenStyle.Render("✅")
+	successMsg := branding.GreenStyle.Render("Transaction Scheduler Manager setup successfully!")
+	logger.Info(fmt.Sprintf("%s %s", successIcon, successMsg))
+
+	if txResult.TransactionID.String() != "" {
+		txIDLabel := branding.GrayStyle.Render("Transaction ID:")
+		txID := branding.PurpleStyle.Render(txResult.TransactionID.String())
+		logger.Info(fmt.Sprintf("   %s %s", txIDLabel, txID))
+	}
 
 	return &setupResult{
-		success: true,
-		message: "Transaction Scheduler Manager resource created successfully",
+		success:       true,
+		transactionID: txResult.TransactionID.String(),
 	}, nil
 }
 
 type setupResult struct {
-	success bool
-	message string
+	success       bool
+	transactionID string
 }
 
 func (r *setupResult) JSON() any {
 	return map[string]any{
-		"success": r.success,
-		"message": r.message,
+		"success":        r.success,
+		"transactionID":  r.transactionID,
+		"message":        "Transaction Scheduler Manager setup successfully",
 	}
 }
 
 func (r *setupResult) String() string {
-	return r.message
+	// Return empty string since we already logged everything in the command
+	return ""
 }
 
 func (r *setupResult) Oneliner() string {
-	return r.message
+	return "Transaction Scheduler Manager setup successfully"
 }
