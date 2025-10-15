@@ -36,7 +36,6 @@ import (
 	flowGo "github.com/onflow/flow-go/model/flow"
 
 	"github.com/onflow/flowkit/v2"
-	"github.com/onflow/flowkit/v2/accounts"
 	"github.com/onflow/flowkit/v2/config"
 )
 
