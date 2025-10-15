@@ -104,6 +104,7 @@ func setupRun(
 	logger.Info("")
 	logger.Info("⚡ Setting up Transaction Scheduler Manager...")
 
+	// Transaction checks if manager exists and only creates it if needed
 	setupTx := fmt.Sprintf(`import FlowTransactionSchedulerUtils from %s
 
 transaction() {
@@ -144,10 +145,16 @@ transaction() {
 	// Log success with styled output
 	logger.Info("")
 	successIcon := branding.GreenStyle.Render("✅")
-	successMsg := branding.GreenStyle.Render("Transaction Scheduler Manager setup successfully!")
+	successMsg := branding.GreenStyle.Render("Transaction Scheduler Manager is setup")
 	logger.Info(fmt.Sprintf("%s %s", successIcon, successMsg))
 
+	logger.Info("")
+	noteIcon := branding.GrayStyle.Render("📝")
+	noteText := branding.GrayStyle.Render("Note: If the manager already existed, no changes were made")
+	logger.Info(fmt.Sprintf("%s %s", noteIcon, noteText))
+
 	if txResult.TransactionID.String() != "" {
+		logger.Info("")
 		txIDLabel := branding.GrayStyle.Render("Transaction ID:")
 		txID := branding.PurpleStyle.Render(txResult.TransactionID.String())
 		logger.Info(fmt.Sprintf("   %s %s", txIDLabel, txID))
@@ -166,9 +173,9 @@ type setupResult struct {
 
 func (r *setupResult) JSON() any {
 	return map[string]any{
-		"success":        r.success,
-		"transactionID":  r.transactionID,
-		"message":        "Transaction Scheduler Manager setup successfully",
+		"success":       r.success,
+		"transactionID": r.transactionID,
+		"message":       "Transaction Scheduler Manager is ready",
 	}
 }
 
@@ -178,5 +185,5 @@ func (r *setupResult) String() string {
 }
 
 func (r *setupResult) Oneliner() string {
-	return "Transaction Scheduler Manager setup successfully"
+	return "Transaction Scheduler Manager is ready"
 }
