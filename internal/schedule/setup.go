@@ -153,13 +153,6 @@ transaction() {
 	noteText := branding.GrayStyle.Render("Note: If the manager already existed, no changes were made")
 	logger.Info(fmt.Sprintf("%s %s", noteIcon, noteText))
 
-	if txResult.TransactionID.String() != "" {
-		logger.Info("")
-		txIDLabel := branding.GrayStyle.Render("Transaction ID:")
-		txID := branding.PurpleStyle.Render(txResult.TransactionID.String())
-		logger.Info(fmt.Sprintf("   %s %s", txIDLabel, txID))
-	}
-
 	return &setupResult{
 		success:       true,
 		transactionID: txResult.TransactionID.String(),
