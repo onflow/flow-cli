@@ -74,6 +74,11 @@ type flagsTests struct {
 	Random       bool   `default:"false" flag:"random" info:"Use the random flag to execute test cases randomly"`
 	Seed         int64  `default:"0" flag:"seed" info:"Use the seed flag to manipulate random execution of test cases"`
 	Name         string `default:"" flag:"name" info:"Use the name flag to run only tests that match the given name"`
+
+	// Fork mode flags
+	ForkURL         string `default:"" flag:"fork-url" info:"Run tests against a fork of a remote network. Provide the GRPC Access URL (host:port)."`
+	ForkNetwork     string `default:"" flag:"fork-network" info:"Explicit network for fork mode (mainnet|testnet). If omitted, auto-detect from URL."`
+	ForkBlockHeight uint64 `default:"0" flag:"fork-block-height" info:"Optional block height to pin the fork (if supported)."`
 }
 
 var testFlags = flagsTests{}
@@ -171,6 +176,40 @@ func testCode(
 	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).With().Timestamp().Logger()
 	runner := cdcTests.NewTestRunner().WithLogger(logger)
 
+	// Configure fork mode if requested
+	var forkNetwork string
+	if flags.ForkURL != "" {
+		// Determine network for aliases and emulator fork
+		if flags.ForkNetwork != "" {
+			forkNetwork = strings.ToLower(flags.ForkNetwork)
+		} else {
+			forkNetwork = detectForkNetworkFromURL(flags.ForkURL)
+			if forkNetwork == "" {
+				return nil, fmt.Errorf("could not auto-detect fork network from URL; please provide --fork-network")
+			}
+		}
+
+		// Pass fork configuration to the test runner if available in the library
+		// ForkConfig mirrors cadence test runner's fork options (RPCHost and optional block height)
+		// Read-only mode is not supported; tests run with local overlay writes
+		// Attempt to enable fork mode on the test runner if supported by the library version
+		// Newer cadence-tools/test exposes WithForkURL and WithForkBlockHeight helpers.
+		type withForkURL interface {
+			WithForkURL(url string) *cdcTests.TestRunner
+		}
+		if r, ok := any(runner).(withForkURL); ok {
+			runner = r.WithForkURL(flags.ForkURL)
+		}
+		type withForkBlockHeight interface {
+			WithForkBlockHeight(height uint64) *cdcTests.TestRunner
+		}
+		if flags.ForkBlockHeight > 0 {
+			if r, ok := any(runner).(withForkBlockHeight); ok {
+				runner = r.WithForkBlockHeight(flags.ForkBlockHeight)
+			}
+		}
+	}
+
 	var coverageReport *runtime.CoverageReport
 	if flags.Cover {
 		coverageReport = state.CreateCoverageReport("testing")
@@ -199,8 +238,13 @@ func testCode(
 
 	contractsConfig := *state.Contracts()
 	contracts := make(map[string]common.Address, len(contractsConfig))
+	// Choose alias network: default to "testing", but in fork mode use selected chain (mainnet/testnet)
+	aliasNetwork := "testing"
+	if flags.ForkURL != "" && forkNetwork != "" {
+		aliasNetwork = forkNetwork
+	}
 	for _, contract := range contractsConfig {
-		alias := contract.Aliases.ByNetwork("testing")
+		alias := contract.Aliases.ByNetwork(aliasNetwork)
 		if alias != nil {
 			contracts[contract.Name] = common.Address(alias.Address)
 		}
@@ -310,6 +354,26 @@ func fileResolver(scriptPath string, state *flowkit.State) cdcTests.FileResolver
 
 		return string(content), nil
 	}
+}
+
+// detectForkNetworkFromURL attempts to infer mainnet or testnet from the provided access node URL.
+// Returns one of: "mainnet", "testnet", or empty string if unknown.
+func detectForkNetworkFromURL(url string) string {
+	lowered := strings.ToLower(url)
+	if strings.Contains(lowered, "testnet") {
+		return "testnet"
+	}
+	if strings.Contains(lowered, "mainnet") {
+		return "mainnet"
+	}
+	// Heuristic: known host suffixes
+	if strings.Contains(lowered, "access.mainnet.nodes.onflow.org") {
+		return "mainnet"
+	}
+	if strings.Contains(lowered, "access.testnet.nodes.onflow.org") {
+		return "testnet"
+	}
+	return ""
 }
 
 func absolutePath(basePath, filePath string) string {
