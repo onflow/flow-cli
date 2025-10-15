@@ -19,13 +19,18 @@
 package schedule
 
 import (
+	"context"
 	"fmt"
 
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/accounts"
 	"github.com/onflow/flowkit/v2/output"
+	"github.com/onflow/flowkit/v2/transactions"
 
+	"github.com/onflow/flow-cli/common/branding"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
 )
@@ -74,35 +79,104 @@ func setupRun(
 
 	address := signer.Address
 
-	// Log network and account information
-	logger.Info(fmt.Sprintf("Network: %s", globalFlags.Network))
-	logger.Info(fmt.Sprintf("Signer: %s (%s)", setupFlags.Signer, address.String()))
-	logger.Info("Setting up Flow Transaction Scheduler Manager resource...")
+	chainID, err := util.NetworkToChainID(globalFlags.Network)
+	if err != nil {
+		return nil, err
+	}
 
-	// TODO: Implement setup logic for Transaction Scheduler Manager resource
+	// Check if network is supported
+	if chainID == flowsdk.Mainnet {
+		return nil, fmt.Errorf("transaction scheduling is not yet supported on mainnet")
+	}
+
+	contractAddress, err := getContractAddress(FlowTransactionSchedulerUtils, chainID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Log setup information with styled output
+	networkStr := branding.GrayStyle.Render(globalFlags.Network)
+	addressStr := branding.PurpleStyle.Render(address.HexWithPrefix())
+	signerStr := branding.GrayStyle.Render(setupFlags.Signer)
+
+	logger.Info(fmt.Sprintf("🌐 Network: %s", networkStr))
+	logger.Info(fmt.Sprintf("📝 Signer: %s (%s)", signerStr, addressStr))
+	logger.Info("")
+	logger.Info("⚡ Setting up Transaction Scheduler Manager...")
+
+	// Transaction checks if manager exists and only creates it if needed
+	setupTx := fmt.Sprintf(`import FlowTransactionSchedulerUtils from %s
+
+transaction() {
+    prepare(signer: auth(BorrowValue, SaveValue) &Account) {
+        // Check if Manager already exists
+        if signer.storage.borrow<&{FlowTransactionSchedulerUtils.Manager}>(from: FlowTransactionSchedulerUtils.managerStoragePath) == nil {
+            // Create and save Manager
+            signer.storage.save(
+                <-FlowTransactionSchedulerUtils.createManager(),
+                to: FlowTransactionSchedulerUtils.managerStoragePath
+            )
+        }
+    }
+}`, contractAddress)
+
+	_, txResult, err := flow.SendTransaction(
+		context.Background(),
+		transactions.AccountRoles{
+			Proposer:    *signer,
+			Authorizers: []accounts.Account{*signer},
+			Payer:       *signer,
+		},
+		flowkit.Script{
+			Code: []byte(setupTx),
+			Args: nil,
+		},
+		1000,
+	)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to setup transaction scheduler: %w", err)
+	}
+
+	if txResult.Error != nil {
+		return nil, fmt.Errorf("setup transaction failed: %s", txResult.Error.Error())
+	}
+
+	// Log success with styled output
+	logger.Info("")
+	successIcon := branding.GreenStyle.Render("✅")
+	successMsg := branding.GreenStyle.Render("Transaction Scheduler Manager is setup")
+	logger.Info(fmt.Sprintf("%s %s", successIcon, successMsg))
+
+	logger.Info("")
+	noteIcon := branding.GrayStyle.Render("📝")
+	noteText := branding.GrayStyle.Render("Note: If the manager already existed, no changes were made")
+	logger.Info(fmt.Sprintf("%s %s", noteIcon, noteText))
 
 	return &setupResult{
-		success: true,
-		message: "Transaction Scheduler Manager resource created successfully",
+		success:       true,
+		transactionID: txResult.TransactionID.String(),
 	}, nil
 }
 
 type setupResult struct {
-	success bool
-	message string
+	success       bool
+	transactionID string
 }
 
 func (r *setupResult) JSON() any {
 	return map[string]any{
-		"success": r.success,
-		"message": r.message,
+		"success":       r.success,
+		"transactionID": r.transactionID,
+		"message":       "Transaction Scheduler Manager is ready",
 	}
 }
 
 func (r *setupResult) String() string {
-	return r.message
+	// Return empty string since we already logged everything in the command
+	return ""
 }
 
 func (r *setupResult) Oneliner() string {
-	return r.message
+	return "Transaction Scheduler Manager is ready"
 }
