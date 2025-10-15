@@ -777,8 +777,8 @@ github.com/onflow/cadence-tools/languageserver v1.6.1 h1:UsOwocNj8pb65DJZIUEVL6i
 github.com/onflow/cadence-tools/languageserver v1.6.1/go.mod h1:Vt0ySmNi0AQ5zbEpBGgOAAiwzAbTwzKlouXeg3M0AIQ=
 github.com/onflow/cadence-tools/lint v1.4.1 h1:8xIgOydCHf9Zd2jxgeICDlPLNLEK03mpEk0rbdCsRDI=
 github.com/onflow/cadence-tools/lint v1.4.1/go.mod h1:IQsvWU+ECveki6S9gyUbvNQ2sXNh7imgMkAWqaO498o=
-github.com/onflow/cadence-tools/test v1.6.1-0.20251014100355-f71357e95295 h1:0L3NRiohGok7DVnkr60X4MaQ0V8htnd2Nl4fGxIJeiQ=
-github.com/onflow/cadence-tools/test v1.6.1-0.20251014100355-f71357e95295/go.mod h1:ewfsxGT0HOMPuWUdITDW96DMLJ7Rm3LDypNB9DElpqI=
+github.com/onflow/cadence-tools/test v1.6.1-0.20251015220747-cf02f4a059bb h1:iugMQFcAYAaTFxnzVq8K0wtnA7oK1Sd5i9V/ZC76QA8=
+github.com/onflow/cadence-tools/test v1.6.1-0.20251015220747-cf02f4a059bb/go.mod h1:VtiR8okVXHDLcbGFrOY8vPwN5PdXiihs3+Cw8liy5fA=
 github.com/onflow/crypto v0.25.3 h1:XQ3HtLsw8h1+pBN+NQ1JYM9mS2mVXTyg55OldaAIF7U=
 github.com/onflow/crypto v0.25.3/go.mod h1:+1igaXiK6Tjm9wQOBD1EGwW7bYWMUGKtwKJ/2QL/OWs=
 github.com/onflow/fcl-dev-wallet v0.8.0 h1:8TWHhJBWrzS6RCZI3eVjRT+SaUBqO6eygUNDaJV/B7s=
@@ -791,8 +791,6 @@ github.com/onflow/flow-core-contracts/lib/go/contracts v1.9.0 h1:m6lHp0xDdmVWbpb
 github.com/onflow/flow-core-contracts/lib/go/contracts v1.9.0/go.mod h1:jBDqVep0ICzhXky56YlyO4aiV2Jl/5r7wnqUPpvi7zE=
 github.com/onflow/flow-core-contracts/lib/go/templates v1.9.0 h1:8jn4Lxp/dpyWdgJ+5XEDUkYOf2aveObZtHtkdnYIEco=
 github.com/onflow/flow-core-contracts/lib/go/templates v1.9.0/go.mod h1:twSVyUt3rNrgzAmxtBX+1Gw64QlPemy17cyvnXYy1Ug=
-github.com/onflow/flow-emulator v1.8.1-0.20251014100111-98caa17f05e1 h1:oIpitU5hiFeEpJSjC416DALWal7HHTJJuQbs8gwVoDs=
-github.com/onflow/flow-emulator v1.8.1-0.20251014100111-98caa17f05e1/go.mod h1:snkG+3nExHn+bLuFonkMN6tgJD85OYE70tDb9YiWVnw=
 github.com/onflow/flow-evm-bridge v0.1.0 h1:7X2osvo4NnQgHj8aERUmbYtv9FateX8liotoLnPL9nM=
 github.com/onflow/flow-evm-bridge v0.1.0/go.mod h1:5UYwsnu6WcBNrwitGFxphCl5yq7fbWYGYuiCSTVF6pk=
 github.com/onflow/flow-evm-gateway v1.3.4-0.20251010110429-8248471999df h1:XZDpNs5Pa7nqYWNbsOqdu0IAkMHAlDL7pFq+tXEXf9s=

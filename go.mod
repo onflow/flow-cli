@@ -15,11 +15,11 @@ require (
 	github.com/onflow/cadence v1.7.1
 	github.com/onflow/cadence-tools/languageserver v1.6.1
 	github.com/onflow/cadence-tools/lint v1.4.1
-	github.com/onflow/cadence-tools/test v1.6.1-0.20251014100355-f71357e95295
+	github.com/onflow/cadence-tools/test v1.6.1-0.20251015220747-cf02f4a059bb
 	github.com/onflow/fcl-dev-wallet v0.8.0
 	github.com/onflow/flixkit-go/v2 v2.5.1
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.9.0
-	github.com/onflow/flow-emulator v1.8.1-0.20251014100111-98caa17f05e1
+	github.com/onflow/flow-emulator v1.8.1-0.20251015084412-d5c5b3056729
 	github.com/onflow/flow-evm-gateway v1.3.4-0.20251010110429-8248471999df
 	github.com/onflow/flow-go v0.43.1-rc.5-pr8007.0.20251007165614-c6967df18fa9
 	github.com/onflow/flow-go-sdk v1.8.4

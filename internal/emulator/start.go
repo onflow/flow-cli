@@ -31,6 +31,7 @@ import (
 
 	"github.com/dukex/mixpanel"
 	"github.com/onflow/flow-emulator/cmd/emulator/start"
+	"github.com/onflow/flow-emulator/server"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -139,11 +140,13 @@ func init() {
 		Cmd = start.Cmd(start.StartConfig{
 			GetServiceKey:   configuredServiceKey,
 			RestMiddlewares: []start.HttpMiddleware{trackRequestMiddleware},
+			ConfigureServer: emulatorConfigureServer,
 		})
 	} else {
 		Cmd = start.Cmd(start.StartConfig{
 			GetServiceKey:   configuredServiceKey,
 			RestMiddlewares: []start.HttpMiddleware{},
+			ConfigureServer: emulatorConfigureServer,
 		})
 	}
 
@@ -151,6 +154,51 @@ func init() {
 	Cmd.Short = "Run Flow network for development"
 	Cmd.GroupID = "tools"
 	SnapshotCmd.AddToParent(Cmd)
+}
+
+// emulatorConfigureServer maps the higher-level global --network flag to the
+// emulator server's ForkHost, unless an explicit ForkHost was already provided
+// via flags or environment. This avoids mutating Cobra flags and centralizes
+// final values in server.Config.
+func emulatorConfigureServer(conf *server.Config) error {
+	// Explicit fork host wins
+	if conf.ForkHost != "" {
+		return nil
+	}
+
+	networkName := command.Flags.Network
+	if networkName == "" || networkName == "emulator" {
+		return nil
+	}
+
+	loader := &afero.Afero{Fs: afero.NewOsFs()}
+	state, err := flowkit.Load(command.Flags.ConfigPaths, loader)
+	if err != nil {
+		return fmt.Errorf("failed to load flow.json: %w", err)
+	}
+
+	endpoint, err := resolveNetworkEndpoint(state, networkName)
+	if err != nil {
+		return err
+	}
+
+	conf.ForkHost = endpoint
+	return nil
+}
+
+// resolveNetworkEndpoint resolves a network name to its access node endpoint from flow.json
+func resolveNetworkEndpoint(state *flowkit.State, networkName string) (string, error) {
+	network, err := state.Networks().ByName(networkName)
+	if err != nil {
+		return "", fmt.Errorf("network %q not found in flow.json", networkName)
+	}
+
+	host := network.Host
+	if host == "" {
+		return "", fmt.Errorf("network %q has no host configured", networkName)
+	}
+
+	return host, nil
 }
 
 func exitf(code int, msg string, args ...any) {
