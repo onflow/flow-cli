@@ -283,22 +283,6 @@ func IsCoreContract(contractName string) bool {
 	return false
 }
 
-// ResolveAddressOrAccountName resolves a string that could be either an address or account name
-func ResolveAddressOrAccountName(input string, state *flowkit.State) (flow.Address, error) {
-	address := flow.HexToAddress(input)
-
-	if address.IsValid(flow.Mainnet) || address.IsValid(flow.Testnet) || address.IsValid(flow.Emulator) {
-		return address, nil
-	}
-
-	account, err := state.Accounts().ByName(input)
-	if err != nil {
-		return flow.EmptyAddress, fmt.Errorf("could not find account with name %s", input)
-	}
-
-	return account.Address, nil
-}
-
 // IsEmulatorRunning checks if the emulator is running on the given host
 func IsEmulatorRunning(host string) bool {
 	conn, err := net.DialTimeout("tcp", host, 2*time.Second)
