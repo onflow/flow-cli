@@ -224,6 +224,20 @@ func GetAddressNetwork(address flow.Address) (flow.ChainID, error) {
 	return "", fmt.Errorf("address not valid for any known chain: %s", address)
 }
 
+// NetworkToChainID converts a network name string to a ChainID
+func NetworkToChainID(network string) (flow.ChainID, error) {
+	switch network {
+	case "mainnet":
+		return flow.Mainnet, nil
+	case "testnet":
+		return flow.Testnet, nil
+	case "emulator":
+		return flow.Emulator, nil
+	default:
+		return "", fmt.Errorf("unknown network: %s", network)
+	}
+}
+
 func CreateTabWriter(b *bytes.Buffer) *tabwriter.Writer {
 	return tabwriter.NewWriter(b, 0, 8, 1, '\t', tabwriter.AlignRight)
 }

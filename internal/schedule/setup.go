@@ -19,12 +19,16 @@
 package schedule
 
 import (
+	"context"
 	"fmt"
 
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/accounts"
 	"github.com/onflow/flowkit/v2/output"
+	"github.com/onflow/flowkit/v2/transactions"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
@@ -74,12 +78,64 @@ func setupRun(
 
 	address := signer.Address
 
-	// Log network and account information
+	chainID, err := util.NetworkToChainID(globalFlags.Network)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if network is supported
+	if chainID == flowsdk.Mainnet {
+		return nil, fmt.Errorf("transaction scheduling is not yet supported on mainnet")
+	}
+
+	contractAddress, err := getContractAddress(FlowTransactionSchedulerUtils, chainID)
+	if err != nil {
+		return nil, err
+	}
+
 	logger.Info(fmt.Sprintf("Network: %s", globalFlags.Network))
 	logger.Info(fmt.Sprintf("Signer: %s (%s)", setupFlags.Signer, address.String()))
 	logger.Info("Setting up Flow Transaction Scheduler Manager resource...")
 
-	// TODO: Implement setup logic for Transaction Scheduler Manager resource
+	setupTx := fmt.Sprintf(`import FlowTransactionSchedulerUtils from %s
+
+transaction() {
+    prepare(signer: auth(BorrowValue, SaveValue) &Account) {
+        // Check if Manager already exists
+        if signer.storage.borrow<&{FlowTransactionSchedulerUtils.Manager}>(from: FlowTransactionSchedulerUtils.managerStoragePath) == nil {
+            // Create and save Manager
+            signer.storage.save(
+                <-FlowTransactionSchedulerUtils.createManager(),
+                to: FlowTransactionSchedulerUtils.managerStoragePath
+            )
+        }
+    }
+}`, contractAddress)
+
+	_, txResult, err := flow.SendTransaction(
+		context.Background(),
+		transactions.AccountRoles{
+			Proposer:    *signer,
+			Authorizers: []accounts.Account{*signer},
+			Payer:       *signer,
+		},
+		flowkit.Script{
+			Code: []byte(setupTx),
+			Args: nil,
+		},
+		1000,
+	)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to setup transaction scheduler: %w", err)
+	}
+
+	if txResult.Error != nil {
+		return nil, fmt.Errorf("setup transaction failed: %s", txResult.Error.Error())
+	}
+
+	logger.Info("")
+	logger.Info(fmt.Sprintf("Transaction ID: %s", txResult.TransactionID.String()))
 
 	return &setupResult{
 		success: true,
