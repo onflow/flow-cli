@@ -303,5 +303,3 @@ require (
 	modernc.org/sqlite v1.28.0 // indirect
 	nhooyr.io/websocket v1.8.7 // indirect
 )
-
-replace github.com/onflow/flow-emulator => ../flow-emulator
