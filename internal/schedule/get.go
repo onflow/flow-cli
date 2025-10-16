@@ -121,7 +121,7 @@ access(all) fun main(transactionID: UInt64): FlowTransactionScheduler.Transactio
 		return nil, fmt.Errorf("failed to execute script: %w", err)
 	}
 
-	txData, err := parseTransactionData(value)
+	txData, err := ParseTransactionData(value)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse transaction data: %w", err)
 	}
@@ -136,92 +136,23 @@ access(all) fun main(transactionID: UInt64): FlowTransactionScheduler.Transactio
 	successMsg := branding.GreenStyle.Render("Transaction data retrieved successfully")
 	logger.Info(fmt.Sprintf("%s %s", successIcon, successMsg))
 
-	return txData, nil
-}
-
-// parseTransactionData parses the cadence.Value returned from the script
-func parseTransactionData(value cadence.Value) (*getResult, error) {
-	// Check if result is nil (optional return)
-	optional, ok := value.(cadence.Optional)
-	if !ok {
-		return nil, fmt.Errorf("expected optional value, got %T", value)
-	}
-
-	if optional.Value == nil {
-		return nil, nil // Transaction not found
-	}
-
-	structValue, ok := optional.Value.(cadence.Struct)
-	if !ok {
-		return nil, fmt.Errorf("expected struct value, got %T", optional.Value)
-	}
-
-	fields := cadence.FieldsMappedByName(structValue)
-
-	result := &getResult{}
-
-	if id, ok := fields["id"].(cadence.UInt64); ok {
-		result.id = uint64(id)
-	}
-
-	if priority, ok := fields["priority"].(cadence.Enum); ok {
-		priorityFields := cadence.FieldsMappedByName(priority)
-		if rawValue, ok := priorityFields["rawValue"].(cadence.UInt8); ok {
-			result.priority = uint8(rawValue)
-		}
-	}
-
-	if effort, ok := fields["executionEffort"].(cadence.UInt64); ok {
-		result.executionEffort = uint64(effort)
-	}
-
-	if status, ok := fields["status"].(cadence.Enum); ok {
-		statusFields := cadence.FieldsMappedByName(status)
-		if rawValue, ok := statusFields["rawValue"].(cadence.UInt8); ok {
-			result.status = uint8(rawValue)
-		}
-	}
-
-	if fees, ok := fields["fees"].(cadence.UFix64); ok {
-		result.fees = fees.String()
-	}
-
-	if timestamp, ok := fields["scheduledTimestamp"].(cadence.UFix64); ok {
-		result.scheduledTimestamp = timestamp.String()
-	}
-
-	if handlerType, ok := fields["handlerTypeIdentifier"].(cadence.String); ok {
-		result.handlerTypeIdentifier = string(handlerType)
-	}
-
-	if handlerAddr, ok := fields["handlerAddress"].(cadence.Address); ok {
-		result.handlerAddress = handlerAddr.String()
-	}
-
-	return result, nil
+	return &getResult{data: txData}, nil
 }
 
 type getResult struct {
-	id                    uint64
-	priority              uint8
-	executionEffort       uint64
-	status                uint8
-	fees                  string
-	scheduledTimestamp    string
-	handlerTypeIdentifier string
-	handlerAddress        string
+	data *TransactionData
 }
 
 func (r *getResult) JSON() any {
 	return map[string]any{
-		"id":                      r.id,
-		"priority":                r.priority,
-		"execution_effort":        r.executionEffort,
-		"status":                  r.status,
-		"fees":                    r.fees,
-		"scheduled_timestamp":     r.scheduledTimestamp,
-		"handler_type_identifier": r.handlerTypeIdentifier,
-		"handler_address":         r.handlerAddress,
+		"id":                      r.data.ID,
+		"priority":                r.data.Priority,
+		"execution_effort":        r.data.ExecutionEffort,
+		"status":                  r.data.Status,
+		"fees":                    r.data.Fees,
+		"scheduled_timestamp":     r.data.ScheduledTimestamp,
+		"handler_type_identifier": r.data.HandlerTypeIdentifier,
+		"handler_address":         r.data.HandlerAddress,
 	}
 }
 
@@ -230,82 +161,48 @@ func (r *getResult) String() string {
 
 	// ID
 	idLabel := branding.GrayStyle.Render("   ID:")
-	idValue := branding.PurpleStyle.Render(fmt.Sprintf("%d", r.id))
+	idValue := branding.PurpleStyle.Render(fmt.Sprintf("%d", r.data.ID))
 	output += fmt.Sprintf("%s %s\n", idLabel, idValue)
 
 	// Status
 	statusLabel := branding.GrayStyle.Render("   Status:")
-	statusValue := branding.GreenStyle.Render(getStatusString(r.status))
+	statusValue := branding.GreenStyle.Render(GetStatusString(r.data.Status))
 	output += fmt.Sprintf("%s %s\n", statusLabel, statusValue)
 
 	// Priority
 	priorityLabel := branding.GrayStyle.Render("   Priority:")
-	priorityValue := branding.PurpleStyle.Render(getPriorityString(r.priority))
+	priorityValue := branding.PurpleStyle.Render(GetPriorityString(r.data.Priority))
 	output += fmt.Sprintf("%s %s\n", priorityLabel, priorityValue)
 
 	// Execution Effort
 	effortLabel := branding.GrayStyle.Render("   Execution Effort:")
-	effortValue := branding.PurpleStyle.Render(fmt.Sprintf("%d", r.executionEffort))
+	effortValue := branding.PurpleStyle.Render(fmt.Sprintf("%d", r.data.ExecutionEffort))
 	output += fmt.Sprintf("%s %s\n", effortLabel, effortValue)
 
 	// Fees
 	feesLabel := branding.GrayStyle.Render("   Fees:")
-	feesValue := branding.PurpleStyle.Render(fmt.Sprintf("%s FLOW", r.fees))
+	feesValue := branding.PurpleStyle.Render(fmt.Sprintf("%s FLOW", r.data.Fees))
 	output += fmt.Sprintf("%s %s\n", feesLabel, feesValue)
 
 	// Scheduled Timestamp
 	timestampLabel := branding.GrayStyle.Render("   Scheduled Timestamp:")
-	timestampValue := branding.PurpleStyle.Render(r.scheduledTimestamp)
+	timestampValue := branding.PurpleStyle.Render(r.data.ScheduledTimestamp)
 	output += fmt.Sprintf("%s %s\n", timestampLabel, timestampValue)
 
 	// Handler Type
 	handlerTypeLabel := branding.GrayStyle.Render("   Handler Type:")
-	handlerTypeValue := branding.PurpleStyle.Render(r.handlerTypeIdentifier)
+	handlerTypeValue := branding.PurpleStyle.Render(r.data.HandlerTypeIdentifier)
 	output += fmt.Sprintf("%s %s\n", handlerTypeLabel, handlerTypeValue)
 
 	// Handler Address
 	handlerAddrLabel := branding.GrayStyle.Render("   Handler Address:")
-	handlerAddrValue := branding.PurpleStyle.Render(r.handlerAddress)
+	handlerAddrValue := branding.PurpleStyle.Render(r.data.HandlerAddress)
 	output += fmt.Sprintf("%s %s\n", handlerAddrLabel, handlerAddrValue)
 
 	return output
 }
 
 func (r *getResult) Oneliner() string {
-	statusStr := getStatusString(r.status)
-	return fmt.Sprintf("Transaction %d - Status: %s", r.id, statusStr)
-}
-
-// getStatusString converts status code to readable string
-func getStatusString(status uint8) string {
-	switch status {
-	case 0:
-		return "Pending"
-	case 1:
-		return "Scheduled"
-	case 2:
-		return "Executing"
-	case 3:
-		return "Executed"
-	case 4:
-		return "Failed"
-	case 5:
-		return "Cancelled"
-	default:
-		return fmt.Sprintf("Unknown(%d)", status)
-	}
-}
-
-// getPriorityString converts priority code to readable string
-func getPriorityString(priority uint8) string {
-	switch priority {
-	case 0:
-		return "Low"
-	case 1:
-		return "Medium"
-	case 2:
-		return "High"
-	default:
-		return fmt.Sprintf("Unknown(%d)", priority)
-	}
+	statusStr := GetStatusString(r.data.Status)
+	return fmt.Sprintf("Transaction %d - Status: %s", r.data.ID, statusStr)
 }
