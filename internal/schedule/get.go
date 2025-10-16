@@ -127,6 +127,7 @@ access(all) fun main(transactionID: UInt64): FlowTransactionScheduler.Transactio
 	}
 
 	if txData == nil {
+		logger.Info("")
 		return nil, fmt.Errorf("scheduled transaction not found")
 	}
 
