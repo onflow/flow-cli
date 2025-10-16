@@ -15,14 +15,15 @@ require (
 	github.com/onflow/cadence v1.7.1
 	github.com/onflow/cadence-tools/languageserver v1.6.1
 	github.com/onflow/cadence-tools/lint v1.4.1
-	github.com/onflow/cadence-tools/test v1.6.0
+	github.com/onflow/cadence-tools/test v1.6.1-0.20251016170430-c62b66c20ba7
 	github.com/onflow/fcl-dev-wallet v0.8.0
 	github.com/onflow/flixkit-go/v2 v2.5.1
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.9.0
-	github.com/onflow/flow-emulator v1.8.0
+	github.com/onflow/flow-emulator v1.8.1-0.20251016003930-85731ef4832d
 	github.com/onflow/flow-evm-gateway v1.3.4-0.20251010110429-8248471999df
 	github.com/onflow/flow-go v0.43.1-rc.5-pr8007.0.20251007165614-c6967df18fa9
 	github.com/onflow/flow-go-sdk v1.8.4
+	github.com/onflow/flow/protobuf/go/flow v0.4.16
 	github.com/onflow/flowkit/v2 v2.6.1
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
@@ -206,7 +207,6 @@ require (
 	github.com/onflow/flow-ft/lib/go/templates v1.0.1 // indirect
 	github.com/onflow/flow-nft/lib/go/contracts v1.3.0 // indirect
 	github.com/onflow/flow-nft/lib/go/templates v1.3.0 // indirect
-	github.com/onflow/flow/protobuf/go/flow v0.4.16 // indirect
 	github.com/onflow/go-ethereum v1.15.10 // indirect
 	github.com/onflow/nft-storefront/lib/go/contracts v1.0.0 // indirect
 	github.com/onflow/sdks v0.6.0-preview.1 // indirect
