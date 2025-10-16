@@ -97,10 +97,10 @@ func getRun(
 	networkStr := branding.GrayStyle.Render(globalFlags.Network)
 	txIDStr := branding.PurpleStyle.Render(transactionIDStr)
 
+	logger.Info("Getting scheduled transaction details")
+	logger.Info("")
 	logger.Info(fmt.Sprintf("🌐 Network: %s", networkStr))
 	logger.Info(fmt.Sprintf("🔍 Transaction ID: %s", txIDStr))
-	logger.Info("")
-	logger.Info("⏳ Retrieving scheduled transaction details...")
 
 	script := fmt.Sprintf(`import FlowTransactionScheduler from %s
 
