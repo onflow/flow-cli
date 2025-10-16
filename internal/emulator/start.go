@@ -31,7 +31,6 @@ import (
 
 	"github.com/dukex/mixpanel"
 	"github.com/onflow/flow-emulator/cmd/emulator/start"
-	"github.com/onflow/flow-emulator/server"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -140,50 +139,52 @@ func init() {
 		Cmd = start.Cmd(start.StartConfig{
 			GetServiceKey:   configuredServiceKey,
 			RestMiddlewares: []start.HttpMiddleware{trackRequestMiddleware},
-			ConfigureServer: emulatorConfigureServer,
 		})
 	} else {
 		Cmd = start.Cmd(start.StartConfig{
 			GetServiceKey:   configuredServiceKey,
 			RestMiddlewares: []start.HttpMiddleware{},
-			ConfigureServer: emulatorConfigureServer,
 		})
+	}
+
+	// Add --fork flag with optional value (defaults to mainnet when value omitted)
+	Cmd.Flags().String("fork", "", "fork from a remote network (mainnet|testnet). If provided without a value, defaults to mainnet")
+	if f := Cmd.Flags().Lookup("fork"); f != nil {
+		f.NoOptDefVal = "mainnet"
 	}
 
 	Cmd.Use = "emulator"
 	Cmd.Short = "Run Flow network for development"
 	Cmd.GroupID = "tools"
 	SnapshotCmd.AddToParent(Cmd)
-}
 
-// emulatorConfigureServer maps the higher-level global --network flag to the
-// emulator server's ForkHost, unless an explicit ForkHost was already provided
-// via flags or environment. This avoids mutating Cobra flags and centralizes
-// final values in server.Config.
-func emulatorConfigureServer(conf *server.Config) error {
-	// Explicit fork host wins
-	if conf.ForkHost != "" {
-		return nil
+	// Translate --fork to --fork-host before emulator reads flags
+	Cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		fh, err := cmd.Flags().GetString("fork-host")
+		if err != nil {
+			return err
+		}
+		if fh != "" {
+			return nil
+		}
+		forkOpt, err := cmd.Flags().GetString("fork")
+		if err != nil {
+			return err
+		}
+		if forkOpt == "" {
+			return nil
+		}
+		loader := &afero.Afero{Fs: afero.NewOsFs()}
+		state, err := flowkit.Load(command.Flags.ConfigPaths, loader)
+		if err != nil {
+			return fmt.Errorf("failed to load flow.json: %w", err)
+		}
+		endpoint, err := resolveNetworkEndpoint(state, forkOpt)
+		if err != nil {
+			return err
+		}
+		return cmd.Flags().Set("fork-host", endpoint)
 	}
-
-	networkName := command.Flags.Network
-	if networkName == "" || networkName == "emulator" {
-		return nil
-	}
-
-	loader := &afero.Afero{Fs: afero.NewOsFs()}
-	state, err := flowkit.Load(command.Flags.ConfigPaths, loader)
-	if err != nil {
-		return fmt.Errorf("failed to load flow.json: %w", err)
-	}
-
-	endpoint, err := resolveNetworkEndpoint(state, networkName)
-	if err != nil {
-		return err
-	}
-
-	conf.ForkHost = endpoint
-	return nil
 }
 
 // resolveNetworkEndpoint resolves a network name to its access node endpoint from flow.json

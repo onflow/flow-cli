@@ -20,6 +20,7 @@ package test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -27,12 +28,17 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	cdcTests "github.com/onflow/cadence-tools/test"
 	"github.com/onflow/cadence/common"
 	"github.com/onflow/cadence/runtime"
+	flowgo "github.com/onflow/flow-go/model/flow"
+	flowaccess "github.com/onflow/flow/protobuf/go/flow/access"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"
@@ -76,9 +82,9 @@ type flagsTests struct {
 	Name         string `default:"" flag:"name" info:"Use the name flag to run only tests that match the given name"`
 
 	// Fork mode flags
-	ForkURL         string `default:"" flag:"fork-url" info:"Run tests against a fork of a remote network. Provide the GRPC Access URL (host:port)."`
-	ForkNetwork     string `default:"" flag:"fork-network" info:"Explicit network for fork mode (mainnet|testnet). If omitted, auto-detect from URL."`
-	ForkBlockHeight uint64 `default:"0" flag:"fork-block-height" info:"Optional block height to pin the fork (if supported)."`
+	Fork       string `default:"" info:"Fork tests from a remote network. If provided without a value, defaults to mainnet."`
+	ForkHost   string `default:"" flag:"fork-host" info:"Run tests against a fork of a remote network. Provide the GRPC Access host (host:port)."`
+	ForkHeight uint64 `default:"0" flag:"fork-height" info:"Optional block height to pin the fork (if supported)."`
 }
 
 var testFlags = flagsTests{}
@@ -97,6 +103,13 @@ flow test test1.cdc test2.cdc`,
 	},
 	Flags: &testFlags,
 	RunS:  run,
+}
+
+func init() {
+	// add default value to --fork flag
+	if f := TestCommand.Cmd.Flags().Lookup("fork"); f != nil {
+		f.NoOptDefVal = "mainnet"
+	}
 }
 
 func run(
@@ -177,37 +190,30 @@ func testCode(
 	runner := cdcTests.NewTestRunner().WithLogger(logger)
 
 	// Configure fork mode if requested
-	var forkNetwork string
-	if flags.ForkURL != "" {
-		// Determine network for aliases and emulator fork
-		if flags.ForkNetwork != "" {
-			forkNetwork = strings.ToLower(flags.ForkNetwork)
-		} else {
-			forkNetwork = detectForkNetworkFromURL(flags.ForkURL)
-			if forkNetwork == "" {
-				return nil, fmt.Errorf("could not auto-detect fork network from URL; please provide --fork-network")
-			}
+	effectiveForkHost := strings.TrimSpace(flags.ForkHost)
+	if effectiveForkHost == "" && strings.TrimSpace(flags.Fork) != "" {
+		netCfg, err := state.Networks().ByName(strings.ToLower(flags.Fork))
+		if err != nil {
+			return nil, fmt.Errorf("unknown fork network %q: %w", flags.Fork, err)
+		}
+		if netCfg.Host == "" {
+			return nil, fmt.Errorf("network %q has no host configured in flow.json", flags.Fork)
+		}
+		effectiveForkHost = netCfg.Host
+	}
+
+	if effectiveForkHost != "" {
+		// Auto-detect chain id from host via GetNetworkParameters
+		forkChainID, err := detectForkChainIDFromHost(effectiveForkHost)
+		if err != nil {
+			return nil, fmt.Errorf("could not auto-detect fork network from host: %w", err)
 		}
 
-		// Pass fork configuration to the test runner if available in the library
-		// ForkConfig mirrors cadence test runner's fork options (RPCHost and optional block height)
-		// Read-only mode is not supported; tests run with local overlay writes
-		// Attempt to enable fork mode on the test runner if supported by the library version
-		// Newer cadence-tools/test exposes WithForkURL and WithForkBlockHeight helpers.
-		type withForkURL interface {
-			WithForkURL(url string) *cdcTests.TestRunner
-		}
-		if r, ok := any(runner).(withForkURL); ok {
-			runner = r.WithForkURL(flags.ForkURL)
-		}
-		type withForkBlockHeight interface {
-			WithForkBlockHeight(height uint64) *cdcTests.TestRunner
-		}
-		if flags.ForkBlockHeight > 0 {
-			if r, ok := any(runner).(withForkBlockHeight); ok {
-				runner = r.WithForkBlockHeight(flags.ForkBlockHeight)
-			}
-		}
+		runner = runner.WithFork(cdcTests.ForkConfig{
+			ForkHost:   effectiveForkHost,
+			ChainID:    forkChainID,
+			ForkHeight: flags.ForkHeight,
+		})
 	}
 
 	var coverageReport *runtime.CoverageReport
@@ -240,8 +246,8 @@ func testCode(
 	contracts := make(map[string]common.Address, len(contractsConfig))
 	// Choose alias network: default to "testing", but in fork mode use selected chain (mainnet/testnet)
 	aliasNetwork := "testing"
-	if flags.ForkURL != "" && forkNetwork != "" {
-		aliasNetwork = forkNetwork
+	if testFlags.Fork != "" {
+		aliasNetwork = testFlags.Fork
 	}
 	for _, contract := range contractsConfig {
 		alias := contract.Aliases.ByNetwork(aliasNetwork)
@@ -358,22 +364,22 @@ func fileResolver(scriptPath string, state *flowkit.State) cdcTests.FileResolver
 
 // detectForkNetworkFromURL attempts to infer mainnet or testnet from the provided access node URL.
 // Returns one of: "mainnet", "testnet", or empty string if unknown.
-func detectForkNetworkFromURL(url string) string {
-	lowered := strings.ToLower(url)
-	if strings.Contains(lowered, "testnet") {
-		return "testnet"
+func detectForkChainIDFromHost(host string) (flowgo.ChainID, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	conn, err := grpc.NewClient(host, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return "", err
 	}
-	if strings.Contains(lowered, "mainnet") {
-		return "mainnet"
+	defer conn.Close()
+
+	client := flowaccess.NewAccessAPIClient(conn)
+	resp, err := client.GetNetworkParameters(ctx, &flowaccess.GetNetworkParametersRequest{})
+	if err != nil {
+		return "", err
 	}
-	// Heuristic: known host suffixes
-	if strings.Contains(lowered, "access.mainnet.nodes.onflow.org") {
-		return "mainnet"
-	}
-	if strings.Contains(lowered, "access.testnet.nodes.onflow.org") {
-		return "testnet"
-	}
-	return ""
+	return flowgo.ChainID(resp.GetChainId()), nil
 }
 
 func absolutePath(basePath, filePath string) string {
