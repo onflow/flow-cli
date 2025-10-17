@@ -102,7 +102,7 @@ func setupRun(
 	logger.Info(fmt.Sprintf("🌐 Network: %s", networkStr))
 	logger.Info(fmt.Sprintf("📝 Signer: %s (%s)", signerStr, addressStr))
 	logger.Info("")
-	logger.Info("⚡ Setting up Transaction Scheduler Manager...")
+	logger.Info("🔧 Setting up Transaction Scheduler Manager...")
 
 	// Transaction checks if manager exists and only creates it if needed
 	setupTx := fmt.Sprintf(`import FlowTransactionSchedulerUtils from %s

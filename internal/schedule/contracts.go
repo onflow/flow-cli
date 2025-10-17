@@ -22,16 +22,18 @@ import (
 	"fmt"
 
 	flowsdk "github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go/fvm/systemcontracts"
+	flowGo "github.com/onflow/flow-go/model/flow"
 )
 
 // ContractName represents a scheduler-related contract name
 type ContractName string
 
 const (
-	// FlowTransactionSchedulerUtils contract provides utility functions for transaction scheduling
 	FlowTransactionSchedulerUtils ContractName = "FlowTransactionSchedulerUtils"
-	// FlowTransactionScheduler contract handles the core transaction scheduling logic
-	FlowTransactionScheduler ContractName = "FlowTransactionScheduler"
+	FlowTransactionScheduler      ContractName = "FlowTransactionScheduler"
+	FlowToken                     ContractName = "FlowToken"
+	FungibleToken                 ContractName = "FungibleToken"
 )
 
 // contractAddresses maps contract names to their addresses on different networks
@@ -48,12 +50,34 @@ var contractAddresses = map[ContractName]map[flowsdk.ChainID]string{
 
 // getContractAddress returns the contract address for the given contract name and network
 func getContractAddress(contract ContractName, chainID flowsdk.ChainID) (string, error) {
-	// Check if mainnet
-	if chainID == flowsdk.Mainnet {
+	// Check if mainnet for scheduling contracts
+	if chainID == flowsdk.Mainnet && (contract == FlowTransactionSchedulerUtils || contract == FlowTransactionScheduler) {
 		return "", fmt.Errorf("transaction scheduling is not yet supported on mainnet")
 	}
 
-	// Look up the contract address
+	// Handle system contracts using the systemcontracts library
+	if contract == FlowToken || contract == FungibleToken {
+		var flowGoChainID flowGo.ChainID
+		switch chainID {
+		case flowsdk.Emulator:
+			flowGoChainID = flowGo.Emulator
+		case flowsdk.Testnet:
+			flowGoChainID = flowGo.Testnet
+		case flowsdk.Mainnet:
+			flowGoChainID = flowGo.Mainnet
+		default:
+			return "", fmt.Errorf("unsupported chain ID: %s", chainID)
+		}
+
+		systemContracts := systemcontracts.SystemContractsForChain(flowGoChainID)
+		switch contract {
+		case FlowToken:
+			return systemContracts.FlowToken.Address.HexWithPrefix(), nil
+		case FungibleToken:
+			return systemContracts.FungibleToken.Address.HexWithPrefix(), nil
+		}
+	}
+
 	networkAddresses, contractExists := contractAddresses[contract]
 	if !contractExists {
 		return "", fmt.Errorf("unknown contract: %s", contract)
