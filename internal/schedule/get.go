@@ -19,14 +19,20 @@
 package schedule
 
 import (
+	"context"
 	"fmt"
+	"strconv"
 
+	"github.com/onflow/cadence"
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/output"
 
+	"github.com/onflow/flow-cli/common/branding"
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 type flagsGet struct{}
@@ -65,51 +71,139 @@ func getRun(
 		return nil, fmt.Errorf("transaction ID is required as an argument")
 	}
 
-	transactionID := args[0]
+	transactionIDStr := args[0]
 
-	logger.Info(fmt.Sprintf("Network: %s", globalFlags.Network))
-	logger.Info(fmt.Sprintf("Transaction ID: %s", transactionID))
-	logger.Info("Retrieving scheduled transaction details...")
+	// Parse transaction ID as UInt64
+	transactionID, err := strconv.ParseUint(transactionIDStr, 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("invalid transaction ID: %w", err)
+	}
 
-	// TODO: Implement get logic for scheduled transaction
+	chainID, err := util.NetworkToChainID(globalFlags.Network)
+	if err != nil {
+		return nil, err
+	}
 
-	return &getResult{
-		success:       true,
-		message:       "Scheduled transaction details retrieved successfully",
-		transactionID: transactionID,
-		status:        "Scheduled",
-		scheduledAt:   "2024-01-01T00:00:00Z",
-		executeAt:     "2024-01-01T12:00:00Z",
-	}, nil
+	// Check if network is supported
+	if chainID == flowsdk.Mainnet {
+		return nil, fmt.Errorf("transaction scheduling is not yet supported on mainnet")
+	}
+
+	contractAddress, err := getContractAddress(FlowTransactionScheduler, chainID)
+	if err != nil {
+		return nil, err
+	}
+
+	networkStr := branding.GrayStyle.Render(globalFlags.Network)
+	txIDStr := branding.PurpleStyle.Render(transactionIDStr)
+
+	logger.Info("Getting scheduled transaction details")
+	logger.Info("")
+	logger.Info(fmt.Sprintf("🌐 Network: %s", networkStr))
+	logger.Info(fmt.Sprintf("🔍 Transaction ID: %s", txIDStr))
+
+	script := fmt.Sprintf(`import FlowTransactionScheduler from %s
+
+access(all) fun main(transactionID: UInt64): FlowTransactionScheduler.TransactionData? {
+    // Get the transaction data directly from the FlowTransactionScheduler contract
+    return FlowTransactionScheduler.getTransactionData(id: transactionID)
+}`, contractAddress)
+
+	value, err := flow.ExecuteScript(
+		context.Background(),
+		flowkit.Script{
+			Code: []byte(script),
+			Args: []cadence.Value{cadence.NewUInt64(transactionID)},
+		},
+		flowkit.LatestScriptQuery,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute script: %w", err)
+	}
+
+	txData, err := ParseTransactionData(value)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse transaction data: %w", err)
+	}
+
+	if txData == nil {
+		logger.Info("")
+		return nil, fmt.Errorf("scheduled transaction not found")
+	}
+
+	// Log success
+	logger.Info("")
+	successIcon := branding.GreenStyle.Render("✅")
+	successMsg := branding.GreenStyle.Render("Transaction data retrieved successfully")
+	logger.Info(fmt.Sprintf("%s %s", successIcon, successMsg))
+
+	return &getResult{data: txData}, nil
 }
 
 type getResult struct {
-	success       bool
-	message       string
-	transactionID string
-	status        string
-	scheduledAt   string
-	executeAt     string
+	data *TransactionData
 }
 
 func (r *getResult) JSON() any {
 	return map[string]any{
-		"success":        r.success,
-		"message":        r.message,
-		"transaction_id": r.transactionID,
-		"status":         r.status,
-		"scheduled_at":   r.scheduledAt,
-		"execute_at":     r.executeAt,
+		"id":                      r.data.ID,
+		"priority":                r.data.Priority,
+		"execution_effort":        r.data.ExecutionEffort,
+		"status":                  r.data.Status,
+		"fees":                    r.data.Fees,
+		"scheduled_timestamp":     r.data.ScheduledTimestamp,
+		"handler_type_identifier": r.data.HandlerTypeIdentifier,
+		"handler_address":         r.data.HandlerAddress,
 	}
 }
 
 func (r *getResult) String() string {
-	return fmt.Sprintf(`Transaction ID: %s
-Status: %s
-Scheduled At: %s
-Execute At: %s`, r.transactionID, r.status, r.scheduledAt, r.executeAt)
+	var output string
+
+	// ID
+	idLabel := branding.GrayStyle.Render("   ID:")
+	idValue := branding.PurpleStyle.Render(fmt.Sprintf("%d", r.data.ID))
+	output += fmt.Sprintf("%s %s\n", idLabel, idValue)
+
+	// Status
+	statusLabel := branding.GrayStyle.Render("   Status:")
+	statusValue := branding.GreenStyle.Render(GetStatusString(r.data.Status))
+	output += fmt.Sprintf("%s %s\n", statusLabel, statusValue)
+
+	// Priority
+	priorityLabel := branding.GrayStyle.Render("   Priority:")
+	priorityValue := branding.PurpleStyle.Render(GetPriorityString(r.data.Priority))
+	output += fmt.Sprintf("%s %s\n", priorityLabel, priorityValue)
+
+	// Execution Effort
+	effortLabel := branding.GrayStyle.Render("   Execution Effort:")
+	effortValue := branding.PurpleStyle.Render(fmt.Sprintf("%d", r.data.ExecutionEffort))
+	output += fmt.Sprintf("%s %s\n", effortLabel, effortValue)
+
+	// Fees
+	feesLabel := branding.GrayStyle.Render("   Fees:")
+	feesValue := branding.PurpleStyle.Render(fmt.Sprintf("%s FLOW", r.data.Fees))
+	output += fmt.Sprintf("%s %s\n", feesLabel, feesValue)
+
+	// Scheduled Timestamp
+	timestampLabel := branding.GrayStyle.Render("   Scheduled Timestamp:")
+	timestampValue := branding.PurpleStyle.Render(r.data.ScheduledTimestamp)
+	output += fmt.Sprintf("%s %s\n", timestampLabel, timestampValue)
+
+	// Handler Type
+	handlerTypeLabel := branding.GrayStyle.Render("   Handler Type:")
+	handlerTypeValue := branding.PurpleStyle.Render(r.data.HandlerTypeIdentifier)
+	output += fmt.Sprintf("%s %s\n", handlerTypeLabel, handlerTypeValue)
+
+	// Handler Address
+	handlerAddrLabel := branding.GrayStyle.Render("   Handler Address:")
+	handlerAddrValue := branding.PurpleStyle.Render(r.data.HandlerAddress)
+	output += fmt.Sprintf("%s %s\n", handlerAddrLabel, handlerAddrValue)
+
+	return output
 }
 
 func (r *getResult) Oneliner() string {
-	return fmt.Sprintf("Transaction %s - Status: %s", r.transactionID, r.status)
+	statusStr := GetStatusString(r.data.Status)
+	return fmt.Sprintf("Transaction %d - Status: %s", r.data.ID, statusStr)
 }
