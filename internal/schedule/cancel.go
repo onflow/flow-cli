@@ -120,7 +120,7 @@ func cancelRun(
 	signerStr := branding.GrayStyle.Render(cancelFlags.Signer)
 	txIDStr := branding.PurpleStyle.Render(transactionIDStr)
 
-	logger.Info("Canceling scheduled transaction")
+	logger.Info("Canceling scheduled transaction...")
 	logger.Info("")
 	logger.Info(fmt.Sprintf("🌐 Network: %s", networkStr))
 	logger.Info(fmt.Sprintf("📝 Signer: %s (%s)", signerStr, addressStr))
