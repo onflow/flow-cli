@@ -24,7 +24,6 @@ import (
 	"strconv"
 
 	"github.com/onflow/cadence"
-	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flowkit/v2"
@@ -82,11 +81,6 @@ func getRun(
 	chainID, err := util.NetworkToChainID(globalFlags.Network)
 	if err != nil {
 		return nil, err
-	}
-
-	// Check if network is supported
-	if chainID == flowsdk.Mainnet {
-		return nil, fmt.Errorf("transaction scheduling is not yet supported on mainnet")
 	}
 
 	contractAddress, err := getContractAddress(FlowTransactionScheduler, chainID)
