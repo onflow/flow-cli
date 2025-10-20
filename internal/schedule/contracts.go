@@ -52,7 +52,7 @@ var contractAddresses = map[ContractName]map[flowsdk.ChainID]string{
 // getContractAddress returns the contract address for the given contract name and network
 func getContractAddress(contract ContractName, chainID flowsdk.ChainID) (string, error) {
 	// Handle system contracts using the systemcontracts library
-	if contract == FlowToken || contract == FungibleToken {
+	if contract == FlowToken || contract == FungibleToken || contract == FlowTransactionScheduler {
 		var flowGoChainID flowGo.ChainID
 		switch chainID {
 		case flowsdk.Emulator:
@@ -71,6 +71,8 @@ func getContractAddress(contract ContractName, chainID flowsdk.ChainID) (string,
 			return systemContracts.FlowToken.Address.HexWithPrefix(), nil
 		case FungibleToken:
 			return systemContracts.FungibleToken.Address.HexWithPrefix(), nil
+		case FlowTransactionScheduler:
+			return systemContracts.FlowCallbackScheduler.Address.HexWithPrefix(), nil
 		}
 	}
 
