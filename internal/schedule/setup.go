@@ -22,7 +22,6 @@ import (
 	"context"
 	"fmt"
 
-	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flowkit/v2"
