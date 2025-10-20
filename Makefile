@@ -31,7 +31,7 @@ install-tools:
 
 .PHONY: test
 test:
-	GO111MODULE=on go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
+	CGO_ENABLED=1 CGO_CFLAGS="-O2 -D__BLST_PORTABLE__ -std=gnu11" GO111MODULE=on go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
 
 .PHONY: test-e2e-emulator
 test-e2e-emulator:
