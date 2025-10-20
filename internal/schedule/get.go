@@ -97,7 +97,7 @@ func getRun(
 	networkStr := branding.GrayStyle.Render(globalFlags.Network)
 	txIDStr := branding.PurpleStyle.Render(transactionIDStr)
 
-	logger.Info("Getting scheduled transaction details")
+	logger.Info("Getting scheduled transaction details...")
 	logger.Info("")
 	logger.Info(fmt.Sprintf("🌐 Network: %s", networkStr))
 	logger.Info(fmt.Sprintf("🔍 Transaction ID: %s", txIDStr))
@@ -131,7 +131,6 @@ access(all) fun main(transactionID: UInt64): FlowTransactionScheduler.Transactio
 		return nil, fmt.Errorf("scheduled transaction not found")
 	}
 
-	// Log success
 	logger.Info("")
 	successIcon := branding.GreenStyle.Render("✅")
 	successMsg := branding.GreenStyle.Render("Transaction data retrieved successfully")
@@ -158,49 +157,7 @@ func (r *getResult) JSON() any {
 }
 
 func (r *getResult) String() string {
-	var output string
-
-	// ID
-	idLabel := branding.GrayStyle.Render("   ID:")
-	idValue := branding.PurpleStyle.Render(fmt.Sprintf("%d", r.data.ID))
-	output += fmt.Sprintf("%s %s\n", idLabel, idValue)
-
-	// Status
-	statusLabel := branding.GrayStyle.Render("   Status:")
-	statusValue := branding.GreenStyle.Render(GetStatusString(r.data.Status))
-	output += fmt.Sprintf("%s %s\n", statusLabel, statusValue)
-
-	// Priority
-	priorityLabel := branding.GrayStyle.Render("   Priority:")
-	priorityValue := branding.PurpleStyle.Render(GetPriorityString(r.data.Priority))
-	output += fmt.Sprintf("%s %s\n", priorityLabel, priorityValue)
-
-	// Execution Effort
-	effortLabel := branding.GrayStyle.Render("   Execution Effort:")
-	effortValue := branding.PurpleStyle.Render(fmt.Sprintf("%d", r.data.ExecutionEffort))
-	output += fmt.Sprintf("%s %s\n", effortLabel, effortValue)
-
-	// Fees
-	feesLabel := branding.GrayStyle.Render("   Fees:")
-	feesValue := branding.PurpleStyle.Render(fmt.Sprintf("%s FLOW", r.data.Fees))
-	output += fmt.Sprintf("%s %s\n", feesLabel, feesValue)
-
-	// Scheduled Timestamp
-	timestampLabel := branding.GrayStyle.Render("   Scheduled Timestamp:")
-	timestampValue := branding.PurpleStyle.Render(r.data.ScheduledTimestamp)
-	output += fmt.Sprintf("%s %s\n", timestampLabel, timestampValue)
-
-	// Handler Type
-	handlerTypeLabel := branding.GrayStyle.Render("   Handler Type:")
-	handlerTypeValue := branding.PurpleStyle.Render(r.data.HandlerTypeIdentifier)
-	output += fmt.Sprintf("%s %s\n", handlerTypeLabel, handlerTypeValue)
-
-	// Handler Address
-	handlerAddrLabel := branding.GrayStyle.Render("   Handler Address:")
-	handlerAddrValue := branding.PurpleStyle.Render(r.data.HandlerAddress)
-	output += fmt.Sprintf("%s %s\n", handlerAddrLabel, handlerAddrValue)
-
-	return output
+	return FormatTransactionDetails(r.data)
 }
 
 func (r *getResult) Oneliner() string {

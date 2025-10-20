@@ -19,13 +19,20 @@
 package schedule
 
 import (
+	"context"
 	"fmt"
+	"strconv"
 
+	"github.com/onflow/cadence"
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/accounts"
 	"github.com/onflow/flowkit/v2/output"
+	"github.com/onflow/flowkit/v2/transactions"
 
+	"github.com/onflow/flow-cli/common/branding"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
 )
@@ -71,42 +78,141 @@ func cancelRun(
 		return nil, fmt.Errorf("transaction ID is required as an argument")
 	}
 
-	transactionID := args[0]
+	transactionIDStr := args[0]
+
+	// Parse transaction ID as UInt64
+	transactionID, err := strconv.ParseUint(transactionIDStr, 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("invalid transaction ID: %w", err)
+	}
 
 	signer, err := util.GetSignerAccount(state, cancelFlags.Signer)
 	if err != nil {
 		return nil, err
 	}
 
-	logger.Info(fmt.Sprintf("Network: %s", globalFlags.Network))
-	logger.Info(fmt.Sprintf("Signer: %s (%s)", cancelFlags.Signer, signer.Address.String()))
-	logger.Info(fmt.Sprintf("Transaction ID: %s", transactionID))
-	logger.Info("Canceling scheduled transaction...")
+	chainID, err := util.NetworkToChainID(globalFlags.Network)
+	if err != nil {
+		return nil, err
+	}
 
-	// TODO: Implement cancel logic for scheduled transaction
+	if chainID == flowsdk.Mainnet {
+		return nil, fmt.Errorf("transaction scheduling is not yet supported on mainnet")
+	}
+
+	schedulerUtilsAddress, err := getContractAddress(FlowTransactionSchedulerUtils, chainID)
+	if err != nil {
+		return nil, err
+	}
+
+	flowTokenAddress, err := getContractAddress(FlowToken, chainID)
+	if err != nil {
+		return nil, err
+	}
+
+	fungibleTokenAddress, err := getContractAddress(FungibleToken, chainID)
+	if err != nil {
+		return nil, err
+	}
+
+	networkStr := branding.GrayStyle.Render(globalFlags.Network)
+	addressStr := branding.PurpleStyle.Render(signer.Address.HexWithPrefix())
+	signerStr := branding.GrayStyle.Render(cancelFlags.Signer)
+	txIDStr := branding.PurpleStyle.Render(transactionIDStr)
+
+	logger.Info("Canceling scheduled transaction...")
+	logger.Info("")
+	logger.Info(fmt.Sprintf("🌐 Network: %s", networkStr))
+	logger.Info(fmt.Sprintf("📝 Signer: %s (%s)", signerStr, addressStr))
+	logger.Info(fmt.Sprintf("🔍 Transaction ID: %s", txIDStr))
+	logger.Info("")
+
+	// Build transaction code
+	cancelTx := fmt.Sprintf(`import FlowTransactionSchedulerUtils from %s
+import FlowToken from %s
+import FungibleToken from %s
+
+transaction(transactionId: UInt64) {
+    let manager: auth(FlowTransactionSchedulerUtils.Owner) &{FlowTransactionSchedulerUtils.Manager}
+    let tokenReceiver: &{FungibleToken.Receiver}
+
+    prepare(signer: auth(BorrowValue) &Account) {
+        // 1. Borrow Manager reference
+        self.manager = signer.storage.borrow<auth(FlowTransactionSchedulerUtils.Owner) &{FlowTransactionSchedulerUtils.Manager}>(
+            from: FlowTransactionSchedulerUtils.managerStoragePath
+        ) ?? panic("Could not borrow Manager. Please ensure you have a Manager set up.")
+
+         // Verify transaction exists in manager
+        assert(
+            self.manager.getTransactionIDs().contains(transactionId),
+            message: "Transaction with ID ".concat(transactionId.toString()).concat(" not found in manager")
+        )
+
+        // 2. Get FlowToken receiver to deposit refunds
+        self.tokenReceiver = signer.capabilities.get<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
+            .borrow()
+            ?? panic("Could not borrow FlowToken receiver")
+    }
+
+    execute {
+        // Cancel the transaction and receive refunded fees
+        let refundVault <- self.manager.cancel(id: transactionId)
+
+        // Deposit refunded fees back to the account
+        self.tokenReceiver.deposit(from: <-refundVault)
+    }
+}`, schedulerUtilsAddress, flowTokenAddress, fungibleTokenAddress)
+
+	_, txResult, err := flow.SendTransaction(
+		context.Background(),
+		transactions.AccountRoles{
+			Proposer:    *signer,
+			Authorizers: []accounts.Account{*signer},
+			Payer:       *signer,
+		},
+		flowkit.Script{
+			Code: []byte(cancelTx),
+			Args: []cadence.Value{cadence.NewUInt64(transactionID)},
+		},
+		1000,
+	)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to cancel scheduled transaction: %w", err)
+	}
+
+	if txResult.Error != nil {
+		return nil, fmt.Errorf("cancel transaction failed: %s", txResult.Error.Error())
+	}
+
+	logger.Info("")
+	successIcon := branding.GreenStyle.Render("✅")
+	successMsg := branding.GreenStyle.Render("Scheduled transaction canceled successfully")
+	logger.Info(fmt.Sprintf("%s %s", successIcon, successMsg))
 
 	return &cancelResult{
-		success: true,
-		message: fmt.Sprintf("Scheduled transaction %s canceled successfully", transactionID),
+		success:       true,
+		transactionID: transactionIDStr,
 	}, nil
 }
 
 type cancelResult struct {
-	success bool
-	message string
+	success       bool
+	transactionID string
 }
 
 func (r *cancelResult) JSON() any {
 	return map[string]any{
-		"success": r.success,
-		"message": r.message,
+		"success":       r.success,
+		"transactionID": r.transactionID,
+		"message":       "Scheduled transaction canceled successfully",
 	}
 }
 
 func (r *cancelResult) String() string {
-	return r.message
+	return ""
 }
 
 func (r *cancelResult) Oneliner() string {
-	return r.message
+	return fmt.Sprintf("Scheduled transaction %s canceled successfully", r.transactionID)
 }
