@@ -41,6 +41,7 @@ var contractAddresses = map[ContractName]map[flowsdk.ChainID]string{
 	FlowTransactionSchedulerUtils: {
 		flowsdk.Emulator: "0xf8d6e0586b0a20c7",
 		flowsdk.Testnet:  "0x8c5303eaa26202d6",
+		flowsdk.Mainnet:  "0xe467b9dd11fa00df",
 	},
 	FlowTransactionScheduler: {
 		flowsdk.Emulator: "0xf8d6e0586b0a20c7",
@@ -50,11 +51,6 @@ var contractAddresses = map[ContractName]map[flowsdk.ChainID]string{
 
 // getContractAddress returns the contract address for the given contract name and network
 func getContractAddress(contract ContractName, chainID flowsdk.ChainID) (string, error) {
-	// Check if mainnet for scheduling contracts
-	if chainID == flowsdk.Mainnet && (contract == FlowTransactionSchedulerUtils || contract == FlowTransactionScheduler) {
-		return "", fmt.Errorf("transaction scheduling is not yet supported on mainnet")
-	}
-
 	// Handle system contracts using the systemcontracts library
 	if contract == FlowToken || contract == FungibleToken {
 		var flowGoChainID flowGo.ChainID
