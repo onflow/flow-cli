@@ -86,10 +86,6 @@ func listRun(
 		return nil, err
 	}
 
-	if chainID == flowsdk.Mainnet {
-		return nil, fmt.Errorf("transaction scheduling is not yet supported on mainnet")
-	}
-
 	schedulerAddress, err := getContractAddress(FlowTransactionScheduler, chainID)
 	if err != nil {
 		return nil, err
