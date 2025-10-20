@@ -53,7 +53,7 @@ ci: install-tools generate test coverage
 
 $(BINARY):
 	CGO_ENABLED=1 \
-	CGO_CFLAGS="-O2 -D__BLST_PORTABLE__" \
+	CGO_CFLAGS="-O2 -D__BLST_PORTABLE__ -std=gnu11" \
 	GO111MODULE=on go build \
 		-trimpath \
 		-ldflags \
