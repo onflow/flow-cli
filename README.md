@@ -82,3 +82,5 @@ The Flow CLI includes several commands to interact with Flow networks, such as q
 ## Contributing 
 
 Read [contributing](./CONTRIBUTING.md) document.
+<br>## Welcome to Flow Project Init<br>Flow CLI bootstraps Cadence projects—new contributors, start with the Project init tutorial for your first local emulator. Tip: Use Flow Simulator for testing! <br>
+
