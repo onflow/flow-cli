@@ -37,6 +37,7 @@ import (
 	"github.com/onflow/flow-cli/internal/keys"
 	"github.com/onflow/flow-cli/internal/project"
 	"github.com/onflow/flow-cli/internal/quick"
+	"github.com/onflow/flow-cli/internal/schedule"
 	"github.com/onflow/flow-cli/internal/scripts"
 	"github.com/onflow/flow-cli/internal/settings"
 	"github.com/onflow/flow-cli/internal/signatures"
@@ -90,6 +91,7 @@ func main() {
 	cmd.AddCommand(super.GenerateCommand)
 	cmd.AddCommand(dependencymanager.Cmd)
 	cmd.AddCommand(evm.Cmd)
+	cmd.AddCommand(schedule.Cmd)
 
 	command.InitFlags(cmd)
 	cmd.AddGroup(&cobra.Group{
@@ -119,6 +121,10 @@ func main() {
 	cmd.AddGroup(&cobra.Group{
 		ID:    "manager",
 		Title: "🔗 Dependency Manager",
+	})
+	cmd.AddGroup(&cobra.Group{
+		ID:    "schedule",
+		Title: "⏰ Transaction Scheduler",
 	})
 
 	// Initialize template functions for styling
