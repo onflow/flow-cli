@@ -99,7 +99,8 @@ func Test_PersistentPreRunE_ForkFlag(t *testing.T) {
 	}
 
 	// Test case 1: Fork with mainnet
-	cmd.Flags().Set("fork", "mainnet")
+	err = cmd.Flags().Set("fork", "mainnet")
+	require.NoError(t, err)
 	err = cmd.PersistentPreRunE(cmd, []string{})
 	assert.NoError(t, err)
 
@@ -110,11 +111,14 @@ func Test_PersistentPreRunE_ForkFlag(t *testing.T) {
 	assert.True(t, skipValidation)
 
 	// Reset flags for next test
-	cmd.Flags().Set("fork-host", "")
-	cmd.Flags().Set("skip-tx-validation", "false")
+	err = cmd.Flags().Set("fork-host", "")
+	require.NoError(t, err)
+	err = cmd.Flags().Set("skip-tx-validation", "false")
+	require.NoError(t, err)
 
 	// Test case 2: Fork with testnet
-	cmd.Flags().Set("fork", "testnet")
+	err = cmd.Flags().Set("fork", "testnet")
+	require.NoError(t, err)
 	err = cmd.PersistentPreRunE(cmd, []string{})
 	assert.NoError(t, err)
 
@@ -190,7 +194,8 @@ func Test_PersistentPreRunE_ForkFlag_Errors(t *testing.T) {
 	}
 
 	// Test case: Network not found
-	cmd.Flags().Set("fork", "nonexistent")
+	err = cmd.Flags().Set("fork", "nonexistent")
+	require.NoError(t, err)
 	err = cmd.PersistentPreRunE(cmd, []string{})
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "network \"nonexistent\" not found")
