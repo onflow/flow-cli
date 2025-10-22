@@ -20,7 +20,6 @@ package util
 
 import (
 	"bytes"
-	"context"
 	"encoding/hex"
 	"fmt"
 	"net"
@@ -35,9 +34,6 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/onflow/flow-go/fvm/systemcontracts"
 	flowGo "github.com/onflow/flow-go/model/flow"
-	flowaccess "github.com/onflow/flow/protobuf/go/flow/access"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"
@@ -240,37 +236,6 @@ func NetworkToChainID(network string) (flow.ChainID, error) {
 	default:
 		return "", fmt.Errorf("unknown network: %s", network)
 	}
-}
-
-// GetNetworkChainID resolves a network name from flow.json and returns its chain ID.
-// It queries the network's access node via GetNetworkParameters to detect the chain ID.
-func GetNetworkChainID(state *flowkit.State, networkName string) (flowGo.ChainID, error) {
-	network, err := state.Networks().ByName(networkName)
-	if err != nil {
-		return "", fmt.Errorf("network %q not found in flow.json", networkName)
-	}
-
-	host := network.Host
-	if host == "" {
-		return "", fmt.Errorf("network %q has no host configured", networkName)
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-
-	conn, err := grpc.NewClient(host, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		return "", fmt.Errorf("failed to connect to %s: %w", host, err)
-	}
-	defer conn.Close()
-
-	client := flowaccess.NewAccessAPIClient(conn)
-	resp, err := client.GetNetworkParameters(ctx, &flowaccess.GetNetworkParametersRequest{})
-	if err != nil {
-		return "", fmt.Errorf("failed to get network parameters from %s: %w", host, err)
-	}
-
-	return flowGo.ChainID(resp.GetChainId()), nil
 }
 
 func CreateTabWriter(b *bytes.Buffer) *tabwriter.Writer {

@@ -32,6 +32,7 @@ import (
 	"github.com/dukex/mixpanel"
 	"github.com/onflow/flow-emulator/cmd/emulator/start"
 	"github.com/onflow/flow-go-sdk/crypto"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -134,6 +135,16 @@ func trackRequestMiddleware(next http.Handler) http.Handler {
 }
 
 func init() {
+	// Configure zerolog to use console format matching the emulator's output
+	consoleWriter := zerolog.ConsoleWriter{Out: os.Stderr}
+	consoleWriter.FormatMessage = func(i interface{}) string {
+		if i == nil {
+			return ""
+		}
+		return fmt.Sprintf("%-44s", i)
+	}
+	log.Logger = log.Output(consoleWriter).Level(zerolog.InfoLevel)
+
 	// Initialize mixpanel client only if metrics are enabled and token is not empty
 	if settings.MetricsEnabled() && command.MixpanelToken != "" {
 		mixpanelClient = mixpanel.New(command.MixpanelToken, "")
@@ -191,19 +202,8 @@ func init() {
 			return fmt.Errorf("network %q has no host configured", forkOpt)
 		}
 
-		// Detect chain ID from the network
-		chainID, err := util.GetNetworkChainID(state, forkOpt)
-		if err != nil {
-			return err
-		}
-
 		// Set fork-host flag
 		if err := cmd.Flags().Set("fork-host", host); err != nil {
-			return err
-		}
-
-		// Set chain-id flag
-		if err := cmd.Flags().Set("chain-id", host); err != nil {
 			return err
 		}
 
@@ -214,7 +214,6 @@ func init() {
 		}
 
 		// Log info to stderr
-		log.Info().Msgf("Forking from %s (chain ID: %s)", host, chainID)
 		log.Info().Msg("Signature validation automatically disabled for fork mode")
 
 		return nil
