@@ -22,13 +22,13 @@ import (
 	"context"
 	"fmt"
 
-	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/output"
 
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 type flagsGet struct {
@@ -39,23 +39,26 @@ var getFlags = flagsGet{}
 
 var getCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "get <address>",
-		Short:   "Gets an account by address",
-		Example: "flow accounts get f8d6e0586b0a20c7",
+		Use:     "get [address|name]",
+		Short:   "Gets an account by address or account name",
+		Example: "flow accounts get f8d6e0586b0a20c7\nflow accounts get my-account",
 		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &getFlags,
-	Run:   get,
+	RunS:  get,
 }
 
 func get(
 	args []string,
 	_ command.GlobalFlags,
 	logger output.Logger,
-	_ flowkit.ReaderWriter,
 	flow flowkit.Services,
+	state *flowkit.State,
 ) (command.Result, error) {
-	address := flowsdk.HexToAddress(args[0])
+	address, err := util.ResolveAddressOrAccountNameForNetworks(args[0], state, []string{"mainnet", "testnet", "emulator"})
+	if err != nil {
+		return nil, err
+	}
 
 	logger.StartProgress(fmt.Sprintf("Loading account %s...", address))
 	defer logger.StopProgress()
