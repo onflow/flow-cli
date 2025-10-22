@@ -262,6 +262,21 @@ func DetectChainIDFromHost(host string) (flowGo.ChainID, error) {
 	return flowGo.ChainID(resp.GetChainId()), nil
 }
 
+// ResolveNetworkEndpoint resolves a network name to its access node endpoint from flow.json
+func ResolveNetworkEndpoint(state *flowkit.State, networkName string) (string, error) {
+	network, err := state.Networks().ByName(networkName)
+	if err != nil {
+		return "", fmt.Errorf("network %q not found in flow.json", networkName)
+	}
+
+	host := network.Host
+	if host == "" {
+		return "", fmt.Errorf("network %q has no host configured", networkName)
+	}
+
+	return host, nil
+}
+
 func CreateTabWriter(b *bytes.Buffer) *tabwriter.Writer {
 	return tabwriter.NewWriter(b, 0, 8, 1, '\t', tabwriter.AlignRight)
 }

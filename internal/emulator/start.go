@@ -179,7 +179,7 @@ func init() {
 		if err != nil {
 			return fmt.Errorf("failed to load flow.json: %w", err)
 		}
-		endpoint, err := resolveNetworkEndpoint(state, forkOpt)
+		endpoint, err := util.ResolveNetworkEndpoint(state, forkOpt)
 		if err != nil {
 			return err
 		}
@@ -195,21 +195,6 @@ func init() {
 
 		return cmd.Flags().Set("fork-host", endpoint)
 	}
-}
-
-// resolveNetworkEndpoint resolves a network name to its access node endpoint from flow.json
-func resolveNetworkEndpoint(state *flowkit.State, networkName string) (string, error) {
-	network, err := state.Networks().ByName(networkName)
-	if err != nil {
-		return "", fmt.Errorf("network %q not found in flow.json", networkName)
-	}
-
-	host := network.Host
-	if host == "" {
-		return "", fmt.Errorf("network %q has no host configured", networkName)
-	}
-
-	return host, nil
 }
 
 func exitf(code int, msg string, args ...any) {
