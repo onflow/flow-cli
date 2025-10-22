@@ -207,7 +207,7 @@ func init() {
 		if err := cmd.Flags().Set("skip-tx-validation", "true"); err != nil {
 			return err
 		}
-		
+
 		// Log info to stderr
 		log.Info().Msgf("Forking from %s (chain ID: %s)", host, chainID)
 		log.Info().Msg("Signature validation automatically disabled for fork mode")
@@ -217,6 +217,10 @@ func init() {
 }
 
 func exitf(code int, msg string, args ...any) {
-	log.Error().Msgf(msg, args...)
+	if len(args) == 0 {
+		log.Error().Msg(msg)
+	} else {
+		log.Error().Msgf(msg, args...)
+	}
 	os.Exit(code)
 }
