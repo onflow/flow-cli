@@ -32,6 +32,7 @@ import (
 	"github.com/dukex/mixpanel"
 	"github.com/onflow/flow-emulator/cmd/emulator/start"
 	"github.com/onflow/flow-go-sdk/crypto"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 
@@ -208,14 +209,14 @@ func init() {
 		}
 		
 		// Log info to stderr
-		fmt.Fprintf(os.Stderr, "Forking from %s (chain ID: %s)\n", host, chainID)
-		fmt.Fprintf(os.Stderr, "Signature validation automatically disabled for fork mode\n")
+		log.Info().Msgf("Forking from %s (chain ID: %s)", host, chainID)
+		log.Info().Msg("Signature validation automatically disabled for fork mode")
 
 		return nil
 	}
 }
 
 func exitf(code int, msg string, args ...any) {
-	fmt.Printf(msg+"\n", args...)
+	log.Error().Msgf(msg, args...)
 	os.Exit(code)
 }
