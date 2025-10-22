@@ -199,7 +199,19 @@ func init() {
 		// Log the detected chain ID for user feedback
 		fmt.Printf("Detected chain ID: %s from fork host: %s\n", chainID, host)
 
-		return cmd.Flags().Set("fork-host", host)
+		// Set fork-host flag
+		if err := cmd.Flags().Set("fork-host", host); err != nil {
+			return err
+		}
+
+		// Automatically disable signature validation when forking
+		// This is necessary because forked transactions were signed for the original network
+		if err := cmd.Flags().Set("skip-tx-validation", "true"); err != nil {
+			return err
+		}
+		fmt.Println("Signature validation automatically disabled for fork mode")
+
+		return nil
 	}
 }
 
