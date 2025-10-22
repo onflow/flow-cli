@@ -242,37 +242,39 @@ func NetworkToChainID(network string) (flow.ChainID, error) {
 	}
 }
 
-// GetNetworkFromConfig resolves a network name from flow.json and returns its host and chain ID.
-// It first looks up the network in flow.json, then queries the access node to detect the chain ID.
-func GetNetworkFromConfig(state *flowkit.State, networkName string) (host string, chainID flowGo.ChainID, err error) {
-	network, err := state.Networks().ByName(networkName)
-	if err != nil {
-		return "", "", fmt.Errorf("network %q not found in flow.json", networkName)
-	}
-
-	host = network.Host
-	if host == "" {
-		return "", "", fmt.Errorf("network %q has no host configured", networkName)
-	}
-
-	// Detect chain ID from the access node
+// DetectChainIDFromHost attempts to infer the chain ID from the provided access node host.
+// Returns the chain ID by querying GetNetworkParameters via gRPC.
+func DetectChainIDFromHost(host string) (flowGo.ChainID, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	conn, err := grpc.NewClient(host, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		return "", "", fmt.Errorf("failed to connect to %s: %w", host, err)
+		return "", err
 	}
 	defer conn.Close()
 
 	client := flowaccess.NewAccessAPIClient(conn)
 	resp, err := client.GetNetworkParameters(ctx, &flowaccess.GetNetworkParametersRequest{})
 	if err != nil {
-		return "", "", fmt.Errorf("failed to get network parameters from %s: %w", host, err)
+		return "", err
+	}
+	return flowGo.ChainID(resp.GetChainId()), nil
+}
+
+// ResolveNetworkEndpoint resolves a network name to its access node endpoint from flow.json
+func ResolveNetworkEndpoint(state *flowkit.State, networkName string) (string, error) {
+	network, err := state.Networks().ByName(networkName)
+	if err != nil {
+		return "", fmt.Errorf("network %q not found in flow.json", networkName)
 	}
 
-	chainID = flowGo.ChainID(resp.GetChainId())
-	return host, chainID, nil
+	host := network.Host
+	if host == "" {
+		return "", fmt.Errorf("network %q has no host configured", networkName)
+	}
+
+	return host, nil
 }
 
 func CreateTabWriter(b *bytes.Buffer) *tabwriter.Writer {
