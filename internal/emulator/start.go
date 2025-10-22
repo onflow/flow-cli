@@ -67,20 +67,20 @@ func configuredServiceKey(
 	if init {
 		state, err = flowkit.Init(loader)
 		if err != nil {
-			exitf(1, err.Error())
+			log.Fatal().Msgf("%s", err.Error())
 		} else {
 			err = state.SaveDefault()
 			if err != nil {
-				exitf(1, err.Error())
+				log.Fatal().Msgf("%s", err.Error())
 			}
 		}
 	} else {
 		state, err = flowkit.Load(command.Flags.ConfigPaths, loader)
 		if err != nil {
 			if errors.Is(err, config.ErrDoesNotExist) {
-				exitf(1, "🙏 Configuration (flow.json) is missing, are you in the correct directory? If you are trying to create a new project, initialize it with 'flow init' and then rerun this command.")
+				log.Fatal().Msg("🙏 Configuration (flow.json) is missing, are you in the correct directory? If you are trying to create a new project, initialize it with 'flow init' and then rerun this command.")
 			} else {
-				exitf(1, err.Error())
+				log.Fatal().Msgf("%s", err.Error())
 			}
 		}
 	}
@@ -202,6 +202,11 @@ func init() {
 			return err
 		}
 
+		// Set chain-id flag
+		if err := cmd.Flags().Set("chain-id", host); err != nil {
+			return err
+		}
+
 		// Automatically disable signature validation when forking
 		// This is necessary because forked transactions were signed for the original network
 		if err := cmd.Flags().Set("skip-tx-validation", "true"); err != nil {
@@ -214,13 +219,4 @@ func init() {
 
 		return nil
 	}
-}
-
-func exitf(code int, msg string, args ...any) {
-	if len(args) == 0 {
-		log.Error().Msg(msg)
-	} else {
-		log.Error().Msgf(msg, args...)
-	}
-	os.Exit(code)
 }
