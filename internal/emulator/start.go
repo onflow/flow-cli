@@ -196,9 +196,6 @@ func init() {
 			return err
 		}
 
-		// Log the detected chain ID for user feedback
-		fmt.Printf("Detected chain ID: %s from fork host: %s\n", chainID, host)
-
 		// Set fork-host flag
 		if err := cmd.Flags().Set("fork-host", host); err != nil {
 			return err
@@ -209,7 +206,10 @@ func init() {
 		if err := cmd.Flags().Set("skip-tx-validation", "true"); err != nil {
 			return err
 		}
-		fmt.Println("Signature validation automatically disabled for fork mode")
+		
+		// Log info to stderr
+		fmt.Fprintf(os.Stderr, "Forking from %s (chain ID: %s)\n", host, chainID)
+		fmt.Fprintf(os.Stderr, "Signature validation automatically disabled for fork mode\n")
 
 		return nil
 	}
