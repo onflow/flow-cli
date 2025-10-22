@@ -37,6 +37,7 @@ const (
 	ProjectTypeDefault               ProjectType = "default"
 	ProjectTypeScheduledTransactions ProjectType = "scheduledtransactions"
 	ProjectTypeStablecoin            ProjectType = "stablecoin"
+	ProjectTypeDeFiActions           ProjectType = "defiactions"
 	ProjectTypeCustom                ProjectType = "custom"
 )
 
@@ -117,6 +118,80 @@ func getProjectTypeConfigs() map[ProjectType]*ProjectTypeConfig {
 			CustomDependencies: []flowkitConfig.Dependency{},
 			ContractNames:      []string{"PiggyBank", "EVMVMBridgedToken_2aabea2058b5ac2d339b163c6ab6f2b6d53aabed"},
 			DeploymentAccount:  "emulator-account",
+		},
+		ProjectTypeDeFiActions: {
+			Description:   "DeFi Actions project (build composable DeFi connectors)",
+			CoreContracts: []string{"FungibleToken", "FlowToken"},
+			CustomDependencies: []flowkitConfig.Dependency{
+				{
+					Name: "DeFiActionsMathUtils",
+					Source: flowkitConfig.Source{
+						NetworkName:  flowkitConfig.MainnetNetwork.Name,
+						Address:      flowsdk.HexToAddress("92195d814edf9cb0"),
+						ContractName: "DeFiActionsMathUtils",
+					},
+					Aliases: flowkitConfig.Aliases{
+						{
+							Network: "mainnet",
+							Address: flowsdk.HexToAddress("92195d814edf9cb0"),
+						},
+						{
+							Network: "testnet",
+							Address: flowsdk.HexToAddress("4c2ff9dd03ab442f"),
+						},
+						{
+							Network: "testing",
+							Address: flowsdk.HexToAddress("0000000000000006"),
+						},
+					},
+				},
+				{
+					Name: "DeFiActionsUtils",
+					Source: flowkitConfig.Source{
+						NetworkName:  flowkitConfig.MainnetNetwork.Name,
+						Address:      flowsdk.HexToAddress("92195d814edf9cb0"),
+						ContractName: "DeFiActionsUtils",
+					},
+					Aliases: flowkitConfig.Aliases{
+						{
+							Network: "mainnet",
+							Address: flowsdk.HexToAddress("92195d814edf9cb0"),
+						},
+						{
+							Network: "testnet",
+							Address: flowsdk.HexToAddress("4c2ff9dd03ab442f"),
+						},
+						{
+							Network: "testing",
+							Address: flowsdk.HexToAddress("0000000000000006"),
+						},
+					},
+				},
+				{
+					Name: "DeFiActions",
+					Source: flowkitConfig.Source{
+						NetworkName:  flowkitConfig.MainnetNetwork.Name,
+						Address:      flowsdk.HexToAddress("92195d814edf9cb0"),
+						ContractName: "DeFiActions",
+					},
+					Aliases: flowkitConfig.Aliases{
+						{
+							Network: "mainnet",
+							Address: flowsdk.HexToAddress("92195d814edf9cb0"),
+						},
+						{
+							Network: "testnet",
+							Address: flowsdk.HexToAddress("4c2ff9dd03ab442f"),
+						},
+						{
+							Network: "testing",
+							Address: flowsdk.HexToAddress("0000000000000006"),
+						},
+					},
+				},
+			},
+			ContractNames:     []string{"DeFiActionsMathUtils", "DeFiActionsUtils", "DeFiActions", "ExampleConnectors"},
+			DeploymentAccount: "emulator-account",
 		},
 		ProjectTypeCustom: {
 			Description:        "Custom project (select standard Flow contract dependencies)",
@@ -226,6 +301,28 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 			generator.FileTemplate{
 				TemplatePath: "cursor/quick_checklist.md.tmpl",
 				TargetPath:   ".cursor/rules/scheduledtransactions/quick-checklist.md",
+				Data:         map[string]interface{}{},
+			},
+		}
+	case ProjectTypeDeFiActions:
+		return []generator.TemplateItem{
+			generator.ContractTemplate{
+				Name:         "ExampleConnectors",
+				TemplatePath: "contract_example_connectors.cdc.tmpl",
+				SkipTests:    true,
+				AddTestAlias: true,
+			},
+			generator.TestTemplate{
+				Name:         "ExampleConnectors",
+				TemplatePath: "contract_example_connectors_test.cdc.tmpl",
+			},
+			generator.TransactionTemplate{
+				Name:         "DepositViaSink",
+				TemplatePath: "transaction_deposit_via_sink.cdc.tmpl",
+			},
+			generator.FileTemplate{
+				TemplatePath: "README_defi_actions.md.tmpl",
+				TargetPath:   getReadmeFileName(targetDir),
 				Data:         map[string]interface{}{},
 			},
 		}
