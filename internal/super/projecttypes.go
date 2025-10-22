@@ -124,6 +124,50 @@ func getProjectTypeConfigs() map[ProjectType]*ProjectTypeConfig {
 			CoreContracts: []string{"FungibleToken", "FlowToken"},
 			CustomDependencies: []flowkitConfig.Dependency{
 				{
+					Name: "DeFiActionsMathUtils",
+					Source: flowkitConfig.Source{
+						NetworkName:  flowkitConfig.MainnetNetwork.Name,
+						Address:      flowsdk.HexToAddress("92195d814edf9cb0"),
+						ContractName: "DeFiActionsMathUtils",
+					},
+					Aliases: flowkitConfig.Aliases{
+						{
+							Network: "mainnet",
+							Address: flowsdk.HexToAddress("92195d814edf9cb0"),
+						},
+						{
+							Network: "testnet",
+							Address: flowsdk.HexToAddress("4c2ff9dd03ab442f"),
+						},
+						{
+							Network: "testing",
+							Address: flowsdk.HexToAddress("0000000000000006"),
+						},
+					},
+				},
+				{
+					Name: "DeFiActionsUtils",
+					Source: flowkitConfig.Source{
+						NetworkName:  flowkitConfig.MainnetNetwork.Name,
+						Address:      flowsdk.HexToAddress("92195d814edf9cb0"),
+						ContractName: "DeFiActionsUtils",
+					},
+					Aliases: flowkitConfig.Aliases{
+						{
+							Network: "mainnet",
+							Address: flowsdk.HexToAddress("92195d814edf9cb0"),
+						},
+						{
+							Network: "testnet",
+							Address: flowsdk.HexToAddress("4c2ff9dd03ab442f"),
+						},
+						{
+							Network: "testing",
+							Address: flowsdk.HexToAddress("0000000000000006"),
+						},
+					},
+				},
+				{
 					Name: "DeFiActions",
 					Source: flowkitConfig.Source{
 						NetworkName:  flowkitConfig.MainnetNetwork.Name,
@@ -139,10 +183,14 @@ func getProjectTypeConfigs() map[ProjectType]*ProjectTypeConfig {
 							Network: "testnet",
 							Address: flowsdk.HexToAddress("4c2ff9dd03ab442f"),
 						},
+						{
+							Network: "testing",
+							Address: flowsdk.HexToAddress("0000000000000006"),
+						},
 					},
 				},
 			},
-			ContractNames:     []string{"ExampleConnectors"},
+			ContractNames:     []string{"DeFiActionsMathUtils", "DeFiActionsUtils", "DeFiActions", "ExampleConnectors"},
 			DeploymentAccount: "emulator-account",
 		},
 		ProjectTypeCustom: {
@@ -261,6 +309,7 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 			generator.ContractTemplate{
 				Name:         "ExampleConnectors",
 				TemplatePath: "contract_example_connectors.cdc.tmpl",
+				SkipTests:    true,
 				AddTestAlias: true,
 			},
 			generator.TestTemplate{
