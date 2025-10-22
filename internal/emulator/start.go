@@ -148,7 +148,7 @@ func init() {
 	}
 
 	// Add --fork flag with optional value (defaults to mainnet when value omitted)
-	Cmd.Flags().String("fork", "", "fork from a remote network (mainnet|testnet). If provided without a value, defaults to mainnet")
+	Cmd.Flags().String("fork", "", "fork from a remote network defined in flow.json (typically mainnet or testnet). If provided without a value, defaults to mainnet")
 	if f := Cmd.Flags().Lookup("fork"); f != nil {
 		f.NoOptDefVal = "mainnet"
 	}
