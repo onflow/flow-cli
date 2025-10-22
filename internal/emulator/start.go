@@ -147,10 +147,69 @@ func init() {
 		})
 	}
 
+	// Add --fork flag with optional value (defaults to mainnet when value omitted)
+	Cmd.Flags().String("fork", "", "fork from a remote network (mainnet|testnet). If provided without a value, defaults to mainnet")
+	if f := Cmd.Flags().Lookup("fork"); f != nil {
+		f.NoOptDefVal = "mainnet"
+	}
+
 	Cmd.Use = "emulator"
 	Cmd.Short = "Run Flow network for development"
 	Cmd.GroupID = "tools"
 	SnapshotCmd.AddToParent(Cmd)
+
+	// Translate --fork to --fork-host before emulator reads flags
+	Cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		fh, err := cmd.Flags().GetString("fork-host")
+		if err != nil {
+			return err
+		}
+		if fh != "" {
+			return nil
+		}
+		forkOpt, err := cmd.Flags().GetString("fork")
+		if err != nil {
+			return err
+		}
+		if forkOpt == "" {
+			return nil
+		}
+		loader := &afero.Afero{Fs: afero.NewOsFs()}
+		state, err := flowkit.Load(command.Flags.ConfigPaths, loader)
+		if err != nil {
+			return fmt.Errorf("failed to load flow.json: %w", err)
+		}
+		endpoint, err := resolveNetworkEndpoint(state, forkOpt)
+		if err != nil {
+			return err
+		}
+
+		// Auto-detect chain id from host via GetNetworkParameters
+		chainID, err := util.DetectChainIDFromHost(endpoint)
+		if err != nil {
+			return fmt.Errorf("could not auto-detect fork network from host: %w", err)
+		}
+
+		// Log the detected chain ID for user feedback
+		fmt.Printf("Detected chain ID: %s from fork host: %s\n", chainID, endpoint)
+
+		return cmd.Flags().Set("fork-host", endpoint)
+	}
+}
+
+// resolveNetworkEndpoint resolves a network name to its access node endpoint from flow.json
+func resolveNetworkEndpoint(state *flowkit.State, networkName string) (string, error) {
+	network, err := state.Networks().ByName(networkName)
+	if err != nil {
+		return "", fmt.Errorf("network %q not found in flow.json", networkName)
+	}
+
+	host := network.Host
+	if host == "" {
+		return "", fmt.Errorf("network %q has no host configured", networkName)
+	}
+
+	return host, nil
 }
 
 func exitf(code int, msg string, args ...any) {
