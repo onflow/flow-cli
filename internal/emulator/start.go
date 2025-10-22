@@ -179,21 +179,17 @@ func init() {
 		if err != nil {
 			return fmt.Errorf("failed to load flow.json: %w", err)
 		}
-		endpoint, err := util.ResolveNetworkEndpoint(state, forkOpt)
+
+		// Resolve network and detect chain ID
+		host, chainID, err := util.GetNetworkFromConfig(state, forkOpt)
 		if err != nil {
 			return err
 		}
 
-		// Auto-detect chain id from host via GetNetworkParameters
-		chainID, err := util.DetectChainIDFromHost(endpoint)
-		if err != nil {
-			return fmt.Errorf("could not auto-detect fork network from host: %w", err)
-		}
-
 		// Log the detected chain ID for user feedback
-		fmt.Printf("Detected chain ID: %s from fork host: %s\n", chainID, endpoint)
+		fmt.Printf("Detected chain ID: %s from fork host: %s\n", chainID, host)
 
-		return cmd.Flags().Set("fork-host", endpoint)
+		return cmd.Flags().Set("fork-host", host)
 	}
 }
 
