@@ -242,28 +242,9 @@ func NetworkToChainID(network string) (flow.ChainID, error) {
 	}
 }
 
-// DetectChainIDFromHost attempts to infer the chain ID from the provided access node host.
-// Returns the chain ID by querying GetNetworkParameters via gRPC.
-func DetectChainIDFromHost(host string) (flowGo.ChainID, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-
-	conn, err := grpc.NewClient(host, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		return "", err
-	}
-	defer conn.Close()
-
-	client := flowaccess.NewAccessAPIClient(conn)
-	resp, err := client.GetNetworkParameters(ctx, &flowaccess.GetNetworkParametersRequest{})
-	if err != nil {
-		return "", err
-	}
-	return flowGo.ChainID(resp.GetChainId()), nil
-}
-
-// ResolveNetworkEndpoint resolves a network name to its access node endpoint from flow.json
-func ResolveNetworkEndpoint(state *flowkit.State, networkName string) (string, error) {
+// GetNetworkChainID resolves a network name from flow.json and returns its chain ID.
+// It queries the network's access node via GetNetworkParameters to detect the chain ID.
+func GetNetworkChainID(state *flowkit.State, networkName string) (flowGo.ChainID, error) {
 	network, err := state.Networks().ByName(networkName)
 	if err != nil {
 		return "", fmt.Errorf("network %q not found in flow.json", networkName)
@@ -274,7 +255,22 @@ func ResolveNetworkEndpoint(state *flowkit.State, networkName string) (string, e
 		return "", fmt.Errorf("network %q has no host configured", networkName)
 	}
 
-	return host, nil
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	conn, err := grpc.NewClient(host, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return "", fmt.Errorf("failed to connect to %s: %w", host, err)
+	}
+	defer conn.Close()
+
+	client := flowaccess.NewAccessAPIClient(conn)
+	resp, err := client.GetNetworkParameters(ctx, &flowaccess.GetNetworkParametersRequest{})
+	if err != nil {
+		return "", fmt.Errorf("failed to get network parameters from %s: %w", host, err)
+	}
+
+	return flowGo.ChainID(resp.GetChainId()), nil
 }
 
 func CreateTabWriter(b *bytes.Buffer) *tabwriter.Writer {
