@@ -32,6 +32,8 @@ import (
 	"github.com/dukex/mixpanel"
 	"github.com/onflow/flow-emulator/cmd/emulator/start"
 	"github.com/onflow/flow-go-sdk/crypto"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 
@@ -66,20 +68,20 @@ func configuredServiceKey(
 	if init {
 		state, err = flowkit.Init(loader)
 		if err != nil {
-			exitf(1, err.Error())
+			log.Fatal().Msgf("%s", err.Error())
 		} else {
 			err = state.SaveDefault()
 			if err != nil {
-				exitf(1, err.Error())
+				log.Fatal().Msgf("%s", err.Error())
 			}
 		}
 	} else {
 		state, err = flowkit.Load(command.Flags.ConfigPaths, loader)
 		if err != nil {
 			if errors.Is(err, config.ErrDoesNotExist) {
-				exitf(1, "🙏 Configuration (flow.json) is missing, are you in the correct directory? If you are trying to create a new project, initialize it with 'flow init' and then rerun this command.")
+				log.Fatal().Msg("🙏 Configuration (flow.json) is missing, are you in the correct directory? If you are trying to create a new project, initialize it with 'flow init' and then rerun this command.")
 			} else {
-				exitf(1, err.Error())
+				log.Fatal().Msgf("%s", err.Error())
 			}
 		}
 	}
@@ -133,6 +135,16 @@ func trackRequestMiddleware(next http.Handler) http.Handler {
 }
 
 func init() {
+	// Configure zerolog to use console format matching the emulator's output
+	consoleWriter := zerolog.ConsoleWriter{Out: os.Stderr}
+	consoleWriter.FormatMessage = func(i interface{}) string {
+		if i == nil {
+			return ""
+		}
+		return fmt.Sprintf("%-44s", i)
+	}
+	log.Logger = log.Output(consoleWriter).Level(zerolog.InfoLevel)
+
 	// Initialize mixpanel client only if metrics are enabled and token is not empty
 	if settings.MetricsEnabled() && command.MixpanelToken != "" {
 		mixpanelClient = mixpanel.New(command.MixpanelToken, "")
@@ -147,13 +159,63 @@ func init() {
 		})
 	}
 
+	// Add --fork flag with optional value (defaults to mainnet when value omitted)
+	Cmd.Flags().String("fork", "", "fork from a remote network defined in flow.json. If provided without a value, defaults to mainnet")
+	if f := Cmd.Flags().Lookup("fork"); f != nil {
+		f.NoOptDefVal = "mainnet"
+	}
+
 	Cmd.Use = "emulator"
 	Cmd.Short = "Run Flow network for development"
 	Cmd.GroupID = "tools"
 	SnapshotCmd.AddToParent(Cmd)
-}
 
-func exitf(code int, msg string, args ...any) {
-	fmt.Printf(msg+"\n", args...)
-	os.Exit(code)
+	// Translate --fork to --fork-host before emulator reads flags
+	Cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		fh, err := cmd.Flags().GetString("fork-host")
+		if err != nil {
+			return err
+		}
+		if fh != "" {
+			return nil
+		}
+		forkOpt, err := cmd.Flags().GetString("fork")
+		if err != nil {
+			return err
+		}
+		if forkOpt == "" {
+			return nil
+		}
+		loader := &afero.Afero{Fs: afero.NewOsFs()}
+		state, err := flowkit.Load(command.Flags.ConfigPaths, loader)
+		if err != nil {
+			return fmt.Errorf("failed to load flow.json: %w", err)
+		}
+
+		// Resolve network endpoint from flow.json
+		network, err := state.Networks().ByName(forkOpt)
+		if err != nil {
+			return fmt.Errorf("network %q not found in flow.json", forkOpt)
+		}
+		host := network.Host
+		if host == "" {
+			return fmt.Errorf("network %q has no host configured", forkOpt)
+		}
+
+		// Set fork-host flag
+		if err := cmd.Flags().Set("fork-host", host); err != nil {
+			return err
+		}
+
+		// Automatically disable signature validation when forking
+		// This is necessary because forked transactions were signed for the original network
+		if err := cmd.Flags().Set("skip-tx-validation", "true"); err != nil {
+			return err
+		}
+
+		// Log info to stderr
+		log.Info().Msg("Signature validation automatically disabled for fork mode")
+
+		return nil
+	}
 }
