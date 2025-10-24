@@ -55,3 +55,4 @@ jobs:
         uses: github/codeql-action/analyze@v3
         with:
           category: "/language:${{ matrix.languages}}"
+          # need org username and pat to access private libraries
