@@ -50,12 +50,12 @@ var getCommand = &command.Command{
 
 func get(
 	args []string,
-	_ command.GlobalFlags,
+	globalFlags command.GlobalFlags,
 	logger output.Logger,
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	address, err := util.ResolveAddressOrAccountNameForNetworks(args[0], state, []string{"mainnet", "testnet", "emulator"})
+	address, err := util.ResolveAddressOrAccountNameForNetworks(args[0], state, []string{globalFlags.Network})
 	if err != nil {
 		return nil, err
 	}

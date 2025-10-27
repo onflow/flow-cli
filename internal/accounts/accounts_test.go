@@ -262,7 +262,7 @@ func Test_Get(t *testing.T) {
 			srv.GetAccount.Return(tests.NewAccountWithAddress(inArgs[0]), nil)
 		})
 
-		result, err := get(inArgs, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
+		result, err := get(inArgs, command.GlobalFlags{Network: "emulator"}, util.NoLogger, srv.Mock, state)
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 	})
@@ -284,7 +284,7 @@ func Test_Get(t *testing.T) {
 			srv.GetAccount.Return(tests.NewAccountWithAddress(addr.Hex()), nil)
 		})
 
-		result, err := get(inArgs, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
+		result, err := get(inArgs, command.GlobalFlags{Network: "emulator"}, util.NoLogger, srv.Mock, state)
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 	})
