@@ -26,6 +26,7 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/flow-cli/common/branding"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
 )
@@ -95,46 +96,46 @@ func (r *accountResult) String() string {
 	if r.Address.IsValid(flow.Testnet) {
 		_, _ = fmt.Fprintf(
 			writer,
-			"If you would like to fund the account with 1000 FLOW tokens for testing,"+
-				" visit %s\n\n",
-			testnetFaucetURL(r.Address),
+			"%s %s\n\n",
+			branding.GrayStyle.Render("If you would like to fund the account with 1000 FLOW tokens for testing, visit"),
+			branding.PurpleStyle.Render(testnetFaucetURL(r.Address)),
 		)
 	}
 
-	_, _ = fmt.Fprintf(writer, "Address\t 0x%s\n", r.Address)
-	_, _ = fmt.Fprintf(writer, "Balance\t %s\n", cadence.UFix64(r.Balance))
+	_, _ = fmt.Fprintf(writer, "%s\t %s\n", branding.GrayStyle.Render("Address"), branding.PurpleStyle.Render("0x"+r.Address.String()))
+	_, _ = fmt.Fprintf(writer, "%s\t %s\n", branding.GrayStyle.Render("Balance"), branding.GreenStyle.Render(cadence.UFix64(r.Balance).String()))
 
-	_, _ = fmt.Fprintf(writer, "Keys\t %d\n", len(r.Keys))
+	_, _ = fmt.Fprintf(writer, "%s\t %d\n", branding.GrayStyle.Render("Keys"), len(r.Keys))
 
 	for i, key := range r.Keys {
-		_, _ = fmt.Fprintf(writer, "\nKey %d\tPublic Key\t %x\n", i, key.PublicKey.Encode())
-		_, _ = fmt.Fprintf(writer, "\tWeight\t %d\n", key.Weight)
-		_, _ = fmt.Fprintf(writer, "\tSignature Algorithm\t %s\n", key.SigAlgo)
-		_, _ = fmt.Fprintf(writer, "\tHash Algorithm\t %s\n", key.HashAlgo)
-		_, _ = fmt.Fprintf(writer, "\tRevoked \t %t\n", key.Revoked)
-		_, _ = fmt.Fprintf(writer, "\tSequence Number \t %d\n", key.SequenceNumber)
-		_, _ = fmt.Fprintf(writer, "\tIndex \t %d\n", key.Index)
+		_, _ = fmt.Fprintf(writer, "\n%s %d\t%s\t %x\n", branding.GrayStyle.Render("Key"), i, branding.GrayStyle.Render("Public Key"), key.PublicKey.Encode())
+		_, _ = fmt.Fprintf(writer, "\t%s\t %d\n", branding.GrayStyle.Render("Weight"), key.Weight)
+		_, _ = fmt.Fprintf(writer, "\t%s\t %s\n", branding.GrayStyle.Render("Signature Algorithm"), key.SigAlgo)
+		_, _ = fmt.Fprintf(writer, "\t%s\t %s\n", branding.GrayStyle.Render("Hash Algorithm"), key.HashAlgo)
+		_, _ = fmt.Fprintf(writer, "\t%s \t %t\n", branding.GrayStyle.Render("Revoked"), key.Revoked)
+		_, _ = fmt.Fprintf(writer, "\t%s \t %d\n", branding.GrayStyle.Render("Sequence Number"), key.SequenceNumber)
+		_, _ = fmt.Fprintf(writer, "\t%s \t %d\n", branding.GrayStyle.Render("Index"), key.Index)
 		_, _ = fmt.Fprintf(writer, "\n")
 
 		// only show up to 3 keys and then show label to expand more info
 		if i == 3 && !command.ContainsFlag(r.include, "keys") {
-			_, _ = fmt.Fprint(writer, "...keys minimized, use --include keys flag if you want to view all\n\n")
+			_, _ = fmt.Fprint(writer, branding.GrayStyle.Render("...keys minimized, use --include keys flag if you want to view all\n\n"))
 			break
 		}
 	}
 
-	_, _ = fmt.Fprintf(writer, "Contracts Deployed: %d\n", len(r.Contracts))
+	_, _ = fmt.Fprintf(writer, "%s %d\n", branding.GrayStyle.Render("Contracts Deployed:"), len(r.Contracts))
 	for name := range r.Contracts {
-		_, _ = fmt.Fprintf(writer, "Contract: '%s'\n", name)
+		_, _ = fmt.Fprintf(writer, "%s %s\n", branding.GrayStyle.Render("Contract:"), branding.PurpleStyle.Render("'"+name+"'"))
 	}
 
 	if command.ContainsFlag(r.include, "contracts") {
 		for name, code := range r.Contracts {
-			_, _ = fmt.Fprintf(writer, "Contracts '%s':\n", name)
+			_, _ = fmt.Fprintf(writer, "%s %s:\n", branding.GrayStyle.Render("Contracts"), branding.PurpleStyle.Render("'"+name+"'"))
 			_, _ = fmt.Fprintln(writer, string(code))
 		}
 	} else {
-		_, _ = fmt.Fprint(writer, "\n\nContracts (hidden, use --include contracts)")
+		_, _ = fmt.Fprint(writer, "\n\n"+branding.GrayStyle.Render("Contracts (hidden, use --include contracts)"))
 	}
 
 	_ = writer.Flush()
