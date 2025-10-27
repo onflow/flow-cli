@@ -31,6 +31,7 @@ import (
 	cdcTests "github.com/onflow/cadence-tools/test"
 	"github.com/onflow/cadence/common"
 	"github.com/onflow/cadence/runtime"
+	flowgo "github.com/onflow/flow-go/model/flow"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
@@ -74,6 +75,11 @@ type flagsTests struct {
 	Random       bool   `default:"false" flag:"random" info:"Use the random flag to execute test cases randomly"`
 	Seed         int64  `default:"0" flag:"seed" info:"Use the seed flag to manipulate random execution of test cases"`
 	Name         string `default:"" flag:"name" info:"Use the name flag to run only tests that match the given name"`
+
+	// Fork mode flags
+	Fork       string `default:"" info:"Fork tests from a remote network defined in flow.json (typically mainnet or testnet). If provided without a value, defaults to mainnet."`
+	ForkHost   string `default:"" flag:"fork-host" info:"Run tests against a fork of a remote network. Provide the GRPC Access host (host:port)."`
+	ForkHeight uint64 `default:"0" flag:"fork-height" info:"Optional block height to pin the fork (if supported)."`
 }
 
 var testFlags = flagsTests{}
@@ -92,6 +98,13 @@ flow test test1.cdc test2.cdc`,
 	},
 	Flags: &testFlags,
 	RunS:  run,
+}
+
+func init() {
+	// add default value to --fork flag
+	if f := TestCommand.Cmd.Flags().Lookup("fork"); f != nil {
+		f.NoOptDefVal = "mainnet"
+	}
 }
 
 func run(
@@ -171,6 +184,36 @@ func testCode(
 	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).With().Timestamp().Logger()
 	runner := cdcTests.NewTestRunner().WithLogger(logger)
 
+	// Configure fork mode if requested
+	effectiveForkHost := strings.TrimSpace(flags.ForkHost)
+	var forkChainID flowgo.ChainID
+	
+	if effectiveForkHost == "" && strings.TrimSpace(flags.Fork) != "" {
+		// Resolve network endpoint from flow.json
+		network, err := state.Networks().ByName(strings.ToLower(flags.Fork))
+		if err != nil {
+			return nil, fmt.Errorf("network %q not found in flow.json", flags.Fork)
+		}
+		effectiveForkHost = network.Host
+		if effectiveForkHost == "" {
+			return nil, fmt.Errorf("network %q has no host configured", flags.Fork)
+		}
+
+		// Detect chain ID from the network
+		forkChainID, err = util.GetNetworkChainID(state, strings.ToLower(flags.Fork))
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if effectiveForkHost != "" {
+		runner = runner.WithFork(cdcTests.ForkConfig{
+			ForkHost:   effectiveForkHost,
+			ChainID:    forkChainID,
+			ForkHeight: flags.ForkHeight,
+		})
+	}
+
 	var coverageReport *runtime.CoverageReport
 	if flags.Cover {
 		coverageReport = state.CreateCoverageReport("testing")
@@ -199,8 +242,13 @@ func testCode(
 
 	contractsConfig := *state.Contracts()
 	contracts := make(map[string]common.Address, len(contractsConfig))
+	// Choose alias network: default to "testing", but in fork mode use selected chain (mainnet/testnet)
+	aliasNetwork := "testing"
+	if flags.Fork != "" {
+		aliasNetwork = flags.Fork
+	}
 	for _, contract := range contractsConfig {
-		alias := contract.Aliases.ByNetwork("testing")
+		alias := contract.Aliases.ByNetwork(aliasNetwork)
 		if alias != nil {
 			contracts[contract.Name] = common.Address(alias.Address)
 		}

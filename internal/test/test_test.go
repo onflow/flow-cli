@@ -76,8 +76,7 @@ func TestExecutingTests(t *testing.T) {
 
 		err = result.Results[script.Filename][0].Error
 		require.Error(t, err)
-		var assertionErr *stdlib.AssertionError
-		assert.ErrorAs(t, err, &assertionErr)
+		assert.ErrorAs(t, err, &stdlib.AssertionError{})
 	})
 
 	t.Run("with import", func(t *testing.T) {
@@ -712,8 +711,7 @@ Seed: 1521
 		assert.Len(t, result.Results, 2)
 		assert.NoError(t, result.Results[scriptPassing.Filename][0].Error)
 		assert.Error(t, result.Results[scriptFailing.Filename][0].Error)
-		var assertionErr *stdlib.AssertionError
-		assert.ErrorAs(t, result.Results[scriptFailing.Filename][0].Error, &assertionErr)
+		assert.ErrorAs(t, result.Results[scriptFailing.Filename][0].Error, &stdlib.AssertionError{})
 
 		assert.Contains(
 			t,
@@ -754,4 +752,86 @@ Seed: 1521
 			result.Oneliner(),
 		)
 	})
+}
+
+func TestForkMode_UsesMainnetAliases(t *testing.T) {
+	t.Parallel()
+
+	_, state, _ := util.TestMocks(t)
+
+	// Provide only mainnet alias; no testing alias on purpose
+	mainnetAliases := config.Aliases{{
+		Network: "mainnet",
+		Address: flowsdk.HexToAddress("0x0000000000000007"),
+	}}
+	c := config.Contract{
+		Name:     tests.ContractHelloString.Name,
+		Location: tests.ContractHelloString.Filename,
+		Aliases:  mainnetAliases,
+	}
+	state.Contracts().AddOrUpdate(c)
+
+	script := tests.TestScriptWithImport
+	testFiles := map[string][]byte{
+		script.Filename: script.Source,
+	}
+
+	flags := flagsTests{
+		ForkHost: "access.mainnet.nodes.onflow.org:9000",
+		Fork:     "mainnet",
+	}
+
+	result, err := testCode(testFiles, state, flags)
+
+	require.NoError(t, err)
+	require.Len(t, result.Results, 1)
+	assert.NoError(t, result.Results[script.Filename][0].Error)
+}
+
+func TestForkMode_UsesTestnetAliasesExplicit(t *testing.T) {
+	t.Parallel()
+
+	_, state, _ := util.TestMocks(t)
+
+	testnetAliases := config.Aliases{{
+		Network: "testnet",
+		Address: flowsdk.HexToAddress("0x0000000000000007"),
+	}}
+	c := config.Contract{
+		Name:     tests.ContractHelloString.Name,
+		Location: tests.ContractHelloString.Filename,
+		Aliases:  testnetAliases,
+	}
+	state.Contracts().AddOrUpdate(c)
+
+	script := tests.TestScriptWithImport
+	testFiles := map[string][]byte{
+		script.Filename: script.Source,
+	}
+
+	flags := flagsTests{
+		ForkHost: "access.testnet.nodes.onflow.org:9000",
+		Fork:     "testnet",
+	}
+
+	result, err := testCode(testFiles, state, flags)
+
+	require.NoError(t, err)
+	require.Len(t, result.Results, 1)
+	assert.NoError(t, result.Results[script.Filename][0].Error)
+}
+
+func TestForkMode_AutodetectFailureRequiresExplicitNetwork(t *testing.T) {
+	t.Parallel()
+
+	_, state, _ := util.TestMocks(t)
+
+	// No network hints in URL; expect early error
+	flags := flagsTests{
+		ForkHost: "rpc.foobar.org:9000",
+	}
+
+	_, err := testCode(map[string][]byte{}, state, flags)
+	require.Error(t, err)
+	assert.ErrorContains(t, err, "could not auto-detect fork network")
 }
