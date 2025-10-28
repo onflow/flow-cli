@@ -76,7 +76,7 @@ type flagsTests struct {
 	Name         string `default:"" flag:"name" info:"Use the name flag to run only tests that match the given name"`
 
 	// Fork mode flags
-	Fork       string `default:"" flag:"fork" info:"Fork tests from a remote network defined in flow.json (typically mainnet or testnet). If provided without a value, defaults to mainnet."`
+	Fork       string // Use definition in init()
 	ForkHost   string `default:"" flag:"fork-host" info:"Run tests against a fork of a remote network. Provide the GRPC Access host (host:port)."`
 	ForkHeight uint64 `default:"0" flag:"fork-height" info:"Optional block height to pin the fork (if supported)."`
 }
@@ -100,7 +100,9 @@ flow test test1.cdc test2.cdc`,
 }
 
 func init() {
-	// add default value to --fork flag
+	// Add default value to --fork flag
+	// workaround because config schema via struct tags doesn't support default values
+	TestCommand.Cmd.Flags().StringVar(&testFlags.Fork, "fork", "mainnet", "Fork tests from a remote network. If provided without a value, defaults to mainnet")
 	if f := TestCommand.Cmd.Flags().Lookup("fork"); f != nil {
 		f.NoOptDefVal = "mainnet"
 	}
