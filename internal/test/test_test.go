@@ -759,21 +759,52 @@ func TestForkMode_UsesMainnetAliases(t *testing.T) {
 
 	_, state, _ := util.TestMocks(t)
 
-	// Provide only mainnet alias; no testing alias on purpose
+	// Use a real mainnet address (FlowToken system contract)
+	// This verifies fork mode correctly resolves mainnet aliases
 	mainnetAliases := config.Aliases{{
 		Network: "mainnet",
-		Address: flowsdk.HexToAddress("0x0000000000000007"),
+		Address: flowsdk.HexToAddress("0x1654653399040a61"), // FlowToken on mainnet
 	}}
+
+	// Create a simple test contract to deploy
+	testContractSource := []byte(`
+		access(all) contract TestContract {
+			access(all) var value: Int
+			init() { self.value = 42 }
+			access(all) fun getValue(): Int { return self.value }
+		}
+	`)
+	_ = state.ReaderWriter().WriteFile("TestContract.cdc", testContractSource, 0644)
+
 	c := config.Contract{
-		Name:     tests.ContractHelloString.Name,
-		Location: tests.ContractHelloString.Filename,
+		Name:     "TestContract",
+		Location: "TestContract.cdc",
 		Aliases:  mainnetAliases,
 	}
 	state.Contracts().AddOrUpdate(c)
 
-	script := tests.TestScriptWithImport
+	// Test script that deploys and uses the contract
+	testScript := []byte(`
+		import Test
+
+		access(all) fun testDeployAndUse() {
+			let err = Test.deployContract(
+				name: "TestContract",
+				path: "TestContract.cdc",
+				arguments: []
+			)
+			Test.expect(err, Test.beNil())
+			
+			// Verify the contract deployed and works
+			let script = "import TestContract from 0x1654653399040a61\naccess(all) fun main(): Int { return TestContract.getValue() }"
+			let result = Test.executeScript(script, [])
+			Test.expect(result, Test.beSucceeded())
+			Test.assertEqual(42, result.returnValue! as! Int)
+		}
+	`)
+
 	testFiles := map[string][]byte{
-		script.Filename: script.Source,
+		"test_mainnet_fork.cdc": testScript,
 	}
 
 	flags := flagsTests{
@@ -785,7 +816,7 @@ func TestForkMode_UsesMainnetAliases(t *testing.T) {
 
 	require.NoError(t, err)
 	require.Len(t, result.Results, 1)
-	assert.NoError(t, result.Results[script.Filename][0].Error)
+	assert.NoError(t, result.Results["test_mainnet_fork.cdc"][0].Error)
 }
 
 func TestForkMode_UsesTestnetAliasesExplicit(t *testing.T) {
@@ -793,20 +824,52 @@ func TestForkMode_UsesTestnetAliasesExplicit(t *testing.T) {
 
 	_, state, _ := util.TestMocks(t)
 
+	// Use a real testnet address (FlowToken system contract testnet address)
+	// This verifies fork mode correctly resolves testnet aliases
 	testnetAliases := config.Aliases{{
 		Network: "testnet",
-		Address: flowsdk.HexToAddress("0x0000000000000007"),
+		Address: flowsdk.HexToAddress("0x7e60df042a9c0868"), // FlowToken on testnet
 	}}
+
+	// Create a simple test contract to deploy
+	testContractSource := []byte(`
+		access(all) contract TestContract {
+			access(all) var value: String
+			init() { self.value = "testnet" }
+			access(all) fun getValue(): String { return self.value }
+		}
+	`)
+	_ = state.ReaderWriter().WriteFile("TestContract.cdc", testContractSource, 0644)
+
 	c := config.Contract{
-		Name:     tests.ContractHelloString.Name,
-		Location: tests.ContractHelloString.Filename,
+		Name:     "TestContract",
+		Location: "TestContract.cdc",
 		Aliases:  testnetAliases,
 	}
 	state.Contracts().AddOrUpdate(c)
 
-	script := tests.TestScriptWithImport
+	// Test script that deploys and uses the contract
+	testScript := []byte(`
+		import Test
+
+		access(all) fun testDeployAndUse() {
+			let err = Test.deployContract(
+				name: "TestContract",
+				path: "TestContract.cdc",
+				arguments: []
+			)
+			Test.expect(err, Test.beNil())
+			
+			// Verify the contract deployed and works
+			let script = "import TestContract from 0x7e60df042a9c0868\naccess(all) fun main(): String { return TestContract.getValue() }"
+			let result = Test.executeScript(script, [])
+			Test.expect(result, Test.beSucceeded())
+			Test.assertEqual("testnet", result.returnValue! as! String)
+		}
+	`)
+
 	testFiles := map[string][]byte{
-		script.Filename: script.Source,
+		"test_testnet_fork.cdc": testScript,
 	}
 
 	flags := flagsTests{
@@ -818,7 +881,7 @@ func TestForkMode_UsesTestnetAliasesExplicit(t *testing.T) {
 
 	require.NoError(t, err)
 	require.Len(t, result.Results, 1)
-	assert.NoError(t, result.Results[script.Filename][0].Error)
+	assert.NoError(t, result.Results["test_testnet_fork.cdc"][0].Error)
 }
 
 func TestForkMode_AutodetectFailureRequiresExplicitNetwork(t *testing.T) {
@@ -833,5 +896,5 @@ func TestForkMode_AutodetectFailureRequiresExplicitNetwork(t *testing.T) {
 
 	_, err := testCode(map[string][]byte{}, state, flags)
 	require.Error(t, err)
-	assert.ErrorContains(t, err, "could not auto-detect fork network")
+	assert.ErrorContains(t, err, "failed to get chain ID from fork host")
 }

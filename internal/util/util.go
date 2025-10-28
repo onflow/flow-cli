@@ -242,18 +242,8 @@ func NetworkToChainID(network string) (flow.ChainID, error) {
 	}
 }
 
-// GetNetworkChainID resolves a network name from flow.json and returns its chain ID.
-// It queries the network's access node via GetNetworkParameters to detect the chain ID.
-func GetNetworkChainID(state *flowkit.State, networkName string) (flowGo.ChainID, error) {
-	network, err := state.Networks().ByName(networkName)
-	if err != nil {
-		return "", fmt.Errorf("network %q not found in flow.json", networkName)
-	}
-
-	host := network.Host
-	if host == "" {
-		return "", fmt.Errorf("network %q has no host configured", networkName)
-	}
+// GetChainIDFromHost queries the given host directly to get its chain ID.
+func GetChainIDFromHost(host string) (flowGo.ChainID, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -271,6 +261,22 @@ func GetNetworkChainID(state *flowkit.State, networkName string) (flowGo.ChainID
 	}
 
 	return flowGo.ChainID(resp.GetChainId()), nil
+}
+
+// GetNetworkChainID resolves a network name from flow.json and returns its chain ID.
+// It queries the network's access node via GetNetworkParameters to detect the chain ID.
+func GetNetworkChainID(state *flowkit.State, networkName string) (flowGo.ChainID, error) {
+	network, err := state.Networks().ByName(networkName)
+	if err != nil {
+		return "", fmt.Errorf("network %q not found in flow.json", networkName)
+	}
+
+	host := network.Host
+	if host == "" {
+		return "", fmt.Errorf("network %q has no host configured", networkName)
+	}
+
+	return GetChainIDFromHost(host)
 }
 
 func CreateTabWriter(b *bytes.Buffer) *tabwriter.Writer {

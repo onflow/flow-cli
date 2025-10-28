@@ -31,7 +31,6 @@ import (
 	cdcTests "github.com/onflow/cadence-tools/test"
 	"github.com/onflow/cadence/common"
 	"github.com/onflow/cadence/runtime"
-	flowgo "github.com/onflow/flow-go/model/flow"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
@@ -185,12 +184,15 @@ func testCode(
 	runner := cdcTests.NewTestRunner().WithLogger(logger)
 
 	// Configure fork mode if requested
-	effectiveForkHost := strings.TrimSpace(flags.ForkHost)
-	var forkChainID flowgo.ChainID
-	
-	if effectiveForkHost == "" && strings.TrimSpace(flags.Fork) != "" {
-		// Resolve network endpoint from flow.json
-		network, err := state.Networks().ByName(strings.ToLower(flags.Fork))
+	var effectiveForkHost string
+
+	// Determine the fork host
+	if flags.ForkHost != "" {
+		effectiveForkHost = strings.TrimSpace(flags.ForkHost)
+	} else if flags.Fork != "" {
+		// Look up network in flow.json
+		forkNetwork := strings.ToLower(flags.Fork)
+		network, err := state.Networks().ByName(forkNetwork)
 		if err != nil {
 			return nil, fmt.Errorf("network %q not found in flow.json", flags.Fork)
 		}
@@ -198,15 +200,15 @@ func testCode(
 		if effectiveForkHost == "" {
 			return nil, fmt.Errorf("network %q has no host configured", flags.Fork)
 		}
-
-		// Detect chain ID from the network
-		forkChainID, err = util.GetNetworkChainID(state, strings.ToLower(flags.Fork))
-		if err != nil {
-			return nil, err
-		}
 	}
 
+	// If fork mode is enabled, query the host to get chain ID
 	if effectiveForkHost != "" {
+		forkChainID, err := util.GetChainIDFromHost(effectiveForkHost)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get chain ID from fork host %q: %w", effectiveForkHost, err)
+		}
+
 		runner = runner.WithFork(cdcTests.ForkConfig{
 			ForkHost:   effectiveForkHost,
 			ChainID:    forkChainID,
