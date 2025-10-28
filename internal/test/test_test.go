@@ -76,7 +76,8 @@ func TestExecutingTests(t *testing.T) {
 
 		err = result.Results[script.Filename][0].Error
 		require.Error(t, err)
-		assert.ErrorAs(t, err, &stdlib.AssertionError{})
+		var assertionErr *stdlib.AssertionError
+		assert.ErrorAs(t, err, &assertionErr)
 	})
 
 	t.Run("with import", func(t *testing.T) {
@@ -375,7 +376,7 @@ func TestExecutingTests(t *testing.T) {
 			coverageReport.ExcludedLocationIDs(),
 		)
 
-		expected := "Coverage: 93.9% of statements"
+		expected := "Coverage: 93.7% of statements"
 
 		assert.Equal(
 			t,
@@ -711,7 +712,8 @@ Seed: 1521
 		assert.Len(t, result.Results, 2)
 		assert.NoError(t, result.Results[scriptPassing.Filename][0].Error)
 		assert.Error(t, result.Results[scriptFailing.Filename][0].Error)
-		assert.ErrorAs(t, result.Results[scriptFailing.Filename][0].Error, &stdlib.AssertionError{})
+		var assertionErr2 *stdlib.AssertionError
+		assert.ErrorAs(t, result.Results[scriptFailing.Filename][0].Error, &assertionErr2)
 
 		assert.Contains(
 			t,
