@@ -59,6 +59,7 @@ var GenerateContractCommand = &command.Command{
 var GenerateTransactionCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "transaction <name>",
+		Aliases: []string{"tx"},
 		Short:   "Generate a Cadence transaction template",
 		Example: "flow generate transaction SomeTransaction",
 		Args:    cobra.ExactArgs(1),
