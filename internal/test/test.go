@@ -102,7 +102,7 @@ flow test test1.cdc test2.cdc`,
 func init() {
 	// Add default value to --fork flag
 	// workaround because config schema via struct tags doesn't support default values
-	TestCommand.Cmd.Flags().StringVar(&testFlags.Fork, "fork", "mainnet", "Fork tests from a remote network. If provided without a value, defaults to mainnet")
+	TestCommand.Cmd.Flags().StringVar(&testFlags.Fork, "fork", "", "Fork tests from a remote network. If provided without a value, defaults to mainnet")
 	if f := TestCommand.Cmd.Flags().Lookup("fork"); f != nil {
 		f.NoOptDefVal = "mainnet"
 	}
