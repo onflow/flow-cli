@@ -244,27 +244,31 @@ func testCode(
 		runner = runner.WithRandomSeed(seed)
 	}
 
-	contractsConfig := *state.Contracts()
-	contracts := make(map[string]common.Address, len(contractsConfig))
-	// Choose alias network: default to "testing", but in fork mode use selected chain (mainnet/testnet)
-	aliasNetwork := "testing"
-	if strings.TrimSpace(flags.Fork) != "" {
-		aliasNetwork = strings.ToLower(flags.Fork)
-	}
-	for _, contract := range contractsConfig {
-		alias := contract.Aliases.ByNetwork(aliasNetwork)
-		if alias != nil {
-			contracts[contract.Name] = common.Address(alias.Address)
-		}
-	}
-
 	testResults := make(map[string]cdcTests.Results, 0)
 	exitCode := 0
 	for scriptPath, code := range testFiles {
 		runner := runner.
 			WithImportResolver(importResolver(scriptPath, state)).
 			WithFileResolver(fileResolver(scriptPath, state)).
-			WithContracts(contracts)
+			WithContractAddressResolver(func(network string, contractName string) (common.Address, error) {
+				// Build name -> contract map once per file run
+				contractsByName := make(map[string]config.Contract)
+				for _, c := range *state.Contracts() {
+					contractsByName[c.Name] = c
+				}
+
+				contract, exists := contractsByName[contractName]
+				if !exists {
+					return common.Address{}, fmt.Errorf("contract not found: %s", contractName)
+				}
+
+				alias := contract.Aliases.ByNetwork(network)
+				if alias != nil {
+					return common.Address(alias.Address), nil
+				}
+
+				return common.Address{}, fmt.Errorf("no address for contract %s on network %s", contractName, network)
+			})
 
 		if flags.Name != "" {
 			testFunctions, err := runner.GetTests(string(code))
@@ -313,7 +317,7 @@ func importResolver(scriptPath string, state *flowkit.State) cdcTests.ImportReso
 		contracts[contract.Name] = contract
 	}
 
-	return func(location common.Location) (string, error) {
+	return func(network string, location common.Location) (string, error) {
 		contract := config.Contract{}
 
 		switch location := location.(type) {
