@@ -1,0 +1,24 @@
+import "DeFiActions"
+import "FungibleToken"
+import "FlowToken"
+import "IncrementFiSwapConnectors"
+
+transaction(amountIn: UFix64) {
+    prepare(acct: auth(BorrowValue) &Account) {
+        let opID = DeFiActions.createUniqueIdentifier()
+        let swapper = IncrementFiSwapConnectors.Swapper(
+            path: ["A.1654653399040a61.FlowToken", "A.d6f80565193ad727.stFlowToken"],
+            inVault: Type<@FlowToken.Vault>(),
+            outVault: CompositeType("A.d6f80565193ad727.stFlowToken.Vault")!,
+            uniqueID: opID
+        )
+        let flowVaultRef = acct.storage.borrow<auth(FungibleToken.Withdraw) &FlowToken.Vault>(from: /storage/flowTokenVault)
+            ?? panic("Holder missing FlowToken vault")
+        let payment <- flowVaultRef.withdraw(amount: amountIn)
+        let out <- swapper.swap(quote: nil, inVault: <-payment)
+        assert(out.balance > 0.0, message: "Expected positive output")
+        destroy out
+    }
+}
+
+

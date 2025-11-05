@@ -31,6 +31,7 @@ import (
 	cdcTests "github.com/onflow/cadence-tools/test"
 	"github.com/onflow/cadence/common"
 	"github.com/onflow/cadence/runtime"
+	flowGo "github.com/onflow/flow-go/model/flow"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
@@ -183,7 +184,21 @@ func testCode(
 	flags flagsTests,
 ) (*result, error) {
 	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).With().Timestamp().Logger()
-	runner := cdcTests.NewTestRunner().WithLogger(logger)
+	// Resolve network labels using flow.json state
+	resolveNetworkFromState := func(label string) (string, bool) {
+		network, err := state.Networks().ByName(strings.ToLower(strings.TrimSpace(label)))
+		if err != nil || network == nil {
+			return "", false
+		}
+		if strings.TrimSpace(network.Host) == "" {
+			return "", false
+		}
+		return network.Host, true
+	}
+
+	runner := cdcTests.NewTestRunner().
+		WithLogger(logger).
+		WithNetworkResolver(resolveNetworkFromState)
 
 	// Configure fork mode if requested
 	var effectiveForkHost string
@@ -204,19 +219,41 @@ func testCode(
 		}
 	}
 
+	// Determine network label (used by resolver/addresses); default to testing
+	networkLabel := "testing"
+	if strings.TrimSpace(flags.Fork) != "" {
+		networkLabel = strings.ToLower(flags.Fork)
+	}
+
 	// If fork mode is enabled, query the host to get chain ID
+	var forkCfg *cdcTests.ForkConfig
 	if effectiveForkHost != "" {
 		forkChainID, err := util.GetChainIDFromHost(effectiveForkHost)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get chain ID from fork host %q: %w", effectiveForkHost, err)
 		}
 
-		runner = runner.WithFork(cdcTests.ForkConfig{
+		cfg := cdcTests.ForkConfig{
 			ForkHost:   effectiveForkHost,
 			ChainID:    forkChainID,
 			ForkHeight: flags.ForkHeight,
-		})
+		}
+		forkCfg = &cfg
+		runner = runner.WithFork(cfg)
+
+		// Map chain ID to a sensible network label if not provided explicitly
+		if strings.TrimSpace(flags.Fork) == "" {
+			switch forkChainID {
+			case flowGo.Mainnet:
+				networkLabel = "mainnet"
+			case flowGo.Testnet:
+				networkLabel = "testnet"
+			}
+		}
 	}
+
+	// Apply the network label on the base runner now that it is known
+	runner = runner.WithNetworkLabel(networkLabel)
 
 	var coverageReport *runtime.CoverageReport
 	if flags.Cover {
@@ -247,7 +284,7 @@ func testCode(
 	testResults := make(map[string]cdcTests.Results, 0)
 	exitCode := 0
 	for scriptPath, code := range testFiles {
-		runner := runner.
+		fileRunner := runner.
 			WithImportResolver(importResolver(scriptPath, state)).
 			WithFileResolver(fileResolver(scriptPath, state)).
 			WithContractAddressResolver(func(network string, contractName string) (common.Address, error) {
@@ -270,8 +307,14 @@ func testCode(
 				return common.Address{}, fmt.Errorf("no address for contract %s on network %s", contractName, network)
 			})
 
+		// Ensure the file runner has the correct network label and fork config
+		fileRunner = fileRunner.WithNetworkLabel(networkLabel)
+		if forkCfg != nil {
+			fileRunner = fileRunner.WithFork(*forkCfg)
+		}
+
 		if flags.Name != "" {
-			testFunctions, err := runner.GetTests(string(code))
+			testFunctions, err := fileRunner.GetTests(string(code))
 			if err != nil {
 				return nil, err
 			}
@@ -281,14 +324,14 @@ func testCode(
 					continue
 				}
 
-				result, err := runner.RunTest(string(code), flags.Name)
+				result, err := fileRunner.RunTest(string(code), flags.Name)
 				if err != nil {
 					return nil, err
 				}
 				testResults[scriptPath] = []cdcTests.Result{*result}
 			}
 		} else {
-			results, err := runner.RunTests(string(code))
+			results, err := fileRunner.RunTests(string(code))
 			if err != nil {
 				return nil, err
 			}
