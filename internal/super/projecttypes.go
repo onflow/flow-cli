@@ -124,50 +124,6 @@ func getProjectTypeConfigs() map[ProjectType]*ProjectTypeConfig {
 			CoreContracts: []string{"FungibleToken", "FlowToken"},
 			CustomDependencies: []flowkitConfig.Dependency{
 				{
-					Name: "DeFiActionsMathUtils",
-					Source: flowkitConfig.Source{
-						NetworkName:  flowkitConfig.MainnetNetwork.Name,
-						Address:      flowsdk.HexToAddress("92195d814edf9cb0"),
-						ContractName: "DeFiActionsMathUtils",
-					},
-					Aliases: flowkitConfig.Aliases{
-						{
-							Network: "mainnet",
-							Address: flowsdk.HexToAddress("92195d814edf9cb0"),
-						},
-						{
-							Network: "testnet",
-							Address: flowsdk.HexToAddress("4c2ff9dd03ab442f"),
-						},
-						{
-							Network: "testing",
-							Address: flowsdk.HexToAddress("0000000000000006"),
-						},
-					},
-				},
-				{
-					Name: "DeFiActionsUtils",
-					Source: flowkitConfig.Source{
-						NetworkName:  flowkitConfig.MainnetNetwork.Name,
-						Address:      flowsdk.HexToAddress("92195d814edf9cb0"),
-						ContractName: "DeFiActionsUtils",
-					},
-					Aliases: flowkitConfig.Aliases{
-						{
-							Network: "mainnet",
-							Address: flowsdk.HexToAddress("92195d814edf9cb0"),
-						},
-						{
-							Network: "testnet",
-							Address: flowsdk.HexToAddress("4c2ff9dd03ab442f"),
-						},
-						{
-							Network: "testing",
-							Address: flowsdk.HexToAddress("0000000000000006"),
-						},
-					},
-				},
-				{
 					Name: "DeFiActions",
 					Source: flowkitConfig.Source{
 						NetworkName:  flowkitConfig.MainnetNetwork.Name,
@@ -188,6 +144,15 @@ func getProjectTypeConfigs() map[ProjectType]*ProjectTypeConfig {
 							Address: flowsdk.HexToAddress("0000000000000006"),
 						},
 					},
+				},
+				{
+					Name: "IncrementFiSwapConnectors",
+					Source: flowkitConfig.Source{
+						NetworkName:  flowkitConfig.MainnetNetwork.Name,
+						Address:      flowsdk.HexToAddress("efa9bd7d1b17f1ed"),
+						ContractName: "IncrementFiSwapConnectors",
+					},
+					Aliases: flowkitConfig.Aliases{{Network: "mainnet", Address: flowsdk.HexToAddress("efa9bd7d1b17f1ed")}},
 				},
 			},
 			ContractNames:     []string{"DeFiActionsMathUtils", "DeFiActionsUtils", "DeFiActions", "ExampleConnectors"},
@@ -319,6 +284,14 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 			generator.TransactionTemplate{
 				Name:         "DepositViaSink",
 				TemplatePath: "transaction_deposit_via_sink.cdc.tmpl",
+			},
+			generator.TransactionTemplate{
+				Name:         "incrementfi_swap_flow",
+				TemplatePath: "transaction_incrementfi_swap_flow.cdc.tmpl",
+			},
+			generator.TestTemplate{
+				Name:         "incrementfi_swap_on_fork",
+				TemplatePath: "test_incrementfi_swap_on_fork.cdc.tmpl",
 			},
 			generator.FileTemplate{
 				TemplatePath: "README_defi_actions.md.tmpl",
