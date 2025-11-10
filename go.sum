@@ -783,8 +783,8 @@ github.com/onflow/cadence-tools/test v1.8.0 h1:V/dux1JuUHllxBPPAzEk5au3AZeYcpGQm
 github.com/onflow/cadence-tools/test v1.8.0/go.mod h1:FRfS8/qX12UOSBzORc9+SgOVOK8Sg5nkxVJbdfiNPbY=
 github.com/onflow/crypto v0.25.3 h1:XQ3HtLsw8h1+pBN+NQ1JYM9mS2mVXTyg55OldaAIF7U=
 github.com/onflow/crypto v0.25.3/go.mod h1:+1igaXiK6Tjm9wQOBD1EGwW7bYWMUGKtwKJ/2QL/OWs=
-github.com/onflow/fcl-dev-wallet v0.8.0 h1:8TWHhJBWrzS6RCZI3eVjRT+SaUBqO6eygUNDaJV/B7s=
-github.com/onflow/fcl-dev-wallet v0.8.0/go.mod h1:kc42jkiuoPJmxMRFjfbRO9XvnR/3XLheaOerxVMDTiw=
+github.com/onflow/fcl-dev-wallet v0.9.0 h1:0tPzxsRWP5BaAtJfsPJHZBAYVQs3WWs58N7aJg5exok=
+github.com/onflow/fcl-dev-wallet v0.9.0/go.mod h1:kc42jkiuoPJmxMRFjfbRO9XvnR/3XLheaOerxVMDTiw=
 github.com/onflow/fixed-point v0.1.1 h1:j0jYZVO8VGyk1476alGudEg7XqCkeTVxb5ElRJRKS90=
 github.com/onflow/fixed-point v0.1.1/go.mod h1:gJdoHqKtToKdOZbvryJvDZfcpzC7d2fyWuo3ZmLtcGY=
 github.com/onflow/flixkit-go/v2 v2.6.0 h1:H3Z6llYq8KhpYvCXqxMtGK49txlQdhFP97ALg/Negnw=
