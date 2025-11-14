@@ -42,7 +42,8 @@ type flagsBuild struct {
 	ProposerKeyIndex uint32   `default:"0" flag:"proposer-key-index" info:"proposer key index"`
 	Payer            string   `default:"emulator-account" flag:"payer" info:"transaction payer"`
 	Authorizer       []string `default:"emulator-account" flag:"authorizer" info:"transaction authorizer"`
-	GasLimit         uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
+	ComputeLimit     uint64   `default:"1000" flag:"compute-limit" info:"transaction compute limit"`
+	GasLimit         uint64   `default:"" flag:"gas-limit" info:"(deprecated: use compute-limit) transaction gas limit"`
 }
 
 var buildFlags = flagsBuild{}
@@ -101,6 +102,12 @@ func build(
 		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
 	}
 
+	// Use GasLimit if set (for backwards compatibility), otherwise use ComputeLimit
+	computeLimit := buildFlags.ComputeLimit
+	if buildFlags.GasLimit > 0 {
+		computeLimit = buildFlags.GasLimit
+	}
+
 	tx, err := flow.BuildTransaction(
 		context.Background(),
 		transactions.AddressesRoles{
@@ -114,7 +121,7 @@ func build(
 			Args:     transactionArgs,
 			Location: filename,
 		},
-		buildFlags.GasLimit,
+		computeLimit,
 	)
 	if err != nil {
 		return nil, err
