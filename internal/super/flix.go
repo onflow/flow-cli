@@ -50,7 +50,8 @@ type flixFlags struct {
 	Authorizers     []string `default:"" flag:"authorizer" info:"Name of a single or multiple comma-separated accounts used as authorizers from configuration"`
 	Include         []string `default:"" flag:"include" info:"Fields to include in the output"`
 	Exclude         []string `default:"" flag:"exclude" info:"Fields to exclude from the output (events)"`
-	GasLimit        uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
+	ComputeLimit    uint64   `default:"1000" flag:"compute-limit" info:"transaction compute limit"`
+	GasLimit        uint64   `default:"" flag:"gas-limit" info:"(deprecated: use compute-limit) transaction gas limit"`
 	PreFill         string   `default:"" flag:"pre-fill" info:"template path to pre fill the FLIX"`
 	Lang            string   `default:"js" flag:"lang" info:"language to generate the template for"`
 	ExcludeNetworks []string `default:"" flag:"exclude-networks" info:"Specify which networks to exclude when generating a FLIX template"`
@@ -149,18 +150,28 @@ func executeFlixCmd(
 		return scripts.SendScript([]byte(cadenceWithImportsReplaced.Cadence), args[1:], "", flow, scriptsFlags)
 	}
 
+	// Use GasLimit if set (for backwards compatibility), otherwise use ComputeLimit
+	computeLimit := flags.ComputeLimit
+	gasLimit := uint64(0)
+	if flags.GasLimit > 0 {
+		logger.Info("⚠️  Warning: --gas-limit flag is deprecated, please use --compute-limit instead")
+		computeLimit = flags.GasLimit
+		gasLimit = flags.GasLimit
+	}
+
 	transactionFlags := transactions.Flags{
-		ArgsJSON:    flags.ArgsJSON,
-		Signer:      flags.Signer,
-		Proposer:    flags.Proposer,
-		Payer:       flags.Payer,
-		Authorizers: flags.Authorizers,
-		Include:     flags.Include,
-		Exclude:     flags.Exclude,
-		GasLimit:    flags.GasLimit,
+		ArgsJSON:     flags.ArgsJSON,
+		Signer:       flags.Signer,
+		Proposer:     flags.Proposer,
+		Payer:        flags.Payer,
+		Authorizers:  flags.Authorizers,
+		Include:      flags.Include,
+		Exclude:      flags.Exclude,
+		ComputeLimit: computeLimit,
+		GasLimit:     gasLimit,
 	}
 	// some reason sendTransaction clips the first argument
-	return transactions.SendTransaction([]byte(cadenceWithImportsReplaced.Cadence), args, "", flow, state, transactionFlags)
+	return transactions.SendTransaction([]byte(cadenceWithImportsReplaced.Cadence), args, "", flow, state, transactionFlags, logger)
 }
 
 func packageCmd(
