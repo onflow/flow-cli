@@ -62,7 +62,7 @@ var sendCommand = &command.Command{
 func send(
 	args []string,
 	_ command.GlobalFlags,
-	_ output.Logger,
+	logger output.Logger,
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
@@ -73,10 +73,10 @@ func send(
 		return nil, fmt.Errorf("error loading transaction file: %w", err)
 	}
 
-	return SendTransaction(code, args, filename, flow, state, flags)
+	return SendTransaction(code, args, filename, flow, state, flags, logger)
 }
 
-func SendTransaction(code []byte, args []string, location string, flow flowkit.Services, state *flowkit.State, sendFlags Flags) (result command.Result, err error) {
+func SendTransaction(code []byte, args []string, location string, flow flowkit.Services, state *flowkit.State, sendFlags Flags, logger output.Logger) (result command.Result, err error) {
 	proposerName := sendFlags.Proposer
 	var proposer *accounts.Account
 	if proposerName != "" {
@@ -142,6 +142,7 @@ func SendTransaction(code []byte, args []string, location string, flow flowkit.S
 	// Use GasLimit if set (for backwards compatibility), otherwise use ComputeLimit
 	computeLimit := sendFlags.ComputeLimit
 	if sendFlags.GasLimit > 0 {
+		logger.Info("⚠️  Warning: --gas-limit flag is deprecated, please use --compute-limit instead")
 		computeLimit = sendFlags.GasLimit
 	}
 

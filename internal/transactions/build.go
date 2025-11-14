@@ -62,7 +62,7 @@ var buildCommand = &command.Command{
 func build(
 	args []string,
 	globalFlags command.GlobalFlags,
-	_ output.Logger,
+	logger output.Logger,
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
@@ -105,6 +105,7 @@ func build(
 	// Use GasLimit if set (for backwards compatibility), otherwise use ComputeLimit
 	computeLimit := buildFlags.ComputeLimit
 	if buildFlags.GasLimit > 0 {
+		logger.Info("⚠️  Warning: --gas-limit flag is deprecated, please use --compute-limit instead")
 		computeLimit = buildFlags.GasLimit
 	}
 

@@ -154,6 +154,7 @@ func executeFlixCmd(
 	computeLimit := flags.ComputeLimit
 	gasLimit := uint64(0)
 	if flags.GasLimit > 0 {
+		logger.Info("⚠️  Warning: --gas-limit flag is deprecated, please use --compute-limit instead")
 		computeLimit = flags.GasLimit
 		gasLimit = flags.GasLimit
 	}
@@ -170,7 +171,7 @@ func executeFlixCmd(
 		GasLimit:     gasLimit,
 	}
 	// some reason sendTransaction clips the first argument
-	return transactions.SendTransaction([]byte(cadenceWithImportsReplaced.Cadence), args, "", flow, state, transactionFlags)
+	return transactions.SendTransaction([]byte(cadenceWithImportsReplaced.Cadence), args, "", flow, state, transactionFlags, logger)
 }
 
 func packageCmd(
