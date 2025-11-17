@@ -1,9 +1,9 @@
+// The #test_fork pragma configures this test to run against a snapshot of mainnet state.
+// This allows testing against real deployed contracts and production data.
+#test_fork(network: "mainnet")
+
 import Test
 import "DeFiActions"
-
-access(all) fun setup() {
-	Test.loadFork(network: "mainnet", height: nil)
-}
 
 // Executes a minimal swap from FLOW -> stFlow using IncrementFi on a forked mainnet.
 // Withdraws a tiny amount from a known FLOW holder and swaps via IncrementFi router.
