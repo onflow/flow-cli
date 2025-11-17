@@ -13,18 +13,18 @@ require (
 	github.com/gosuri/uilive v0.0.4
 	github.com/logrusorgru/aurora/v4 v4.0.0
 	github.com/onflow/cadence v1.8.3
-	github.com/onflow/cadence-tools/languageserver v1.7.0
-	github.com/onflow/cadence-tools/lint v1.6.0
-	github.com/onflow/cadence-tools/test v1.8.1-0.20251105181034-5660b54035c8
+	github.com/onflow/cadence-tools/languageserver v1.7.2
+	github.com/onflow/cadence-tools/lint v1.6.1
+	github.com/onflow/cadence-tools/test v1.8.1
 	github.com/onflow/fcl-dev-wallet v0.8.0
-	github.com/onflow/flixkit-go/v2 v2.6.0
+	github.com/onflow/flixkit-go/v2 v2.6.1
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.9.2
 	github.com/onflow/flow-emulator v1.12.1
-	github.com/onflow/flow-evm-gateway v1.3.5
+	github.com/onflow/flow-evm-gateway v1.3.6
 	github.com/onflow/flow-go v0.44.0-experimental-cadence-v1.8.3.0.20251117075053-a0753cafb3a0
 	github.com/onflow/flow-go-sdk v1.9.2
 	github.com/onflow/flow/protobuf/go/flow v0.4.18
-	github.com/onflow/flowkit/v2 v2.7.0
+	github.com/onflow/flowkit/v2 v2.7.2
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/pkg/errors v0.9.1

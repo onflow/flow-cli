@@ -68,7 +68,7 @@ func getContractAddress(contract ContractName, chainID flowsdk.ChainID) (string,
 		case FungibleToken:
 			return systemContracts.FungibleToken.Address.HexWithPrefix(), nil
 		case FlowTransactionScheduler:
-			return systemContracts.FlowCallbackScheduler.Address.HexWithPrefix(), nil
+			return systemContracts.FlowTransactionScheduler.Address.HexWithPrefix(), nil
 		}
 	}
 

@@ -180,8 +180,8 @@ func Test_Send(t *testing.T) {
 	srv, state, _ := util.TestMocks(t)
 
 	t.Run("Success", func(t *testing.T) {
-		const gas = uint64(1000)
-		flags.GasLimit = gas
+		const compute = uint64(1000)
+		flags.ComputeLimit = compute
 		inArgs := []string{tests.TransactionArgString.Filename, "test"}
 
 		srv.SendTransaction.Run(func(args mock.Arguments) {
@@ -192,7 +192,7 @@ func Test_Send(t *testing.T) {
 			assert.Equal(t, acc, roles.Authorizers[0].Name)
 			script := args.Get(2).(flowkit.Script)
 			assert.Equal(t, tests.TransactionArgString.Filename, script.Location)
-			assert.Equal(t, args.Get(3).(uint64), gas)
+			assert.Equal(t, args.Get(3).(uint64), compute)
 		}).Return(nil, nil, nil)
 
 		result, err := send(inArgs, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
