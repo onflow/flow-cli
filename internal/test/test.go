@@ -26,6 +26,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	goRuntime "runtime"
 	"strings"
 
 	cdcTests "github.com/onflow/cadence-tools/test"
@@ -41,6 +42,7 @@ import (
 
 	"github.com/onflow/flow-cli/common/branding"
 
+	"github.com/onflow/flow-cli/build"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
 )
@@ -184,6 +186,12 @@ func testCode(
 	flags flagsTests,
 ) (*result, error) {
 	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).With().Timestamp().Logger()
+	
+	// Track network resolutions per file for pragma-based fork detection
+	// Map: filename -> resolved network name
+	fileNetworkResolutions := make(map[string]string)
+	var currentTestFile string
+	
 	// Resolve network labels using flow.json state
 	resolveNetworkFromState := func(label string) (string, bool) {
 		network, err := state.Networks().ByName(strings.ToLower(strings.TrimSpace(label)))
@@ -193,6 +201,16 @@ func testCode(
 		if strings.TrimSpace(network.Host) == "" {
 			return "", false
 		}
+		
+		// Track network resolution for current test file (indicates pragma-based fork usage)
+		// Only track if it's not the default "testing" network
+		normalizedLabel := strings.ToLower(strings.TrimSpace(label))
+		if currentTestFile != "" && normalizedLabel != "testing" {
+			if _, exists := fileNetworkResolutions[currentTestFile]; !exists {
+				fileNetworkResolutions[currentTestFile] = normalizedLabel
+			}
+		}
+		
 		return network.Host, true
 	}
 
@@ -284,6 +302,9 @@ func testCode(
 	testResults := make(map[string]cdcTests.Results, 0)
 	exitCode := 0
 	for scriptPath, code := range testFiles {
+		// Set current test file for network resolution tracking
+		currentTestFile = scriptPath
+		
 		fileRunner := runner.
 			WithImportResolver(importResolver(scriptPath, state)).
 			WithFileResolver(fileResolver(scriptPath, state)).
@@ -343,6 +364,45 @@ func testCode(
 				exitCode = 1
 				break
 			}
+		}
+		
+		// Clear current test file after processing
+		currentTestFile = ""
+	}
+
+	// Track fork test usage metrics per file
+	// Priority: pragma-based resolution first (more direct), then static flags
+	for scriptPath := range testFiles {
+		// Check if this file used pragma-based fork
+		if resolvedNetwork, hasPragma := fileNetworkResolutions[scriptPath]; hasPragma {
+			// Fork mode via pragma (e.g., #fork(mainnet) in test code)
+			command.TrackEvent("test-fork", map[string]any{
+				"fork_source": "pragma",
+				"network":     resolvedNetwork,
+				"chain_id":    "",
+				"has_height":  false,
+				"version":     build.Semver(),
+				"os":          goRuntime.GOOS,
+				"ci":          os.Getenv("CI") != "",
+			})
+		} else if forkCfg != nil {
+			// Fork mode via static flags (--fork or --fork-host)
+			forkSource := "static-flag"
+			if flags.ForkHost != "" {
+				forkSource = "fork-host-flag"
+			} else if flags.Fork != "" {
+				forkSource = "fork-flag"
+			}
+			
+			command.TrackEvent("test-fork", map[string]any{
+				"fork_source": forkSource,
+				"network":     networkLabel,
+				"chain_id":    forkCfg.ChainID.String(),
+				"has_height":  forkCfg.ForkHeight > 0,
+				"version":     build.Semver(),
+				"os":          goRuntime.GOOS,
+				"ci":          os.Getenv("CI") != "",
+			})
 		}
 	}
 
