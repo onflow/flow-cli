@@ -26,6 +26,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	goRuntime "runtime"
 	"strings"
 
 	cdcTests "github.com/onflow/cadence-tools/test"
@@ -41,6 +42,7 @@ import (
 
 	"github.com/onflow/flow-cli/common/branding"
 
+	"github.com/onflow/flow-cli/build"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
 )
@@ -184,6 +186,12 @@ func testCode(
 	flags flagsTests,
 ) (*result, error) {
 	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).With().Timestamp().Logger()
+
+	// Track network resolutions per file for pragma-based fork detection
+	// Map: filename -> resolved network name
+	fileNetworkResolutions := make(map[string]string)
+	var currentTestFile string
+
 	// Resolve network labels using flow.json state
 	resolveNetworkFromState := func(label string) (string, bool) {
 		network, err := state.Networks().ByName(strings.ToLower(strings.TrimSpace(label)))
@@ -193,6 +201,16 @@ func testCode(
 		if strings.TrimSpace(network.Host) == "" {
 			return "", false
 		}
+
+		// Track network resolution for current test file (indicates pragma-based fork usage)
+		// Only track if it's not the default "testing" network
+		normalizedLabel := strings.ToLower(strings.TrimSpace(label))
+		if currentTestFile != "" && normalizedLabel != "testing" {
+			if _, exists := fileNetworkResolutions[currentTestFile]; !exists {
+				fileNetworkResolutions[currentTestFile] = normalizedLabel
+			}
+		}
+
 		return network.Host, true
 	}
 
@@ -284,6 +302,9 @@ func testCode(
 	testResults := make(map[string]cdcTests.Results, 0)
 	exitCode := 0
 	for scriptPath, code := range testFiles {
+		// Set current test file for network resolution tracking
+		currentTestFile = scriptPath
+
 		fileRunner := runner.
 			WithImportResolver(importResolver(scriptPath, state)).
 			WithFileResolver(fileResolver(scriptPath, state)).
@@ -344,6 +365,61 @@ func testCode(
 				break
 			}
 		}
+
+		// Clear current test file after processing
+		currentTestFile = ""
+	}
+
+	// Track fork test usage metrics - aggregate into single event
+	hasPragmaFiles := len(fileNetworkResolutions) > 0
+	hasStaticFork := forkCfg != nil
+
+	if hasPragmaFiles || hasStaticFork {
+		// Determine primary fork source
+		forkSource := "none"
+		var primaryNetwork string
+		var chainID string
+		hasHeight := false
+
+		if hasPragmaFiles {
+			// Pragma takes priority - collect unique networks
+			forkSource = "pragma"
+			networkSet := make(map[string]bool)
+			for _, network := range fileNetworkResolutions {
+				networkSet[network] = true
+			}
+			// Use first resolved network as primary (for single-value tracking)
+			for _, network := range fileNetworkResolutions {
+				primaryNetwork = network
+				break
+			}
+			// If multiple networks, note that in source
+			if len(networkSet) > 1 {
+				forkSource = "pragma-mixed"
+			}
+		} else if hasStaticFork {
+			// Static flags
+			if flags.ForkHost != "" {
+				forkSource = "fork-host-flag"
+			} else if flags.Fork != "" {
+				forkSource = "fork-flag"
+			}
+			primaryNetwork = networkLabel
+			chainID = forkCfg.ChainID.String()
+			hasHeight = forkCfg.ForkHeight > 0
+		}
+
+		command.TrackEvent("test-fork", map[string]any{
+			"fork_source":  forkSource,
+			"network":      primaryNetwork,
+			"chain_id":     chainID,
+			"has_height":   hasHeight,
+			"pragma_files": len(fileNetworkResolutions),
+			"total_files":  len(testFiles),
+			"version":      build.Semver(),
+			"os":           goRuntime.GOOS,
+			"ci":           os.Getenv("CI") != "",
+		})
 	}
 
 	return &result{
