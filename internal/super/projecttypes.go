@@ -179,7 +179,7 @@ func getProjectTypeConfig(projectType ProjectType) *ProjectTypeConfig {
 }
 
 // getProjectTemplates returns a slice of templates based on the project type.
-// Supported types: ProjectTypeDefault, ProjectTypeScheduledTransactions
+// Supported types: ProjectTypeDefault, ProjectTypeScheduledTransactions, ProjectTypeStablecoin, ProjectTypeDeFiActions
 func getProjectTemplates(projectType ProjectType, targetDir string, state *flowkit.State) []generator.TemplateItem {
 	switch projectType {
 	case ProjectTypeScheduledTransactions:

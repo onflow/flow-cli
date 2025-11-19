@@ -75,19 +75,42 @@ This sends `1.0` FLOW from the emulator account to itself (`0xf8d6e0586b0a20c7`)
 
 ## Testing
 
-Run the test suite to verify the connector works correctly:
+This project includes two types of tests to demonstrate different testing approaches:
+
+### Unit Tests
+
+Run the test suite:
 
 ```bash
-flow test
+flow test cadence/tests/ExampleConnectors_test.cdc
 ```
 
-The tests run in an isolated environment and automatically:
-1. Deploy all DeFi Actions dependencies (`DeFiActionsMathUtils`, `DeFiActionsUtils`, `DeFiActions`)
-2. Deploy the `ExampleConnectors` contract
-3. Execute the `DepositViaSink` transaction
-4. Verify tokens are deposited successfully
+This test runs in the Cadence Testing Framework and manually:
+1. Deploys all DeFi Actions dependencies (`DeFiActionsMathUtils`, `DeFiActionsUtils`, `DeFiActions`)
+2. Deploys the `ExampleConnectors` contract
+3. Executes the `DepositViaSink` transaction
+4. Verifies tokens are deposited successfully
 
-**Note**: Tests don't require the emulator to be running - they use their own test environment.
+**Note**: The testing framework manages its own test environment - no emulator needs to be running.
+
+### Fork Testing
+
+This project includes a fork test (`test_incrementfi_swap_on_fork.cdc`) that demonstrates testing your contracts against real mainnet state. Fork testing allows you to:
+
+- Test interactions with production DeFi protocols (like IncrementFi)
+- Validate your connectors against real deployed contracts
+- Use actual mainnet account data without deploying anything
+- Debug issues with historical blockchain state
+
+Run the fork test against mainnet:
+
+```bash
+flow test cadence/tests/test_incrementfi_swap_on_fork.cdc
+```
+
+The fork test executes a real swap from FLOW → stFlow using IncrementFi's deployed contracts on mainnet. It uses account impersonation to test transactions as any mainnet account, with all changes happening locally in your test environment.
+
+**Learn more**: See the [Fork Testing Tutorial](https://developers.flow.com/blockchain-development-tutorials/cadence/fork-testing) and [Testing Strategy Guide](https://developers.flow.com/build/cadence/smart-contracts/testing-strategy) for detailed information on when and how to use fork testing.
 
 ## Project Structure
 
@@ -95,8 +118,10 @@ The tests run in an isolated environment and automatically:
   - `ExampleConnectors.cdc` - TokenSink connector implementation
 - `cadence/transactions/` - Transaction files
   - `DepositViaSink.cdc` - Example transaction using TokenSink
+  - `incrementfi_swap_flow.cdc` - IncrementFi swap transaction
 - `cadence/tests/` - Test files
   - `ExampleConnectors_test.cdc` - Integration test for TokenSink
+  - `test_incrementfi_swap_on_fork.cdc` - Fork test against mainnet IncrementFi
 - `flow.json` - Flow project configuration with DeFiActions dependencies
 
 ## Dependencies
@@ -112,9 +137,12 @@ This project includes the following dependencies (already installed):
 - `DeFiActionsUtils` - Helper utilities
 - `DeFiActionsMathUtils` - Math utilities for DeFi operations
 
+**DeFi Protocol Connectors:**
+- `IncrementFiSwapConnectors` - IncrementFi swap connectors (used in fork test example)
+
 **Network Configuration:**
-- **Testnet**: All DeFi Actions contracts available at `0x4c2ff9dd03ab442f`
-- **Mainnet**: All DeFi Actions contracts available at `0x92195d814edf9cb0`
+- **Testnet**: DeFi Actions contracts available at `0x4c2ff9dd03ab442f`
+- **Mainnet**: DeFi Actions contracts at `0x92195d814edf9cb0`, IncrementFi at `0xefa9bd7d1b17f1ed`
 - **Emulator**: Contracts are deployed from source to your emulator account
 
 ## Understanding the TokenSink Connector
