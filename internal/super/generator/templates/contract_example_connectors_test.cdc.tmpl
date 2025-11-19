@@ -9,23 +9,18 @@ access(all) let recipient = Test.createAccount()
 
 access(all) fun setup() {
     // Deploy DeFi Actions dependencies first
+    // Note: The Cadence Test Framework requires manual deployment of dependencies
+    // unless used in Fork Testing mode.
     var err = Test.deployContract(
-        name: "DeFiActionsMathUtils",
-        path: "../../imports/92195d814edf9cb0/DeFiActionsMathUtils.cdc",
-        arguments: []
-    )
-    Test.expect(err, Test.beNil())
-
-    err = Test.deployContract(
         name: "DeFiActionsUtils",
-        path: "../../imports/92195d814edf9cb0/DeFiActionsUtils.cdc",
+        path: "../../imports/6d888f175c158410/DeFiActionsUtils.cdc",
         arguments: []
     )
     Test.expect(err, Test.beNil())
 
     err = Test.deployContract(
         name: "DeFiActions",
-        path: "../../imports/92195d814edf9cb0/DeFiActions.cdc",
+        path: "../../imports/6d888f175c158410/DeFiActions.cdc",
         arguments: []
     )
     Test.expect(err, Test.beNil())

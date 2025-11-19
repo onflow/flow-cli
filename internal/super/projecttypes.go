@@ -124,6 +124,19 @@ func getProjectTypeConfigs() map[ProjectType]*ProjectTypeConfig {
 			CoreContracts: []string{"FungibleToken", "FlowToken"},
 			CustomDependencies: []flowkitConfig.Dependency{
 				{
+					Name: "DeFiActionsUtils",
+					Source: flowkitConfig.Source{
+						NetworkName:  flowkitConfig.MainnetNetwork.Name,
+						Address:      flowsdk.HexToAddress("6d888f175c158410"),
+						ContractName: "DeFiActionsUtils",
+					},
+					Aliases: flowkitConfig.Aliases{
+						{Network: "mainnet", Address: flowsdk.HexToAddress("6d888f175c158410")},
+						{Network: "testnet", Address: flowsdk.HexToAddress("0b11b1848a8aa2c0")},
+						{Network: "testing", Address: flowsdk.HexToAddress("0000000000000007")},
+					},
+				},
+				{
 					Name: "DeFiActions",
 					Source: flowkitConfig.Source{
 						NetworkName:  flowkitConfig.MainnetNetwork.Name,
@@ -131,18 +144,9 @@ func getProjectTypeConfigs() map[ProjectType]*ProjectTypeConfig {
 						ContractName: "DeFiActions",
 					},
 					Aliases: flowkitConfig.Aliases{
-						{
-							Network: "mainnet",
-							Address: flowsdk.HexToAddress("6d888f175c158410"),
-						},
-						{
-							Network: "testnet",
-							Address: flowsdk.HexToAddress("0b11b1848a8aa2c0"),
-						},
-						{
-							Network: "testing",
-							Address: flowsdk.HexToAddress("0000000000000006"),
-						},
+						{Network: "mainnet", Address: flowsdk.HexToAddress("6d888f175c158410")},
+						{Network: "testnet", Address: flowsdk.HexToAddress("0b11b1848a8aa2c0")},
+						{Network: "testing", Address: flowsdk.HexToAddress("0000000000000007")},
 					},
 				},
 				{
@@ -185,7 +189,7 @@ func getProjectTypeConfigs() map[ProjectType]*ProjectTypeConfig {
 					},
 				},
 			},
-			ContractNames:     []string{"DeFiActionsMathUtils", "DeFiActionsUtils", "DeFiActions", "ExampleConnectors"},
+			ContractNames:     []string{"ExampleConnectors"},
 			DeploymentAccount: "emulator-account",
 		},
 		ProjectTypeCustom: {
