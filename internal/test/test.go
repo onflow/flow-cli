@@ -26,11 +26,13 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	goRuntime "runtime"
 	"strings"
 
 	cdcTests "github.com/onflow/cadence-tools/test"
 	"github.com/onflow/cadence/common"
 	"github.com/onflow/cadence/runtime"
+	flowGo "github.com/onflow/flow-go/model/flow"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
@@ -40,6 +42,7 @@ import (
 
 	"github.com/onflow/flow-cli/common/branding"
 
+	"github.com/onflow/flow-cli/build"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
 )
@@ -183,7 +186,37 @@ func testCode(
 	flags flagsTests,
 ) (*result, error) {
 	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).With().Timestamp().Logger()
-	runner := cdcTests.NewTestRunner().WithLogger(logger)
+
+	// Track network resolutions per file for pragma-based fork detection
+	// Map: filename -> resolved network name
+	fileNetworkResolutions := make(map[string]string)
+	var currentTestFile string
+
+	// Resolve network labels using flow.json state
+	resolveNetworkFromState := func(label string) (string, bool) {
+		network, err := state.Networks().ByName(strings.ToLower(strings.TrimSpace(label)))
+		if err != nil || network == nil {
+			return "", false
+		}
+		if strings.TrimSpace(network.Host) == "" {
+			return "", false
+		}
+
+		// Track network resolution for current test file (indicates pragma-based fork usage)
+		// Only track if it's not the default "testing" network
+		normalizedLabel := strings.ToLower(strings.TrimSpace(label))
+		if currentTestFile != "" && normalizedLabel != "testing" {
+			if _, exists := fileNetworkResolutions[currentTestFile]; !exists {
+				fileNetworkResolutions[currentTestFile] = normalizedLabel
+			}
+		}
+
+		return network.Host, true
+	}
+
+	runner := cdcTests.NewTestRunner().
+		WithLogger(logger).
+		WithNetworkResolver(resolveNetworkFromState)
 
 	// Configure fork mode if requested
 	var effectiveForkHost string
@@ -204,19 +237,41 @@ func testCode(
 		}
 	}
 
+	// Determine network label (used by resolver/addresses); default to testing
+	networkLabel := "testing"
+	if strings.TrimSpace(flags.Fork) != "" {
+		networkLabel = strings.ToLower(flags.Fork)
+	}
+
 	// If fork mode is enabled, query the host to get chain ID
+	var forkCfg *cdcTests.ForkConfig
 	if effectiveForkHost != "" {
 		forkChainID, err := util.GetChainIDFromHost(effectiveForkHost)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get chain ID from fork host %q: %w", effectiveForkHost, err)
 		}
 
-		runner = runner.WithFork(cdcTests.ForkConfig{
+		cfg := cdcTests.ForkConfig{
 			ForkHost:   effectiveForkHost,
 			ChainID:    forkChainID,
 			ForkHeight: flags.ForkHeight,
-		})
+		}
+		forkCfg = &cfg
+		runner = runner.WithFork(cfg)
+
+		// Map chain ID to a sensible network label if not provided explicitly
+		if strings.TrimSpace(flags.Fork) == "" {
+			switch forkChainID {
+			case flowGo.Mainnet:
+				networkLabel = "mainnet"
+			case flowGo.Testnet:
+				networkLabel = "testnet"
+			}
+		}
 	}
+
+	// Apply the network label on the base runner now that it is known
+	runner = runner.WithNetworkLabel(networkLabel)
 
 	var coverageReport *runtime.CoverageReport
 	if flags.Cover {
@@ -244,30 +299,43 @@ func testCode(
 		runner = runner.WithRandomSeed(seed)
 	}
 
-	contractsConfig := *state.Contracts()
-	contracts := make(map[string]common.Address, len(contractsConfig))
-	// Choose alias network: default to "testing", but in fork mode use selected chain (mainnet/testnet)
-	aliasNetwork := "testing"
-	if strings.TrimSpace(flags.Fork) != "" {
-		aliasNetwork = strings.ToLower(flags.Fork)
-	}
-	for _, contract := range contractsConfig {
-		alias := contract.Aliases.ByNetwork(aliasNetwork)
-		if alias != nil {
-			contracts[contract.Name] = common.Address(alias.Address)
-		}
-	}
-
 	testResults := make(map[string]cdcTests.Results, 0)
 	exitCode := 0
 	for scriptPath, code := range testFiles {
-		runner := runner.
+		// Set current test file for network resolution tracking
+		currentTestFile = scriptPath
+
+		fileRunner := runner.
 			WithImportResolver(importResolver(scriptPath, state)).
 			WithFileResolver(fileResolver(scriptPath, state)).
-			WithContracts(contracts)
+			WithContractAddressResolver(func(network string, contractName string) (common.Address, error) {
+				// Build name -> contract map once per file run
+				contractsByName := make(map[string]config.Contract)
+				for _, c := range *state.Contracts() {
+					contractsByName[c.Name] = c
+				}
+
+				contract, exists := contractsByName[contractName]
+				if !exists {
+					return common.Address{}, fmt.Errorf("contract not found: %s", contractName)
+				}
+
+				alias := contract.Aliases.ByNetwork(network)
+				if alias != nil {
+					return common.Address(alias.Address), nil
+				}
+
+				return common.Address{}, fmt.Errorf("no address for contract %s on network %s", contractName, network)
+			})
+
+		// Ensure the file runner has the correct network label and fork config
+		fileRunner = fileRunner.WithNetworkLabel(networkLabel)
+		if forkCfg != nil {
+			fileRunner = fileRunner.WithFork(*forkCfg)
+		}
 
 		if flags.Name != "" {
-			testFunctions, err := runner.GetTests(string(code))
+			testFunctions, err := fileRunner.GetTests(string(code))
 			if err != nil {
 				return nil, err
 			}
@@ -277,14 +345,14 @@ func testCode(
 					continue
 				}
 
-				result, err := runner.RunTest(string(code), flags.Name)
+				result, err := fileRunner.RunTest(string(code), flags.Name)
 				if err != nil {
 					return nil, err
 				}
 				testResults[scriptPath] = []cdcTests.Result{*result}
 			}
 		} else {
-			results, err := runner.RunTests(string(code))
+			results, err := fileRunner.RunTests(string(code))
 			if err != nil {
 				return nil, err
 			}
@@ -297,6 +365,61 @@ func testCode(
 				break
 			}
 		}
+
+		// Clear current test file after processing
+		currentTestFile = ""
+	}
+
+	// Track fork test usage metrics - aggregate into single event
+	hasPragmaFiles := len(fileNetworkResolutions) > 0
+	hasStaticFork := forkCfg != nil
+
+	if hasPragmaFiles || hasStaticFork {
+		// Determine primary fork source
+		forkSource := "none"
+		var primaryNetwork string
+		var chainID string
+		hasHeight := false
+
+		if hasPragmaFiles {
+			// Pragma takes priority - collect unique networks
+			forkSource = "pragma"
+			networkSet := make(map[string]bool)
+			for _, network := range fileNetworkResolutions {
+				networkSet[network] = true
+			}
+			// Use first resolved network as primary (for single-value tracking)
+			for _, network := range fileNetworkResolutions {
+				primaryNetwork = network
+				break
+			}
+			// If multiple networks, note that in source
+			if len(networkSet) > 1 {
+				forkSource = "pragma-mixed"
+			}
+		} else if hasStaticFork {
+			// Static flags
+			if flags.ForkHost != "" {
+				forkSource = "fork-host-flag"
+			} else if flags.Fork != "" {
+				forkSource = "fork-flag"
+			}
+			primaryNetwork = networkLabel
+			chainID = forkCfg.ChainID.String()
+			hasHeight = forkCfg.ForkHeight > 0
+		}
+
+		command.TrackEvent("test-fork", map[string]any{
+			"fork_source":  forkSource,
+			"network":      primaryNetwork,
+			"chain_id":     chainID,
+			"has_height":   hasHeight,
+			"pragma_files": len(fileNetworkResolutions),
+			"total_files":  len(testFiles),
+			"version":      build.Semver(),
+			"os":           goRuntime.GOOS,
+			"ci":           os.Getenv("CI") != "",
+		})
 	}
 
 	return &result{
@@ -313,7 +436,7 @@ func importResolver(scriptPath string, state *flowkit.State) cdcTests.ImportReso
 		contracts[contract.Name] = contract
 	}
 
-	return func(location common.Location) (string, error) {
+	return func(network string, location common.Location) (string, error) {
 		contract := config.Contract{}
 
 		switch location := location.(type) {

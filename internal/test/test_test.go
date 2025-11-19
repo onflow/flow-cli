@@ -211,7 +211,7 @@ func TestExecutingTests(t *testing.T) {
 		assert.ErrorContains(
 			t,
 			err,
-			"could not find the address of contract: Hello",
+			"could not resolve address of contract Hello",
 		)
 	})
 
@@ -376,7 +376,7 @@ func TestExecutingTests(t *testing.T) {
 			coverageReport.ExcludedLocationIDs(),
 		)
 
-		expected := "Coverage: 93.7% of statements"
+		expected := "Coverage: 90.4% of statements"
 
 		assert.Equal(
 			t,
