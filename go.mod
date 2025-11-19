@@ -13,18 +13,18 @@ require (
 	github.com/gosuri/uilive v0.0.4
 	github.com/logrusorgru/aurora/v4 v4.0.0
 	github.com/onflow/cadence v1.8.3
-	github.com/onflow/cadence-tools/languageserver v1.7.0
-	github.com/onflow/cadence-tools/lint v1.6.1
-	github.com/onflow/cadence-tools/test v1.8.1-0.20251105181034-5660b54035c8
+	github.com/onflow/cadence-tools/languageserver v1.7.3
+	github.com/onflow/cadence-tools/lint v1.6.2
+	github.com/onflow/cadence-tools/test v1.9.1
 	github.com/onflow/fcl-dev-wallet v0.8.0
-	github.com/onflow/flixkit-go/v2 v2.6.1
+	github.com/onflow/flixkit-go/v2 v2.6.2
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.9.2
-	github.com/onflow/flow-emulator v1.12.1
-	github.com/onflow/flow-evm-gateway v1.3.6
-	github.com/onflow/flow-go v0.44.0-experimental-cadence-v1.8.3.0.20251117075053-a0753cafb3a0
-	github.com/onflow/flow-go-sdk v1.9.2
+	github.com/onflow/flow-emulator v1.13.0
+	github.com/onflow/flow-evm-gateway v1.4.0
+	github.com/onflow/flow-go v0.44.0-experimental-cadence-v1.8.3.0.20251117184523-ab0655178589
+	github.com/onflow/flow-go-sdk v1.9.3
 	github.com/onflow/flow/protobuf/go/flow v0.4.18
-	github.com/onflow/flowkit/v2 v2.7.2
+	github.com/onflow/flowkit/v2 v2.8.0
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/pkg/errors v0.9.1
@@ -47,7 +47,7 @@ require (
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
 	cloud.google.com/go/compute/metadata v0.8.0 // indirect
 	cloud.google.com/go/iam v1.5.2 // indirect
-	cloud.google.com/go/kms v1.23.1 // indirect
+	cloud.google.com/go/kms v1.23.2 // indirect
 	cloud.google.com/go/longrunning v0.6.7 // indirect
 	github.com/DataDog/zstd v1.5.6-0.20230824185856-869dae002e5e // indirect
 	github.com/FactomProject/basen v0.0.0-20150613233007-fe3947df716e // indirect
@@ -294,7 +294,7 @@ require (
 	google.golang.org/genproto v0.0.0-20250603155806-513f23925822 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250818200422-3122310a409c // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250811230008-5f3141c8851a // indirect
-	google.golang.org/protobuf v1.36.9 // indirect
+	google.golang.org/protobuf v1.36.10 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	lukechampine.com/blake3 v1.4.1 // indirect
