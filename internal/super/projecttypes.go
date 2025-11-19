@@ -127,17 +127,17 @@ func getProjectTypeConfigs() map[ProjectType]*ProjectTypeConfig {
 					Name: "DeFiActions",
 					Source: flowkitConfig.Source{
 						NetworkName:  flowkitConfig.MainnetNetwork.Name,
-						Address:      flowsdk.HexToAddress("92195d814edf9cb0"),
+						Address:      flowsdk.HexToAddress("6d888f175c158410"),
 						ContractName: "DeFiActions",
 					},
 					Aliases: flowkitConfig.Aliases{
 						{
 							Network: "mainnet",
-							Address: flowsdk.HexToAddress("92195d814edf9cb0"),
+							Address: flowsdk.HexToAddress("6d888f175c158410"),
 						},
 						{
 							Network: "testnet",
-							Address: flowsdk.HexToAddress("4c2ff9dd03ab442f"),
+							Address: flowsdk.HexToAddress("0b11b1848a8aa2c0"),
 						},
 						{
 							Network: "testing",
@@ -149,10 +149,14 @@ func getProjectTypeConfigs() map[ProjectType]*ProjectTypeConfig {
 					Name: "IncrementFiSwapConnectors",
 					Source: flowkitConfig.Source{
 						NetworkName:  flowkitConfig.MainnetNetwork.Name,
-						Address:      flowsdk.HexToAddress("efa9bd7d1b17f1ed"),
+						Address:      flowsdk.HexToAddress("e844c7cf7430a77c"),
 						ContractName: "IncrementFiSwapConnectors",
 					},
-					Aliases: flowkitConfig.Aliases{{Network: "mainnet", Address: flowsdk.HexToAddress("efa9bd7d1b17f1ed")}},
+					Aliases: flowkitConfig.Aliases{
+						{Network: "mainnet", Address: flowsdk.HexToAddress("e844c7cf7430a77c")},
+						{Network: "testnet", Address: flowsdk.HexToAddress("494536c102537e1e")},
+						{Network: "testing", Address: flowsdk.HexToAddress("0000000000000007")},
+					},
 				},
 			},
 			ContractNames:     []string{"DeFiActionsMathUtils", "DeFiActionsUtils", "DeFiActions", "ExampleConnectors"},
