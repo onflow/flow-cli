@@ -118,7 +118,7 @@ The fork test executes a real swap from FLOW → stFlow using IncrementFi's depl
   - `ExampleConnectors.cdc` - TokenSink connector implementation
 - `cadence/transactions/` - Transaction files
   - `DepositViaSink.cdc` - Example transaction using TokenSink
-  - `incrementfi_swap_flow.cdc` - IncrementFi swap transaction
+  - `incrementfi_swap.cdc` - IncrementFi swap transaction
 - `cadence/tests/` - Test files
   - `ExampleConnectors_test.cdc` - Integration test for TokenSink
   - `test_incrementfi_swap_on_fork.cdc` - Fork test against mainnet IncrementFi
@@ -137,7 +137,9 @@ This project includes the following dependencies (already installed):
 - `DeFiActionsUtils` - Helper utilities
 - `DeFiActionsMathUtils` - Math utilities for DeFi operations
 
-**DeFi Protocol Connectors:**
+**DeFi Protocol Dependencies:**
+- `stFlowToken` - Liquid staking token (used in fork test example)
+- `SwapConfig` - IncrementFi swap configuration utilities
 - `IncrementFiSwapConnectors` - IncrementFi swap connectors (used in fork test example)
 
 **Network Configuration:**

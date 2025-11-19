@@ -146,6 +146,32 @@ func getProjectTypeConfigs() map[ProjectType]*ProjectTypeConfig {
 					},
 				},
 				{
+					Name: "stFlowToken",
+					Source: flowkitConfig.Source{
+						NetworkName:  flowkitConfig.MainnetNetwork.Name,
+						Address:      flowsdk.HexToAddress("d6f80565193ad727"),
+						ContractName: "stFlowToken",
+					},
+					Aliases: flowkitConfig.Aliases{
+						{Network: "mainnet", Address: flowsdk.HexToAddress("d6f80565193ad727")},
+						{Network: "testnet", Address: flowsdk.HexToAddress("7c11edb826692404")},
+						{Network: "testing", Address: flowsdk.HexToAddress("0000000000000008")},
+					},
+				},
+				{
+					Name: "SwapConfig",
+					Source: flowkitConfig.Source{
+						NetworkName:  flowkitConfig.MainnetNetwork.Name,
+						Address:      flowsdk.HexToAddress("b78ef7afa52ff906"),
+						ContractName: "SwapConfig",
+					},
+					Aliases: flowkitConfig.Aliases{
+						{Network: "mainnet", Address: flowsdk.HexToAddress("b78ef7afa52ff906")},
+						{Network: "testnet", Address: flowsdk.HexToAddress("b063c16cac85dbd1")},
+						{Network: "testing", Address: flowsdk.HexToAddress("0000000000000009")},
+					},
+				},
+				{
 					Name: "IncrementFiSwapConnectors",
 					Source: flowkitConfig.Source{
 						NetworkName:  flowkitConfig.MainnetNetwork.Name,
@@ -155,7 +181,7 @@ func getProjectTypeConfigs() map[ProjectType]*ProjectTypeConfig {
 					Aliases: flowkitConfig.Aliases{
 						{Network: "mainnet", Address: flowsdk.HexToAddress("e844c7cf7430a77c")},
 						{Network: "testnet", Address: flowsdk.HexToAddress("494536c102537e1e")},
-						{Network: "testing", Address: flowsdk.HexToAddress("0000000000000007")},
+						{Network: "testing", Address: flowsdk.HexToAddress("000000000000000a")},
 					},
 				},
 			},
@@ -290,8 +316,8 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 				TemplatePath: "transaction_deposit_via_sink.cdc.tmpl",
 			},
 			generator.TransactionTemplate{
-				Name:         "incrementfi_swap_flow",
-				TemplatePath: "transaction_incrementfi_swap_flow.cdc.tmpl",
+				Name:         "incrementfi_swap",
+				TemplatePath: "transaction_incrementfi_swap.cdc.tmpl",
 			},
 			generator.TestTemplate{
 				Name:         "incrementfi_swap_on_fork",
