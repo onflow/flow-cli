@@ -105,9 +105,10 @@ release:
 	docker run \
 		--rm \
 		--env-file .release-env \
+		-e GORELEASER_PARALLEL=1 \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v `pwd`:/go/src/$(PACKAGE_NAME) \
 		-v `pwd`/sysroot:/sysroot \
 		-w /go/src/$(PACKAGE_NAME) \
 		ghcr.io/goreleaser/goreleaser-cross:${GOLANG_CROSS_VERSION} \
-		release --clean
+		release --clean --parallelism=1
