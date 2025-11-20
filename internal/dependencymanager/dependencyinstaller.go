@@ -495,16 +495,26 @@ func (di *DependencyInstaller) fetchDependenciesWithDepth(dependency config.Depe
 	if program.HasAddressImports() {
 		imports := program.AddressImportDeclarations()
 		for _, imp := range imports {
-			importContractName := imp.Imports[0].Identifier.Identifier
+
+			actualContractName := imp.Imports[0].Identifier.Identifier
 			importAddress := flowsdk.HexToAddress(imp.Location.String())
 
+			// Check if this import has an alias (e.g., "import FUSD as FUSD1 from 0xaddress")
+			// If aliased, use the alias as the dependency name so "import FUSD1" resolves correctly
+			dependencyName := actualContractName
+			if imp.Imports[0].Alias.Identifier != "" {
+				dependencyName = imp.Imports[0].Alias.Identifier
+			}
+
 			// Create a dependency for the import
+			// Name is the alias (or actual name if not aliased) - this is what gets resolved in imports
+			// ContractName is the actual contract name on chain - this is what gets fetched
 			importDependency := config.Dependency{
-				Name: importContractName,
+				Name: dependencyName,
 				Source: config.Source{
 					NetworkName:  networkName,
 					Address:      importAddress,
-					ContractName: importContractName,
+					ContractName: actualContractName,
 				},
 			}
 
@@ -567,13 +577,13 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 	program.ConvertAddressImports()
 	contractData := string(program.CodeWithUnprocessedImports())
 
-	existingDependency := di.State.Dependencies().ByName(contractName)
+	existingDependency := di.State.Dependencies().ByName(dependency.Name)
 
 	// If a dependency by this name already exists and its remote source network or address does not match,
 	// allow it only if an existing alias matches the incoming network+address; otherwise terminate.
 	if existingDependency != nil && (existingDependency.Source.NetworkName != networkName || existingDependency.Source.Address.String() != contractAddr) {
-		if !di.existingAliasMatches(contractName, networkName, contractAddr) {
-			di.Logger.Info(fmt.Sprintf("%s A dependency named %s already exists with a different remote source. Please fix the conflict and retry.", util.PrintEmoji("🚫"), contractName))
+		if !di.existingAliasMatches(dependency.Name, networkName, contractAddr) {
+			di.Logger.Info(fmt.Sprintf("%s A dependency named %s already exists with a different remote source. Please fix the conflict and retry.", util.PrintEmoji("🚫"), dependency.Name))
 			os.Exit(0)
 			return nil
 		}
@@ -586,7 +596,7 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 		// Find existing pending prompt for this contract or create new one
 		found := false
 		for i := range di.pendingPrompts {
-			if di.pendingPrompts[i].contractName == contractName {
+			if di.pendingPrompts[i].contractName == dependency.Name {
 				di.pendingPrompts[i].needsUpdate = true
 				di.pendingPrompts[i].updateHash = originalContractDataHash
 				found = true
@@ -595,7 +605,7 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 		}
 		if !found {
 			di.pendingPrompts = append(di.pendingPrompts, pendingPrompt{
-				contractName: contractName,
+				contractName: dependency.Name,
 				networkName:  networkName,
 				needsUpdate:  true,
 				updateHash:   originalContractDataHash,
@@ -605,7 +615,7 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 	}
 
 	// Check if this is a new dependency before updating state
-	isNewDep := di.State.Dependencies().ByName(contractName) == nil
+	isNewDep := di.State.Dependencies().ByName(dependency.Name) == nil
 
 	err := di.updateDependencyState(dependency, originalContractDataHash)
 	if err != nil {
@@ -616,7 +626,7 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 	// Handle additional tasks for new dependencies or when contract file doesn't exist
 	// This makes sure prompts are collected for new dependencies regardless of whether contract file exists
 	if isNewDep || !di.contractFileExists(contractAddr, contractName) {
-		err := di.handleAdditionalDependencyTasks(networkName, contractName)
+		err := di.handleAdditionalDependencyTasks(networkName, dependency.Name)
 		if err != nil {
 			di.Logger.Error(fmt.Sprintf("Error handling additional dependency tasks: %v", err))
 			return err
@@ -785,6 +795,15 @@ func (di *DependencyInstaller) updateDependencyState(originalDependency config.D
 
 	di.State.Dependencies().AddOrUpdate(dep)
 	di.State.Contracts().AddDependencyAsContract(dep, originalDependency.Source.NetworkName)
+
+	// If this is an aliased import (Name differs from ContractName), set the Canonical field on the contract
+	// This enables flowkit to generate the correct "import X as Y from address" syntax
+	if dep.Name != dep.Source.ContractName {
+		contract, err := di.State.Contracts().ByName(dep.Name)
+		if err == nil && contract != nil {
+			contract.Canonical = dep.Source.ContractName
+		}
+	}
 
 	if isNewDep {
 		msg := util.MessageWithEmojiPrefix("✅", fmt.Sprintf("%s added to flow.json", dep.Name))
