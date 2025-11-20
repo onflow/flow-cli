@@ -38,5 +38,9 @@ jobs:
           echo 'BUILD_TIME=$(date --iso-8601=seconds)' >> .release-env
           echo 'VERSION=${{ github.event.release.tag_name }}' >> .release-env
           echo 'GITHUB_TOKEN=${{ secrets.FLOW_CLI_RELEASE }}' >> .release-env
+          # Create temp directory in workspace to avoid /tmp disk space issues
+          mkdir -p ${GITHUB_WORKSPACE}/tmp
+          echo 'TMPDIR=${GITHUB_WORKSPACE}/tmp' >> .release-env
+          echo 'GOTMPDIR=${GITHUB_WORKSPACE}/tmp' >> .release-env
       - name: Build and Release
         run: make release
