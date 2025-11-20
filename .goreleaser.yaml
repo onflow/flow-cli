@@ -17,7 +17,6 @@ builds:
     env:
       - CGO_CFLAGS=-O2 -D__BLST_PORTABLE__ -std=gnu11
       - CGO_ENABLED=1
-      - GOFLAGS=-p=1
       # Darwin
       - CC_darwin_amd64=o64-clang
       - CXX_darwin_amd64=o64-clang++
