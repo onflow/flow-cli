@@ -17,6 +17,7 @@ builds:
     env:
       - CGO_CFLAGS=-O2 -D__BLST_PORTABLE__ -std=gnu11
       - CGO_ENABLED=1
+      - GOFLAGS=-p=1
       # Darwin
       - CC_darwin_amd64=o64-clang
       - CXX_darwin_amd64=o64-clang++
@@ -40,7 +41,6 @@ builds:
       - -mod=readonly
     ldflags:
       - -X github.com/onflow/flow-cli/build.semver={{ .Env.VERSION }} -X github.com/onflow/flow-cli/build.commit={{ .ShortCommit }} -X github.com/onflow/flow-cli/internal/command.MixpanelToken={{ .Env.MIXPANEL_PROJECT_TOKEN }} -X github.com/onflow/flow-cli/internal/accounts.accountToken={{ .Env.LILICO_TOKEN }}
-    
 
 archives:
   - id: golang-cross

@@ -38,5 +38,14 @@ jobs:
           echo 'BUILD_TIME=$(date --iso-8601=seconds)' >> .release-env
           echo 'VERSION=${{ github.event.release.tag_name }}' >> .release-env
           echo 'GITHUB_TOKEN=${{ secrets.FLOW_CLI_RELEASE }}' >> .release-env
+          # Create temp and cache directories in workspace; set container-visible paths
+          mkdir -p ${GITHUB_WORKSPACE}/tmp
+          mkdir -p ${GITHUB_WORKSPACE}/.cache/go-build
+          mkdir -p ${GITHUB_WORKSPACE}/.cache/gomod
+          echo "TMPDIR=/go/src/github.com/onflow/flow-cli/tmp" >> .release-env
+          echo "GOTMPDIR=/go/src/github.com/onflow/flow-cli/tmp" >> .release-env
+          echo "GOCACHE=/go/src/github.com/onflow/flow-cli/.cache/go-build" >> .release-env
+          echo "GOMODCACHE=/go/src/github.com/onflow/flow-cli/.cache/gomod" >> .release-env
+          echo "XDG_CACHE_HOME=/go/src/github.com/onflow/flow-cli/.cache" >> .release-env
       - name: Build and Release
         run: make release

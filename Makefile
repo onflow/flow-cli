@@ -105,6 +105,8 @@ release:
 	docker run \
 		--rm \
 		--env-file .release-env \
+		-e GOFLAGS="-p=1" \
+		-e GOMAXPROCS=1 \
 		-e GORELEASER_PARALLEL=1 \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v `pwd`:/go/src/$(PACKAGE_NAME) \
