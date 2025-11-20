@@ -14,10 +14,16 @@ jobs:
         run: |
           sudo rm -rf ${RUNNER_TOOL_CACHE}
           sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/share/chromium
+          sudo rm -rf /usr/local/share/powershell
+          sudo rm -rf /usr/local/share/vcpkg
+          sudo rm -rf /usr/local/share/miniconda
           sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
           sudo rm -rf /usr/local/share/boost
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
           sudo docker image prune --all --force
+          sudo docker builder prune -a -f
           sudo apt-get clean
           df -h
       - uses: actions/checkout@v5
@@ -38,5 +44,9 @@ jobs:
           echo 'BUILD_TIME=$(date --iso-8601=seconds)' >> .release-env
           echo 'VERSION=${{ github.event.release.tag_name }}' >> .release-env
           echo 'GITHUB_TOKEN=${{ secrets.FLOW_CLI_RELEASE }}' >> .release-env
+          # Create temp dir in workspace; set container-visible paths
+          mkdir -p ${GITHUB_WORKSPACE}/tmp
+          echo "TMPDIR=/go/src/github.com/onflow/flow-cli/tmp" >> .release-env
+          echo "GOTMPDIR=/go/src/github.com/onflow/flow-cli/tmp" >> .release-env
       - name: Build and Release
         run: make release
