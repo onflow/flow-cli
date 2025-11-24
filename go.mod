@@ -23,7 +23,7 @@ require (
 	github.com/onflow/flow-evm-gateway v1.4.0
 	github.com/onflow/flow-go v0.44.0-experimental-cadence-v1.8.3.0.20251117184523-ab0655178589
 	github.com/onflow/flow-go-sdk v1.9.3
-	github.com/onflow/flow/protobuf/go/flow v0.4.18
+	github.com/onflow/flow/protobuf/go/flow v0.4.19
 	github.com/onflow/flowkit/v2 v2.8.0
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
