@@ -767,8 +767,6 @@ func TestDependencyInstallerWithAlias(t *testing.T) {
 		di := &DependencyInstaller{
 			Gateways: map[string]gateway.Gateway{
 				config.EmulatorNetwork.Name: gw.Mock,
-				config.TestnetNetwork.Name:  gw.Mock,
-				config.MainnetNetwork.Name:  gw.Mock,
 			},
 			Logger:          logger,
 			State:           state,
@@ -802,22 +800,6 @@ func TestDependencyInstallerWithAlias(t *testing.T) {
 	})
 
 	t.Run("AddByCoreContractNameWithName", func(t *testing.T) {
-		di := &DependencyInstaller{
-			Gateways: map[string]gateway.Gateway{
-				config.EmulatorNetwork.Name: mocks.DefaultMockGateway().Mock,
-				config.TestnetNetwork.Name:  mocks.DefaultMockGateway().Mock,
-				config.MainnetNetwork.Name:  mocks.DefaultMockGateway().Mock,
-			},
-			Logger:          logger,
-			State:           state,
-			SaveState:       true,
-			TargetDir:       "",
-			SkipDeployments: true,
-			SkipAlias:       true,
-			Name:            "FlowTokenCustom",
-			dependencies:    make(map[string]config.Dependency),
-		}
-
 		// Mock the gateway to return FlowToken contract
 		gw := mocks.DefaultMockGateway()
 		gw.GetAccount.Run(func(args mock.Arguments) {
@@ -829,7 +811,19 @@ func TestDependencyInstallerWithAlias(t *testing.T) {
 			gw.GetAccount.Return(acc, nil)
 		})
 
-		di.Gateways[config.MainnetNetwork.Name] = gw.Mock
+		di := &DependencyInstaller{
+			Gateways: map[string]gateway.Gateway{
+				config.MainnetNetwork.Name: gw.Mock,
+			},
+			Logger:          logger,
+			State:           state,
+			SaveState:       true,
+			TargetDir:       "",
+			SkipDeployments: true,
+			SkipAlias:       true,
+			Name:            "FlowTokenCustom",
+			dependencies:    make(map[string]config.Dependency),
+		}
 
 		err := di.AddByCoreContractName("FlowToken")
 		assert.NoError(t, err, "Failed to add core contract with import alias")
@@ -842,6 +836,7 @@ func TestDependencyInstallerWithAlias(t *testing.T) {
 	})
 
 	t.Run("AddAllByNetworkAddressWithNameError", func(t *testing.T) {
+		// This test doesn't need gateways since it returns an error before making any gateway calls
 		di := &DependencyInstaller{
 			Logger:    logger,
 			State:     state,
