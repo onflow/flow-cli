@@ -103,7 +103,7 @@ type DependencyFlags struct {
 	skipAlias         bool   `default:"false" flag:"skip-alias" info:"Skip prompting for an alias"`
 	skipUpdatePrompts bool   `default:"false" flag:"skip-update-prompts" info:"Skip prompting to update existing dependencies"`
 	deploymentAccount string `default:"" flag:"deployment-account,d" info:"Account name to use for deployments (skips deployment account prompt)"`
-	name              string `default:"" flag:"name" info:"Custom name for the dependency"`
+	name              string `default:"" flag:"name" info:"Import alias name for the dependency (sets canonical field for Cadence import aliasing)"`
 }
 
 func (f *DependencyFlags) AddToCommand(cmd *cobra.Command) {
@@ -225,7 +225,8 @@ func (di *DependencyInstaller) AddBySourceString(depSource string) error {
 		},
 	}
 
-	// If a custom name is provided, use it as the dependency name and set canonical
+	// If a name is provided, use it as the import alias and set canonical for Cadence import aliasing
+	// This enables "import OriginalContract as AliasName from address" syntax
 	if di.Name != "" {
 		dep.Name = di.Name
 		dep.Canonical = depContractName
@@ -266,7 +267,8 @@ func (di *DependencyInstaller) AddByCoreContractName(coreContractName string) er
 		},
 	}
 
-	// If a custom name is provided, use it as the dependency name and set canonical
+	// If a name is provided, use it as the import alias and set canonical for Cadence import aliasing
+	// This enables "import OriginalContract as AliasName from address" syntax
 	if di.Name != "" {
 		dep.Name = di.Name
 		dep.Canonical = depContractName
