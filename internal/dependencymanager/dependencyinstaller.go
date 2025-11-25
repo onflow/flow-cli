@@ -577,6 +577,9 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 			os.Exit(0)
 			return nil
 		}
+		
+		// Alias matched - contract already stored, encountered via different network. Skip state update.
+		return nil
 	}
 
 	// Check if remote source version is different from local version
