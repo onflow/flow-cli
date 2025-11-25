@@ -103,6 +103,7 @@ type DependencyFlags struct {
 	skipAlias         bool   `default:"false" flag:"skip-alias" info:"Skip prompting for an alias"`
 	skipUpdatePrompts bool   `default:"false" flag:"skip-update-prompts" info:"Skip prompting to update existing dependencies"`
 	deploymentAccount string `default:"" flag:"deployment-account,d" info:"Account name to use for deployments (skips deployment account prompt)"`
+	name              string `default:"" flag:"name" info:"Import alias name for the dependency (sets canonical field for Cadence import aliasing)"`
 }
 
 func (f *DependencyFlags) AddToCommand(cmd *cobra.Command) {
@@ -125,6 +126,7 @@ type DependencyInstaller struct {
 	SkipDeployments   bool
 	SkipAlias         bool
 	DeploymentAccount string
+	Name              string
 	logs              categorizedLogs
 	dependencies      map[string]config.Dependency
 	accountAliases    map[string]map[string]flowsdk.Address // network -> account -> alias
@@ -164,6 +166,7 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State, saveStat
 		SkipDeployments:   flags.skipDeployments,
 		SkipAlias:         flags.skipAlias,
 		DeploymentAccount: flags.deploymentAccount,
+		Name:              flags.name,
 		dependencies:      make(map[string]config.Dependency),
 		logs:              categorizedLogs{},
 		accountAliases:    make(map[string]map[string]flowsdk.Address),
@@ -222,6 +225,13 @@ func (di *DependencyInstaller) AddBySourceString(depSource string) error {
 		},
 	}
 
+	// If a name is provided, use it as the import alias and set canonical for Cadence import aliasing
+	// This enables "import OriginalContract as AliasName from address" syntax
+	if di.Name != "" {
+		dep.Name = di.Name
+		dep.Canonical = depContractName
+	}
+
 	return di.Add(dep)
 }
 
@@ -257,6 +267,13 @@ func (di *DependencyInstaller) AddByCoreContractName(coreContractName string) er
 		},
 	}
 
+	// If a name is provided, use it as the import alias and set canonical for Cadence import aliasing
+	// This enables "import OriginalContract as AliasName from address" syntax
+	if di.Name != "" {
+		dep.Name = di.Name
+		dep.Canonical = depContractName
+	}
+
 	return di.Add(dep)
 }
 
@@ -273,6 +290,12 @@ func (di *DependencyInstaller) AddByDefiContractName(defiContractName string) er
 
 	if targetDep == nil {
 		return fmt.Errorf("contract %s not found in DeFi actions contracts", defiContractName)
+	}
+
+	// If a custom name is provided, use it as the dependency name and set canonical
+	if di.Name != "" {
+		targetDep.Name = di.Name
+		targetDep.Canonical = defiContractName
 	}
 
 	return di.Add(*targetDep)
@@ -333,6 +356,11 @@ func (di *DependencyInstaller) AddMany(dependencies []config.Dependency) error {
 }
 
 func (di *DependencyInstaller) AddAllByNetworkAddress(sourceStr string) error {
+	// Check if name flag is set - not supported when installing all contracts at an address
+	if di.Name != "" {
+		return fmt.Errorf("--name flag is not supported when installing all contracts at an address (network://address). Please specify a specific contract using network://address.ContractName format")
+	}
+
 	network, address := ParseNetworkAddressString(sourceStr)
 
 	accountContracts, err := di.getContracts(network, flowsdk.HexToAddress(address))
@@ -783,12 +811,13 @@ func (di *DependencyInstaller) updateDependencyAlias(contractName, aliasNetwork 
 }
 
 func (di *DependencyInstaller) updateDependencyState(originalDependency config.Dependency, contractHash string) error {
-	// Create the dependency to save, preserving aliases from the original
+	// Create the dependency to save, preserving aliases and canonical from the original
 	dep := config.Dependency{
-		Name:    originalDependency.Name,
-		Source:  originalDependency.Source,
-		Hash:    contractHash,
-		Aliases: originalDependency.Aliases, // Preserve aliases from the original dependency
+		Name:      originalDependency.Name,
+		Source:    originalDependency.Source,
+		Hash:      contractHash,
+		Aliases:   originalDependency.Aliases,
+		Canonical: originalDependency.Canonical,
 	}
 
 	isNewDep := di.State.Dependencies().ByName(dep.Name) == nil
