@@ -751,7 +751,7 @@ func TestDependencyInstallerWithAlias(t *testing.T) {
 	serviceAcc, _ := state.EmulatorServiceAccount()
 	serviceAddress := serviceAcc.Address
 
-	t.Run("AddBySourceStringWithAlias", func(t *testing.T) {
+	t.Run("AddBySourceStringWithName", func(t *testing.T) {
 		gw := mocks.DefaultMockGateway()
 
 		gw.GetAccount.Run(func(args mock.Arguments) {
@@ -776,21 +776,21 @@ func TestDependencyInstallerWithAlias(t *testing.T) {
 			TargetDir:       "",
 			SkipDeployments: true,
 			SkipAlias:       true,
-			Alias:           "NumberFormatterAlias",
+			Name:            "NumberFormatterCustom",
 			dependencies:    make(map[string]config.Dependency),
 		}
 
 		err := di.AddBySourceString(fmt.Sprintf("%s://%s.%s", config.EmulatorNetwork.Name, serviceAddress.String(), "NumberFormatter"))
-		assert.NoError(t, err, "Failed to add dependency with alias")
+		assert.NoError(t, err, "Failed to add dependency with custom name")
 
-		// Check that the dependency was added with the alias name
-		dep := state.Dependencies().ByName("NumberFormatterAlias")
-		assert.NotNil(t, dep, "Dependency should exist with alias name")
+		// Check that the dependency was added with the custom name
+		dep := state.Dependencies().ByName("NumberFormatterCustom")
+		assert.NotNil(t, dep, "Dependency should exist with custom name")
 		assert.Equal(t, "NumberFormatter", dep.Source.ContractName, "Source ContractName should be the actual contract name")
 		assert.Equal(t, "NumberFormatter", dep.Canonical, "Canonical should be set to the actual contract name")
 
 		// Check that the contract was added with canonical field
-		contract, err := state.Contracts().ByName("NumberFormatterAlias")
+		contract, err := state.Contracts().ByName("NumberFormatterCustom")
 		assert.NoError(t, err, "Contract should exist")
 		assert.Equal(t, "NumberFormatter", contract.Canonical, "Contract Canonical should be set")
 
@@ -801,7 +801,7 @@ func TestDependencyInstallerWithAlias(t *testing.T) {
 		assert.NotNil(t, fileContent)
 	})
 
-	t.Run("AddByCoreContractNameWithAlias", func(t *testing.T) {
+	t.Run("AddByCoreContractNameWithName", func(t *testing.T) {
 		di := &DependencyInstaller{
 			Gateways: map[string]gateway.Gateway{
 				config.EmulatorNetwork.Name: mocks.DefaultMockGateway().Mock,
@@ -814,7 +814,7 @@ func TestDependencyInstallerWithAlias(t *testing.T) {
 			TargetDir:       "",
 			SkipDeployments: true,
 			SkipAlias:       true,
-			Alias:           "FlowTokenAlias",
+			Name:            "FlowTokenCustom",
 			dependencies:    make(map[string]config.Dependency),
 		}
 
@@ -832,26 +832,26 @@ func TestDependencyInstallerWithAlias(t *testing.T) {
 		di.Gateways[config.MainnetNetwork.Name] = gw.Mock
 
 		err := di.AddByCoreContractName("FlowToken")
-		assert.NoError(t, err, "Failed to add core contract with alias")
+		assert.NoError(t, err, "Failed to add core contract with custom name")
 
-		// Check that the dependency was added with the alias name
-		dep := state.Dependencies().ByName("FlowTokenAlias")
-		assert.NotNil(t, dep, "Dependency should exist with alias name")
+		// Check that the dependency was added with the custom name
+		dep := state.Dependencies().ByName("FlowTokenCustom")
+		assert.NotNil(t, dep, "Dependency should exist with custom name")
 		assert.Equal(t, "FlowToken", dep.Source.ContractName, "Source ContractName should be FlowToken")
 		assert.Equal(t, "FlowToken", dep.Canonical, "Canonical should be set to FlowToken")
 	})
 
-	t.Run("AddAllByNetworkAddressWithAliasError", func(t *testing.T) {
+	t.Run("AddAllByNetworkAddressWithNameError", func(t *testing.T) {
 		di := &DependencyInstaller{
 			Logger:    logger,
 			State:     state,
 			SaveState: true,
 			TargetDir: "",
-			Alias:     "SomeAlias",
+			Name:      "SomeName",
 		}
 
 		err := di.AddAllByNetworkAddress(fmt.Sprintf("%s://%s", config.EmulatorNetwork.Name, serviceAddress.String()))
-		assert.Error(t, err, "Should error when using --alias with network://address format")
-		assert.Contains(t, err.Error(), "--alias flag is not supported when installing all contracts", "Error message should mention alias flag limitation")
+		assert.Error(t, err, "Should error when using --name with network://address format")
+		assert.Contains(t, err.Error(), "--name flag is not supported when installing all contracts", "Error message should mention name flag limitation")
 	})
 }

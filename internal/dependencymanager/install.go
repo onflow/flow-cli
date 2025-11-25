@@ -74,15 +74,15 @@ Examples:
      flow dependencies install --deployment-account my-account FlowToken
      flow dependencies install -d my-account FlowToken
 
-  8. Install a dependency with a custom alias:
-     flow dependencies install --alias USDF testnet://0x1234abcd.FiatToken
-     flow dependencies install --alias MyToken mainnet://0xabcd1234.TokenContract
+  8. Install a dependency with a custom name:
+     flow dependencies install --name USDF testnet://0x1234abcd.FiatToken
+     flow dependencies install --name MyToken mainnet://0xabcd1234.TokenContract
 
 Flags:
 • --deployment-account, -d: Specify the account name to use for deployments (skips deployment account prompt)
 • --skip-deployments: Skip adding the dependency to deployments
 • --skip-alias: Skip prompting for an alias
-• --alias: Custom alias name for the dependency (e.g., --alias USDF)
+• --name: Custom name for the dependency (e.g., --name USDF)
 
 Note:
 • Using 'network://address' will attempt to install all contracts deployed at that address.
@@ -100,7 +100,7 @@ flow dependencies install DeFiActions
 flow dependencies install FlowToken NonFungibleToken DeFiActions
 flow dependencies install --deployment-account my-account FlowToken
 flow dependencies install -d my-account FlowToken
-flow dependencies install --alias USDF testnet://0x1234abcd.FiatToken`,
+flow dependencies install --name USDF testnet://0x1234abcd.FiatToken`,
 		Args: cobra.ArbitraryArgs,
 	},
 	Flags: &installFlags,
