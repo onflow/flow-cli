@@ -42,7 +42,7 @@ var templatesFS embed.FS
 type TemplateItem interface {
 	GetType() string
 	GetTemplatePath() string
-	GetData() map[string]interface{}
+	GetData() map[string]any
 	GetTargetPath() string
 }
 
@@ -107,7 +107,7 @@ func (g *Generator) generate(item TemplateItem) error {
 	templatePath := item.GetTemplatePath()
 	data := item.GetData()
 
-	fileData := make(map[string]interface{})
+	fileData := make(map[string]any)
 	maps.Copy(fileData, data)
 
 	outputContent, err := g.processTemplate(templatePath, fileData)
@@ -150,7 +150,7 @@ func (g *Generator) generate(item TemplateItem) error {
 
 // processTemplate reads a template file from the embedded filesystem and processes it with the provided data
 // If you don't need to provide data, pass nil
-func (g *Generator) processTemplate(templatePath string, data map[string]interface{}) (string, error) {
+func (g *Generator) processTemplate(templatePath string, data map[string]any) (string, error) {
 	resolvedPath := filepath.Join("templates", templatePath)
 	templateData, err := templatesFS.ReadFile(filepath.ToSlash(resolvedPath))
 	if err != nil {

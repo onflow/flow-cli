@@ -219,7 +219,7 @@ func (r *lintResult) String() string {
 	return sb.String()
 }
 
-func (r *lintResult) JSON() interface{} {
+func (r *lintResult) JSON() any {
 	return r
 }
 
