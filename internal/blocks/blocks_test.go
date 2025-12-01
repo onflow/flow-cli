@@ -47,7 +47,11 @@ func Test_GetBlock(t *testing.T) {
 			assert.Equal(t, uint64(100), args.Get(3).(uint64))
 		}).Return(nil, nil)
 
-		srv.GetCollection.Return(nil, nil)
+		srv.GetTransactionsByBlockID.Return(
+			[]*flow.Transaction{tests.NewTransaction()},
+			[]*flow.TransactionResult{tests.NewTransactionResult(nil)},
+			nil,
+		)
 
 		returnBlock := tests.NewBlock()
 		returnBlock.Height = uint64(100)
@@ -64,8 +68,9 @@ func Test_GetBlock(t *testing.T) {
 
 func Test_Result(t *testing.T) {
 	result := blockResult{
-		block:       tests.NewBlock(),
-		collections: []*flow.Collection{tests.NewCollection()},
+		block:        tests.NewBlock(),
+		transactions: []*flow.Transaction{},
+		results:      []*flow.TransactionResult{},
 	}
 
 	assert.Equal(t, strings.TrimPrefix(`
@@ -86,7 +91,7 @@ Total Collections	3
 		t,
 		map[string]any{
 			"blockId": "0303030303030303030303030303030303030303030303030303030303030303",
-			"collection": []any{
+			"collections": []any{
 				map[string]any{"id": "0202020202020202020202020202020202020202020202020202020202020202"},
 				map[string]any{"id": "0404040404040404040404040404040404040404040404040404040404040404"},
 				map[string]any{"id": "0606060606060606060606060606060606060606060606060606060606060606"},
