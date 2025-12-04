@@ -214,10 +214,6 @@ func testCode(
 		return network.Host, true
 	}
 
-	runner := cdcTests.NewTestRunner().
-		WithLogger(logger).
-		WithNetworkResolver(resolveNetworkFromState)
-
 	// Configure fork mode if requested
 	var effectiveForkHost string
 
@@ -257,7 +253,6 @@ func testCode(
 			ForkHeight: flags.ForkHeight,
 		}
 		forkCfg = &cfg
-		runner = runner.WithFork(cfg)
 
 		// Map chain ID to a sensible network label if not provided explicitly
 		if strings.TrimSpace(flags.Fork) == "" {
@@ -269,9 +264,6 @@ func testCode(
 			}
 		}
 	}
-
-	// Apply the network label on the base runner now that it is known
-	runner = runner.WithNetworkLabel(networkLabel)
 
 	var coverageReport *runtime.CoverageReport
 	if flags.Cover {
@@ -287,16 +279,13 @@ func testCode(
 				},
 			)
 		}
-		runner = runner.WithCoverageReport(coverageReport)
 	}
 
 	var seed int64
 	if flags.Seed > 0 {
 		seed = flags.Seed
-		runner = runner.WithRandomSeed(seed)
 	} else if flags.Random {
 		seed = int64(rand.Intn(150000))
-		runner = runner.WithRandomSeed(seed)
 	}
 
 	testResults := make(map[string]cdcTests.Results, 0)
@@ -305,11 +294,15 @@ func testCode(
 		// Set current test file for network resolution tracking
 		currentTestFile = scriptPath
 
-		fileRunner := runner.
+		// Create a new test runner per file to ensure complete isolation.
+		// Each file gets its own runner with its own backend state.
+		fileRunner := cdcTests.NewTestRunner().
+			WithLogger(logger).
+			WithNetworkResolver(resolveNetworkFromState).
+			WithNetworkLabel(networkLabel).
 			WithImportResolver(importResolver(scriptPath, state)).
 			WithFileResolver(fileResolver(scriptPath, state)).
 			WithContractAddressResolver(func(network string, contractName string) (common.Address, error) {
-				// Build name -> contract map once per file run
 				contractsByName := make(map[string]config.Contract)
 				for _, c := range *state.Contracts() {
 					contractsByName[c.Name] = c
@@ -325,13 +318,26 @@ func testCode(
 					return common.Address(alias.Address), nil
 				}
 
+				// Fallback to fork network if configured
+				networkConfig, err := state.Networks().ByName(network)
+				if err == nil && networkConfig != nil && networkConfig.Fork != "" {
+					forkAlias := contract.Aliases.ByNetwork(networkConfig.Fork)
+					if forkAlias != nil {
+						return common.Address(forkAlias.Address), nil
+					}
+				}
+
 				return common.Address{}, fmt.Errorf("no address for contract %s on network %s", contractName, network)
 			})
 
-		// Ensure the file runner has the correct network label and fork config
-		fileRunner = fileRunner.WithNetworkLabel(networkLabel)
 		if forkCfg != nil {
 			fileRunner = fileRunner.WithFork(*forkCfg)
+		}
+		if coverageReport != nil {
+			fileRunner = fileRunner.WithCoverageReport(coverageReport)
+		}
+		if seed > 0 {
+			fileRunner = fileRunner.WithRandomSeed(seed)
 		}
 
 		if flags.Name != "" {

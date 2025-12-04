@@ -38,6 +38,7 @@ type flagsAddNetwork struct {
 	Name string `flag:"name" info:"Network name"`
 	Host string `flag:"host" info:"Flow Access API host address"`
 	Key  string `flag:"network-key" info:"Flow Access API host network key for secure client connections"`
+	Fork string `flag:"fork" info:"Source network name to fork contract aliases from"`
 }
 
 var addNetworkFlags = flagsAddNetwork{}
@@ -69,10 +70,19 @@ func addNetwork(
 		raw = prompt.NewNetworkPrompt()
 	}
 
+	// Validate fork network exists
+	if raw["fork"] != "" {
+		_, err := state.Networks().ByName(raw["fork"])
+		if err != nil {
+			return nil, fmt.Errorf("fork network %q not found in configuration", raw["fork"])
+		}
+	}
+
 	state.Networks().AddOrUpdate(config.Network{
 		Name: raw["name"],
 		Host: raw["host"],
 		Key:  raw["key"],
+		Fork: raw["fork"],
 	})
 
 	err = state.SaveEdited(globalFlags.ConfigPaths)
@@ -101,14 +111,17 @@ func flagsToNetworkData(flags flagsAddNetwork) (map[string]string, bool, error) 
 		return nil, true, err
 	}
 
-	err = util.ValidateECDSAP256Pub(flags.Key)
-	if err != nil {
-		return nil, true, fmt.Errorf("invalid network-key provided")
+	if flags.Key != "" {
+		err = util.ValidateECDSAP256Pub(flags.Key)
+		if err != nil {
+			return nil, true, fmt.Errorf("invalid network-key provided")
+		}
 	}
 
 	return map[string]string{
 		"name": flags.Name,
 		"host": flags.Host,
 		"key":  flags.Key,
+		"fork": flags.Fork,
 	}, true, nil
 }
