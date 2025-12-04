@@ -303,7 +303,6 @@ func testCode(
 			WithImportResolver(importResolver(scriptPath, state)).
 			WithFileResolver(fileResolver(scriptPath, state)).
 			WithContractAddressResolver(func(network string, contractName string) (common.Address, error) {
-				// Build name -> contract map once per file run
 				contractsByName := make(map[string]config.Contract)
 				for _, c := range *state.Contracts() {
 					contractsByName[c.Name] = c
@@ -317,6 +316,15 @@ func testCode(
 				alias := contract.Aliases.ByNetwork(network)
 				if alias != nil {
 					return common.Address(alias.Address), nil
+				}
+
+				// Fallback to fork network if configured
+				networkConfig, err := state.Networks().ByName(network)
+				if err == nil && networkConfig != nil && networkConfig.Fork != "" {
+					forkAlias := contract.Aliases.ByNetwork(networkConfig.Fork)
+					if forkAlias != nil {
+						return common.Address(forkAlias.Address), nil
+					}
 				}
 
 				return common.Address{}, fmt.Errorf("no address for contract %s on network %s", contractName, network)
