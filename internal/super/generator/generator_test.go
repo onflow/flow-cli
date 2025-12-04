@@ -200,7 +200,7 @@ func TestGenerateTestTemplate(t *testing.T) {
 	err := g.Create(TestTemplate{
 		Name:         "Foobar",
 		TemplatePath: "contract_init_test.cdc.tmpl",
-		Data: map[string]interface{}{
+		Data: map[string]any{
 			"ContractName": "Foobar",
 		}},
 	)
@@ -234,18 +234,18 @@ func TestGenerateReadmeNoDeps(t *testing.T) {
 	err := g.Create(FileTemplate{
 		TemplatePath: "README.md.tmpl",
 		TargetPath:   "README.md",
-		Data: map[string]interface{}{
-			"Dependencies": []map[string]interface{}{},
-			"Contracts": []map[string]interface{}{
+		Data: map[string]any{
+			"Dependencies": []map[string]any{},
+			"Contracts": []map[string]any{
 				{"Name": "ExampleContract"},
 			},
-			"Transactions": []map[string]interface{}{
+			"Transactions": []map[string]any{
 				{"Name": "ExampleTransaction"},
 			},
-			"Scripts": []map[string]interface{}{
+			"Scripts": []map[string]any{
 				{"Name": "ExampleScript"},
 			},
-			"Tests": []map[string]interface{}{
+			"Tests": []map[string]any{
 				{"Name": "ExampleTest"},
 			},
 		},
@@ -268,21 +268,21 @@ func TestGenerateReadmeWithDeps(t *testing.T) {
 	err := g.Create(FileTemplate{
 		TemplatePath: "README.md.tmpl",
 		TargetPath:   "README.md",
-		Data: map[string]interface{}{
-			"Dependencies": []map[string]interface{}{
+		Data: map[string]any{
+			"Dependencies": []map[string]any{
 				{"Name": "FlowToken"},
 				{"Name": "FungibleToken"},
 			},
-			"Contracts": []map[string]interface{}{
+			"Contracts": []map[string]any{
 				{"Name": "ExampleContract"},
 			},
-			"Transactions": []map[string]interface{}{
+			"Transactions": []map[string]any{
 				{"Name": "ExampleTransaction"},
 			},
-			"Scripts": []map[string]interface{}{
+			"Scripts": []map[string]any{
 				{"Name": "ExampleScript"},
 			},
-			"Tests": []map[string]interface{}{
+			"Tests": []map[string]any{
 				{"Name": "ExampleTest"},
 			},
 		},

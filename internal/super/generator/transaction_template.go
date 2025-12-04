@@ -32,7 +32,7 @@ const (
 type TransactionTemplate struct {
 	Name         string
 	TemplatePath string
-	Data         map[string]interface{}
+	Data         map[string]any
 }
 
 var _ TemplateItem = TransactionTemplate{}
@@ -51,7 +51,7 @@ func (o TransactionTemplate) GetTemplatePath() string {
 }
 
 // GetData returns the data of the script or transaction
-func (o TransactionTemplate) GetData() map[string]interface{} {
+func (o TransactionTemplate) GetData() map[string]any {
 	return o.Data
 }
 

@@ -26,13 +26,13 @@ import (
 type FileTemplate struct {
 	TemplatePath string
 	TargetPath   string
-	Data         map[string]interface{}
+	Data         map[string]any
 }
 
 func NewFileTemplate(
 	templatePath string,
 	targetPath string,
-	data map[string]interface{},
+	data map[string]any,
 ) FileTemplate {
 	return FileTemplate{
 		TemplatePath: templatePath,
@@ -53,7 +53,7 @@ func (c FileTemplate) GetTemplatePath() string {
 }
 
 // GetData returns the data of the contract
-func (c FileTemplate) GetData() map[string]interface{} {
+func (c FileTemplate) GetData() map[string]any {
 	return c.Data
 }
 

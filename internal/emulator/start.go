@@ -137,7 +137,7 @@ func trackRequestMiddleware(next http.Handler) http.Handler {
 func init() {
 	// Configure zerolog to use console format matching the emulator's output
 	consoleWriter := zerolog.ConsoleWriter{Out: os.Stderr}
-	consoleWriter.FormatMessage = func(i interface{}) string {
+	consoleWriter.FormatMessage = func(i any) string {
 		if i == nil {
 			return ""
 		}

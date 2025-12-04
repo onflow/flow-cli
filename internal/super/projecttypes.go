@@ -235,12 +235,12 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 			generator.ScriptTemplate{
 				Name:         "GetCounter",
 				TemplatePath: "script_counter.cdc.tmpl",
-				Data:         map[string]interface{}{"ContractName": "Counter"},
+				Data:         map[string]any{"ContractName": "Counter"},
 			},
 			generator.TransactionTemplate{
 				Name:         "IncrementCounter",
 				TemplatePath: "transaction_counter.cdc.tmpl",
-				Data:         map[string]interface{}{"ContractName": "Counter"},
+				Data:         map[string]any{"ContractName": "Counter"},
 			},
 			generator.TransactionTemplate{
 				Name:         "ScheduleIncrementCounter",
@@ -257,24 +257,24 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 			generator.FileTemplate{
 				TemplatePath: "README_scheduled_transactions.md.tmpl",
 				TargetPath:   getReadmeFileName(targetDir),
-				Data: map[string]interface{}{
-					"Dependencies": (func() []map[string]interface{} {
-						contracts := []map[string]interface{}{}
+				Data: map[string]any{
+					"Dependencies": (func() []map[string]any {
+						contracts := []map[string]any{}
 						for _, dep := range *state.Dependencies() {
-							contracts = append(contracts, map[string]interface{}{
+							contracts = append(contracts, map[string]any{
 								"Name": dep.Name,
 							})
 						}
 						return contracts
 					})(),
-					"Contracts": []map[string]interface{}{
+					"Contracts": []map[string]any{
 						{"Name": "Counter"},
 						{"Name": "CounterTransactionHandler"},
 					},
-					"Scripts": []map[string]interface{}{
+					"Scripts": []map[string]any{
 						{"Name": "GetCounter"},
 					},
-					"Transactions": []map[string]interface{}{
+					"Transactions": []map[string]any{
 						{"Name": "IncrementCounter"},
 						{"Name": "ScheduleIncrementCounter"},
 						{"Name": "InitSchedulerManager"},
@@ -285,22 +285,22 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 			generator.FileTemplate{
 				TemplatePath: "cursor/agent_rules.mdc.tmpl",
 				TargetPath:   ".cursor/rules/scheduledtransactions/agent-rules.mdc",
-				Data:         map[string]interface{}{},
+				Data:         map[string]any{},
 			},
 			generator.FileTemplate{
 				TemplatePath: "cursor/flip.md.tmpl",
 				TargetPath:   ".cursor/rules/scheduledtransactions/flip.md",
-				Data:         map[string]interface{}{},
+				Data:         map[string]any{},
 			},
 			generator.FileTemplate{
 				TemplatePath: "cursor/index.md.tmpl",
 				TargetPath:   ".cursor/rules/scheduledtransactions/index.md",
-				Data:         map[string]interface{}{},
+				Data:         map[string]any{},
 			},
 			generator.FileTemplate{
 				TemplatePath: "cursor/quick_checklist.md.tmpl",
 				TargetPath:   ".cursor/rules/scheduledtransactions/quick-checklist.md",
-				Data:         map[string]interface{}{},
+				Data:         map[string]any{},
 			},
 		}
 	case ProjectTypeDeFiActions:
@@ -330,7 +330,7 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 			generator.FileTemplate{
 				TemplatePath: "README_defi_actions.md.tmpl",
 				TargetPath:   getReadmeFileName(targetDir),
-				Data:         map[string]interface{}{},
+				Data:         map[string]any{},
 			},
 		}
 	case ProjectTypeStablecoin:
@@ -403,7 +403,7 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 			generator.FileTemplate{
 				TemplatePath: "README_stablecoin.md.tmpl",
 				TargetPath:   getReadmeFileName(targetDir),
-				Data:         map[string]interface{}{},
+				Data:         map[string]any{},
 			},
 		}
 	default:
@@ -416,33 +416,33 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 			generator.ScriptTemplate{
 				Name:         "GetCounter",
 				TemplatePath: "script_counter.cdc.tmpl",
-				Data:         map[string]interface{}{"ContractName": "Counter"},
+				Data:         map[string]any{"ContractName": "Counter"},
 			},
 			generator.TransactionTemplate{
 				Name:         "IncrementCounter",
 				TemplatePath: "transaction_counter.cdc.tmpl",
-				Data:         map[string]interface{}{"ContractName": "Counter"},
+				Data:         map[string]any{"ContractName": "Counter"},
 			},
 			generator.FileTemplate{
 				TemplatePath: "README.md.tmpl",
 				TargetPath:   getReadmeFileName(targetDir),
-				Data: map[string]interface{}{
-					"Dependencies": (func() []map[string]interface{} {
-						contracts := []map[string]interface{}{}
+				Data: map[string]any{
+					"Dependencies": (func() []map[string]any {
+						contracts := []map[string]any{}
 						for _, dep := range *state.Dependencies() {
-							contracts = append(contracts, map[string]interface{}{
+							contracts = append(contracts, map[string]any{
 								"Name": dep.Name,
 							})
 						}
 						return contracts
 					})(),
-					"Contracts": []map[string]interface{}{
+					"Contracts": []map[string]any{
 						{"Name": "Counter"},
 					},
-					"Scripts": []map[string]interface{}{
+					"Scripts": []map[string]any{
 						{"Name": "GetCounter"},
 					},
-					"Transactions": []map[string]interface{}{
+					"Transactions": []map[string]any{
 						{"Name": "IncrementCounter"},
 					},
 				},

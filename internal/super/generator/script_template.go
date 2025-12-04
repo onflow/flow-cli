@@ -31,7 +31,7 @@ const (
 type ScriptTemplate struct {
 	Name         string
 	TemplatePath string
-	Data         map[string]interface{}
+	Data         map[string]any
 }
 
 var _ TemplateItem = ScriptTemplate{}
@@ -48,7 +48,7 @@ func (o ScriptTemplate) GetTemplatePath() string {
 	return o.TemplatePath
 }
 
-func (o ScriptTemplate) GetData() map[string]interface{} {
+func (o ScriptTemplate) GetData() map[string]any {
 	return o.Data
 }
 

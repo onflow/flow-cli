@@ -285,13 +285,13 @@ func checkVersion(logger output.Logger) {
 	}(resp.Body)
 
 	body, _ := io.ReadAll(resp.Body)
-	var data map[string]interface{}
+	var data map[string]any
 	err = json.Unmarshal(body, &data)
 	if err != nil {
 		return
 	}
 
-	versions, ok := data["versions"].(map[string]interface{})
+	versions, ok := data["versions"].(map[string]any)
 	if !ok {
 		return
 	}
