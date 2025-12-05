@@ -82,21 +82,20 @@ func get(
 		}
 	}
 
-	collections := make([]*flowsdk.Collection, 0)
+	var transactions []*flowsdk.Transaction
+	var results []*flowsdk.TransactionResult
 	if command.ContainsFlag(blockFlags.Include, "transactions") {
-		for _, guarantee := range block.CollectionGuarantees {
-			collection, err := flow.GetCollection(context.Background(), guarantee.CollectionID)
-			if err != nil {
-				return nil, err
-			}
-			collections = append(collections, collection)
+		transactions, results, err = flow.GetTransactionsByBlockID(context.Background(), block.ID)
+		if err != nil {
+			return nil, err
 		}
 	}
 
 	return &blockResult{
-		block:       block,
-		events:      events,
-		collections: collections,
-		included:    blockFlags.Include,
+		block:        block,
+		events:       events,
+		transactions: transactions,
+		results:      results,
+		included:     blockFlags.Include,
 	}, nil
 }
