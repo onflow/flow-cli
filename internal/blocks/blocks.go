@@ -64,7 +64,7 @@ func (r *blockResult) JSON() any {
 		collection["id"] = guarantee.CollectionID.String()
 		collections = append(collections, collection)
 	}
-	result["collections"] = collections
+	result["collection"] = collections
 
 	// Add transaction details if requested
 	if command.ContainsFlag(r.included, "transactions") && len(r.transactions) > 0 {
