@@ -74,8 +74,8 @@ github.com/atotto/clipboard v0.1.4/go.mod h1:ZY9tmq7sm5xIbd9bOK4onWV4S6X0u6GY7Vn
 github.com/aws/aws-lambda-go v1.13.3/go.mod h1:4UKl9IzQMoD+QF79YdCuzCwp8VbmG4VAQwij/eHl5CU=
 github.com/aws/aws-sdk-go v1.27.0/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
 github.com/aws/aws-sdk-go-v2 v0.18.0/go.mod h1:JWVYvqSMppoMJC0x5wdwiImzgXTI9FuZwxzkQq9wy+g=
-github.com/aws/aws-sdk-go-v2 v1.39.6 h1:2JrPCVgWJm7bm83BDwY5z8ietmeJUbh3O2ACnn+Xsqk=
-github.com/aws/aws-sdk-go-v2 v1.39.6/go.mod h1:c9pm7VwuW0UPxAEYGyTmyurVcNrbF6Rt/wixFqDhcjE=
+github.com/aws/aws-sdk-go-v2 v1.40.1 h1:difXb4maDZkRH0x//Qkwcfpdg1XQVXEAEs2DdXldFFc=
+github.com/aws/aws-sdk-go-v2 v1.40.1/go.mod h1:MayyLB8y+buD9hZqkCW3kX1AKq07Y5pXxtgB+rRFhz0=
 github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.5.1 h1:VGkV9KmhGqOQWnHyi4gLG98kE6OecT42fdrCGFWxJsc=
 github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.5.1/go.mod h1:PLlnMiki//sGnCJiW+aVpvP/C8Kcm8mEj/IVm9+9qk4=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.3 h1:x2Ibm/Af8Fi+BH+Hsn9TXGdT+hKbDd5XOTZxTMxDk7o=
@@ -86,8 +86,8 @@ github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.7.0 h1:HWsM0YQWX76V6MO
 github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.7.0/go.mod h1:LKb3cKNQIMh+itGnEpKGcnL/6OIjPZqrtYah1w5f+3o=
 github.com/aws/aws-sdk-go-v2/service/s3 v1.15.0 h1:nPLfLPfglacc29Y949sDxpr3X/blaY40s3B85WT2yZU=
 github.com/aws/aws-sdk-go-v2/service/s3 v1.15.0/go.mod h1:Iv2aJVtVSm/D22rFoX99cLG4q4uB7tppuCsulGe98k4=
-github.com/aws/smithy-go v1.23.2 h1:Crv0eatJUQhaManss33hS5r40CG3ZFH+21XSkqMrIUM=
-github.com/aws/smithy-go v1.23.2/go.mod h1:LEj2LM3rBRQJxPZTB4KuzZkaZYnZPnvgIhb4pu07mx0=
+github.com/aws/smithy-go v1.24.0 h1:LpilSUItNPFr1eY85RYgTIg5eIEPtvFbskaFcmmIUnk=
+github.com/aws/smithy-go v1.24.0/go.mod h1:LEj2LM3rBRQJxPZTB4KuzZkaZYnZPnvgIhb4pu07mx0=
 github.com/aymanbagabas/go-osc52/v2 v2.0.1 h1:HwpRHbFMcZLEVr42D4p7XBqjyuxQH5SMiErDT4WkJ2k=
 github.com/aymanbagabas/go-osc52/v2 v2.0.1/go.mod h1:uYgXzlJ7ZpABp8OJ+exZzJJhRNQ2ASbcXHWsFqH8hp8=
 github.com/aymanbagabas/go-udiff v0.2.0 h1:TK0fH4MteXUDspT88n8CKzvK0X9O2xu9yQjWpi6yML8=
@@ -774,8 +774,8 @@ github.com/olekukonko/tablewriter v0.0.5 h1:P2Ga83D34wi1o9J6Wh1mRuqd4mF/x/lgBS7N
 github.com/olekukonko/tablewriter v0.0.5/go.mod h1:hPp6KlRPjbx+hW8ykQs1w3UBbZlj6HuIJcUGPhkA7kY=
 github.com/onflow/atree v0.12.0 h1:X7/UEPyCaaEQ1gCg11KDvfyEtEeQLhtRtxMHjAiH/Co=
 github.com/onflow/atree v0.12.0/go.mod h1:qdZcfLQwPirHcNpLiK+2t3KAo+SAb9Si6TqurE6pykE=
-github.com/onflow/cadence v1.8.7 h1:IT7JakavthjKfTHuZFakJmpXbPoc8oYB4W+1iUMakLo=
-github.com/onflow/cadence v1.8.7/go.mod h1:MlJsCwhCZwdnAUd24XHzcsizZfG7a2leab1PztabUsE=
+github.com/onflow/cadence v1.9.1 h1:z78U90Vt+5aBb4MlFk3mQWNi/5fYcUYtXSB/NBNfMKo=
+github.com/onflow/cadence v1.9.1/go.mod h1:MlJsCwhCZwdnAUd24XHzcsizZfG7a2leab1PztabUsE=
 github.com/onflow/cadence-tools/languageserver v1.7.4 h1:Av3UjFqFiHFhUg1gh4rS/MzBJsB3tbGNZyN+7EfwECU=
 github.com/onflow/cadence-tools/languageserver v1.7.4/go.mod h1:Hika8i7lboU8Gsr/odk6XQQa1tTOjZiUiuZO5f7BU7o=
 github.com/onflow/cadence-tools/lint v1.6.4 h1:2hXCu9+VAOaY4uF1rJkwAqNQMp5ERzW5IdwpNttSGoY=
@@ -806,8 +806,8 @@ github.com/onflow/flow-ft/lib/go/templates v1.0.1 h1:FDYKAiGowABtoMNusLuRCILIZDt
 github.com/onflow/flow-ft/lib/go/templates v1.0.1/go.mod h1:uQ8XFqmMK2jxyBSVrmyuwdWjTEb+6zGjRYotfDJ5pAE=
 github.com/onflow/flow-go v0.45.0-experimental-cadence-v1.8.7-vm-test.1 h1:Cc74zaCdR/C0VNLGGG5xA9ihjPzS3U63nN6rbXcArYE=
 github.com/onflow/flow-go v0.45.0-experimental-cadence-v1.8.7-vm-test.1/go.mod h1:Z6LWegWa2EoBxWCxJwld14liy5Nmx/z+T/Bd77582l4=
-github.com/onflow/flow-go-sdk v1.9.6 h1:f/nUBXcOzZawlsZOr+CVF40nPCgGDPvedbWAZYyP1x4=
-github.com/onflow/flow-go-sdk v1.9.6/go.mod h1:rtEMxTK7u1bwlynGJ5UoOXDLfd5b1VFnbYVbdOUCscQ=
+github.com/onflow/flow-go-sdk v1.9.7 h1:eUDfXeIEghEe/cYCviGMnjD00kJm5SmIbtb+Q3xss6s=
+github.com/onflow/flow-go-sdk v1.9.7/go.mod h1:027+x42RUqfraz9ojUKF0riHa/jm1bTdkjuTvYnZQ8c=
 github.com/onflow/flow-nft/lib/go/contracts v1.3.0 h1:DmNop+O0EMyicZvhgdWboFG57xz5t9Qp81FKlfKyqJc=
 github.com/onflow/flow-nft/lib/go/contracts v1.3.0/go.mod h1:eZ9VMMNfCq0ho6kV25xJn1kXeCfxnkhj3MwF3ed08gY=
 github.com/onflow/flow-nft/lib/go/templates v1.3.0 h1:uGIBy4GEY6Z9hKP7sm5nA5kwvbvLWW4nWx5NN9Wg0II=
