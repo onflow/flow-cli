@@ -43,7 +43,7 @@ var DevCommand = &command.Command{
 		Args:       cobra.ExactArgs(0),
 		Example:    "flow dev",
 		GroupID:    "super",
-		Deprecated: "The 'dev' command is deprecated and will be removed in a future release.",
+		Deprecated: "The 'dev' command is being deprecated. We recommend forking as a replacement. See: http://developers.flow.com/blockchain-development-tutorials/cadence/emulator-fork-testing",
 	},
 	Flags: &devFlags,
 	RunS:  dev,
