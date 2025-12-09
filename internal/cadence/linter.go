@@ -196,10 +196,17 @@ func (l *linter) handleImport(
 			Elaboration: helpersChecker.Elaboration,
 		}, nil
 	default:
+		// Normalize relative path imports to absolute paths
+		if l.isPathLocation(importedLocation) {
+			importedLocation = l.normalizePathLocation(checker.Location, importedLocation)
+		}
+
 		filepath, err := l.resolveImportFilepath(importedLocation, checker.Location)
 		if err != nil {
 			return nil, err
 		}
+
+		fileLocation := common.StringLocation(filepath)
 
 		importedChecker, ok := l.checkers[filepath]
 		if !ok {
@@ -219,7 +226,7 @@ func (l *linter) handleImport(
 				}
 			}
 
-			importedChecker, err = checker.SubChecker(importedProgram, importedLocation)
+			importedChecker, err = checker.SubChecker(importedProgram, fileLocation)
 			if err != nil {
 				return nil, err
 			}
@@ -237,6 +244,37 @@ func (l *linter) handleImport(
 	}
 }
 
+// isPathLocation returns true if the location is a file path (contains .cdc)
+func (l *linter) isPathLocation(location common.Location) bool {
+	stringLocation, ok := location.(common.StringLocation)
+	if !ok {
+		return false
+	}
+	return strings.Contains(stringLocation.String(), ".cdc")
+}
+
+// normalizePathLocation normalizes a relative path import against a base location
+func (l *linter) normalizePathLocation(base, relative common.Location) common.Location {
+	baseString, baseOk := base.(common.StringLocation)
+	relativeString, relativeOk := relative.(common.StringLocation)
+
+	if !baseOk || !relativeOk {
+		return relative
+	}
+
+	basePath := baseString.String()
+	relativePath := relativeString.String()
+
+	// If the relative path is absolute, return it as-is
+	if filepath.IsAbs(relativePath) {
+		return relative
+	}
+
+	// Join relative to the parent directory of the base
+	normalizedPath := filepath.Join(filepath.Dir(basePath), relativePath)
+	return common.StringLocation(normalizedPath)
+}
+
 func (l *linter) resolveImportFilepath(
 	location common.Location,
 	parentLocation common.Location,
@@ -246,7 +284,7 @@ func (l *linter) resolveImportFilepath(
 ) {
 	switch location := location.(type) {
 	case common.StringLocation:
-		// If the location is not a cadence file try getting the code by identifier
+		// Resolve by contract name from flowkit config
 		if !strings.Contains(location.String(), ".cdc") {
 			contract, err := l.state.Contracts().ByName(location.String())
 			if err != nil {
@@ -256,14 +294,7 @@ func (l *linter) resolveImportFilepath(
 			return contract.Location, nil
 		}
 
-		// If the location is a cadence file, resolve relative to the parent location
-		parentPath := ""
-		if parentLocation != nil {
-			parentPath = parentLocation.String()
-		}
-
-		resolvedPath := filepath.Join(filepath.Dir(parentPath), location.String())
-		return resolvedPath, nil
+		return location.String(), nil
 	default:
 		return "", fmt.Errorf("unsupported location: %T", location)
 	}
