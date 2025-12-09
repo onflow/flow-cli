@@ -75,6 +75,13 @@ func InitializeConfiguration(params InitConfigParameters, readerWriter flowkit.R
 		return nil, err
 	}
 
+	// Add mainnet-fork network by default
+	state.Networks().AddOrUpdate(config.Network{
+		Name: "mainnet-fork",
+		Host: "127.0.0.1:3569",
+		Fork: "mainnet",
+	})
+
 	emulatorAccount, err := accounts.NewEmulatorAccount(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256, params.TargetDirectory)
 	if err != nil {
 		return nil, err
