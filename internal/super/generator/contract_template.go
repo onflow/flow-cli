@@ -41,7 +41,7 @@ type ContractTemplate struct {
 	FileName     string // Optional: If set, use this for the file name instead of Name
 	Account      string
 	TemplatePath string
-	Data         map[string]interface{}
+	Data         map[string]any
 	SkipTests    bool
 	AddTestAlias bool
 	Aliases      config.Aliases // Optional: Custom aliases for the contract
@@ -64,8 +64,8 @@ func (c ContractTemplate) GetTemplatePath() string {
 	return c.TemplatePath
 }
 
-func (c ContractTemplate) GetData() map[string]interface{} {
-	data := map[string]interface{}{
+func (c ContractTemplate) GetData() map[string]any {
+	data := map[string]any{
 		"Name": c.Name,
 	}
 	maps.Copy(data, c.Data)
@@ -120,7 +120,7 @@ func (c ContractTemplate) GetChildren() []TemplateItem {
 		TestTemplate{
 			Name:         c.Name,
 			TemplatePath: "contract_init_test.cdc.tmpl",
-			Data: map[string]interface{}{
+			Data: map[string]any{
 				"ContractName": c.Name,
 			},
 		},
