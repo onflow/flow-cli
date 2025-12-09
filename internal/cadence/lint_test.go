@@ -308,6 +308,28 @@ func Test_Lint(t *testing.T) {
 			results,
 		)
 	})
+
+	t.Run("resolves nested imports when contract imported by name", func(t *testing.T) {
+		t.Parallel()
+
+		state := setupMockState(t)
+
+		results, err := lintFiles(state, "TransactionImportingContractWithNestedImports.cdc")
+		require.NoError(t, err)
+
+		require.Equal(t,
+			&lintResult{
+				Results: []fileResult{
+					{
+						FilePath:    "TransactionImportingContractWithNestedImports.cdc",
+						Diagnostics: []analysis.Diagnostic{},
+					},
+				},
+				exitCode: 0,
+			},
+			results,
+		)
+	})
 }
 
 func setupMockState(t *testing.T) *flowkit.State {
@@ -380,6 +402,42 @@ func setupMockState(t *testing.T) *flowkit.State {
 		log(RLP.getType())
 	}`), 0644)
 
+	// Regression test files for nested import bug
+	_ = afero.WriteFile(mockFs, "Helper.cdc", []byte(`
+	access(all) contract Helper {
+		access(all) let name: String
+		
+		init() {
+			self.name = "Helper"
+		}
+		
+		access(all) fun greet(): String {
+			return "Hello from ".concat(self.name)
+		}
+	}
+	`), 0644)
+
+	_ = afero.WriteFile(mockFs, "ContractWithNestedImports.cdc", []byte(`
+	import Helper from "./Helper.cdc"
+	
+	access(all) contract ContractWithNestedImports {
+		access(all) fun test(): String {
+			return Helper.greet()
+		}
+		init() {}
+	}
+	`), 0644)
+
+	_ = afero.WriteFile(mockFs, "TransactionImportingContractWithNestedImports.cdc", []byte(`
+	import ContractWithNestedImports from "ContractWithNestedImports"
+	
+	transaction() {
+		prepare(signer: auth(Storage) &Account) {
+			log(ContractWithNestedImports.test())
+		}
+	}
+	`), 0644)
+
 	rw := afero.Afero{Fs: mockFs}
 	state, err := flowkit.Init(rw)
 	require.NoError(t, err)
@@ -388,6 +446,14 @@ func setupMockState(t *testing.T) *flowkit.State {
 	state.Contracts().AddOrUpdate(config.Contract{
 		Name:     "NoError",
 		Location: "NoError.cdc",
+	})
+	state.Contracts().AddOrUpdate(config.Contract{
+		Name:     "Helper",
+		Location: "Helper.cdc",
+	})
+	state.Contracts().AddOrUpdate(config.Contract{
+		Name:     "ContractWithNestedImports",
+		Location: "ContractWithNestedImports.cdc",
 	})
 
 	return state

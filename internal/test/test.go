@@ -453,7 +453,7 @@ func importResolver(scriptPath string, state *flowkit.State) cdcTests.ImportReso
 			relativePath := location.String()
 
 			if strings.Contains(relativePath, helperScriptSubstr) {
-				importedScriptFilePath := absolutePath(scriptPath, relativePath)
+				importedScriptFilePath := util.AbsolutePath(scriptPath, relativePath)
 				scriptCode, err := state.ReadFile(importedScriptFilePath)
 				if err != nil {
 					return "", nil
@@ -482,7 +482,7 @@ func importResolver(scriptPath string, state *flowkit.State) cdcTests.ImportReso
 
 func fileResolver(scriptPath string, state *flowkit.State) cdcTests.FileResolver {
 	return func(path string) (string, error) {
-		importFilePath := absolutePath(scriptPath, path)
+		importFilePath := util.AbsolutePath(scriptPath, path)
 
 		content, err := state.ReadFile(importFilePath)
 		if err != nil {
@@ -491,14 +491,6 @@ func fileResolver(scriptPath string, state *flowkit.State) cdcTests.FileResolver
 
 		return string(content), nil
 	}
-}
-
-func absolutePath(basePath, filePath string) string {
-	if filepath.IsAbs(filePath) {
-		return filePath
-	}
-
-	return filepath.Join(filepath.Dir(basePath), filePath)
 }
 
 type result struct {
