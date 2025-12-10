@@ -147,9 +147,8 @@ func (r *transactionResult) String() string {
 		if r.result.Status == flow.TransactionStatusSealed {
 			statusBadge = output.OkEmoji()
 			statusText = branding.GreenStyle.Render(statusText)
-		} else {
-			statusText = statusText // leave uncolored for non-sealed statuses
 		}
+		// leave uncolored for non-sealed statuses
 		_, _ = fmt.Fprintf(writer, "%s\t%s %s\n", branding.GrayStyle.Render("Status"), statusBadge, statusText)
 	}
 
