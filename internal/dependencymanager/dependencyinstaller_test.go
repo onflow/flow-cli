@@ -675,3 +675,178 @@ func TestDependencyFlagsIntegration(t *testing.T) {
 		assert.Nil(t, mainnetDeployment, "Should not create deployment on mainnet")
 	})
 }
+
+func TestAliasedImportHandling(t *testing.T) {
+	logger := output.NewStdoutLogger(output.NoneLog)
+	_, state, _ := util.TestMocks(t)
+
+	gw := mocks.DefaultMockGateway()
+
+	barAddr := flow.HexToAddress("0x0c")     // testnet address hosting Bar
+	fooTestAddr := flow.HexToAddress("0x0b") // testnet Foo address
+
+	t.Run("AliasedImportCreatesCanonicalMapping", func(t *testing.T) {
+		// Testnet GetAccount returns Bar at barAddr and Foo at fooTestAddr
+		gw.GetAccount.Run(func(args mock.Arguments) {
+			addr := args.Get(1).(flow.Address)
+			switch addr.String() {
+			case barAddr.String():
+				acc := tests.NewAccountWithAddress(addr.String())
+				// Bar imports Foo with an alias: import Foo as FooAlias from 0x0b
+				acc.Contracts = map[string][]byte{
+					"Bar": []byte("import Foo as FooAlias from 0x0b\naccess(all) contract Bar {}"),
+				}
+				gw.GetAccount.Return(acc, nil)
+			case fooTestAddr.String():
+				acc := tests.NewAccountWithAddress(addr.String())
+				acc.Contracts = map[string][]byte{
+					"Foo": []byte("access(all) contract Foo {}"),
+				}
+				gw.GetAccount.Return(acc, nil)
+			default:
+				gw.GetAccount.Return(nil, fmt.Errorf("not found"))
+			}
+		})
+
+		di := &DependencyInstaller{
+			Gateways: map[string]gateway.Gateway{
+				config.EmulatorNetwork.Name: gw.Mock,
+				config.TestnetNetwork.Name:  gw.Mock,
+				config.MainnetNetwork.Name:  gw.Mock,
+			},
+			Logger:          logger,
+			State:           state,
+			SaveState:       true,
+			TargetDir:       "",
+			SkipDeployments: true,
+			SkipAlias:       true,
+			dependencies:    make(map[string]config.Dependency),
+		}
+
+		err := di.AddBySourceString(fmt.Sprintf("%s://%s.%s", config.TestnetNetwork.Name, barAddr.String(), "Bar"))
+		assert.NoError(t, err)
+
+		barDep := state.Dependencies().ByName("Bar")
+		assert.NotNil(t, barDep, "Bar dependency should exist")
+
+		fooAliasDep := state.Dependencies().ByName("FooAlias")
+		assert.NotNil(t, fooAliasDep, "FooAlias dependency should exist")
+		assert.Equal(t, "Foo", fooAliasDep.Source.ContractName, "Source ContractName should be the actual contract name (Foo)")
+
+		fooAliasContract, err := state.Contracts().ByName("FooAlias")
+		assert.NoError(t, err, "FooAlias contract should exist")
+		assert.Equal(t, "Foo", fooAliasContract.Canonical, "Canonical should be set to Foo")
+
+		filePath := fmt.Sprintf("imports/%s/Foo.cdc", fooTestAddr.String())
+		fileContent, err := state.ReaderWriter().ReadFile(filePath)
+		assert.NoError(t, err, "Contract file should exist at imports/address/Foo.cdc")
+		assert.NotNil(t, fileContent)
+	})
+}
+
+func TestDependencyInstallerWithAlias(t *testing.T) {
+	logger := output.NewStdoutLogger(output.NoneLog)
+	_, state, _ := util.TestMocks(t)
+
+	serviceAcc, _ := state.EmulatorServiceAccount()
+	serviceAddress := serviceAcc.Address
+
+	t.Run("AddBySourceStringWithName", func(t *testing.T) {
+		gw := mocks.DefaultMockGateway()
+
+		gw.GetAccount.Run(func(args mock.Arguments) {
+			addr := args.Get(1).(flow.Address)
+			assert.Equal(t, addr.String(), serviceAddress.String())
+			acc := tests.NewAccountWithAddress(addr.String())
+			acc.Contracts = map[string][]byte{
+				"NumberFormatter": []byte("access(all) contract NumberFormatter {}"),
+			}
+			gw.GetAccount.Return(acc, nil)
+		})
+
+		di := &DependencyInstaller{
+			Gateways: map[string]gateway.Gateway{
+				config.EmulatorNetwork.Name: gw.Mock,
+			},
+			Logger:          logger,
+			State:           state,
+			SaveState:       true,
+			TargetDir:       "",
+			SkipDeployments: true,
+			SkipAlias:       true,
+			Name:            "NumberFormatterCustom",
+			dependencies:    make(map[string]config.Dependency),
+		}
+
+		err := di.AddBySourceString(fmt.Sprintf("%s://%s.%s", config.EmulatorNetwork.Name, serviceAddress.String(), "NumberFormatter"))
+		assert.NoError(t, err, "Failed to add dependency with import alias")
+
+		// Check that the dependency was added with the import alias name
+		dep := state.Dependencies().ByName("NumberFormatterCustom")
+		assert.NotNil(t, dep, "Dependency should exist with import alias name")
+		assert.Equal(t, "NumberFormatter", dep.Source.ContractName, "Source ContractName should be the actual contract name")
+		assert.Equal(t, "NumberFormatter", dep.Canonical, "Canonical should be set to the actual contract name for import aliasing")
+
+		// Check that the contract was added with canonical field for Cadence import aliasing
+		contract, err := state.Contracts().ByName("NumberFormatterCustom")
+		assert.NoError(t, err, "Contract should exist")
+		assert.Equal(t, "NumberFormatter", contract.Canonical, "Contract Canonical should be set for import aliasing")
+
+		// Check that the file was created with the actual contract name
+		filePath := fmt.Sprintf("imports/%s/NumberFormatter.cdc", serviceAddress.String())
+		fileContent, err := state.ReaderWriter().ReadFile(filePath)
+		assert.NoError(t, err, "Contract file should exist at imports/address/NumberFormatter.cdc")
+		assert.NotNil(t, fileContent)
+	})
+
+	t.Run("AddByCoreContractNameWithName", func(t *testing.T) {
+		// Mock the gateway to return FlowToken contract
+		gw := mocks.DefaultMockGateway()
+		gw.GetAccount.Run(func(args mock.Arguments) {
+			addr := args.Get(1).(flow.Address)
+			acc := tests.NewAccountWithAddress(addr.String())
+			acc.Contracts = map[string][]byte{
+				"FlowToken": []byte("access(all) contract FlowToken {}"),
+			}
+			gw.GetAccount.Return(acc, nil)
+		})
+
+		di := &DependencyInstaller{
+			Gateways: map[string]gateway.Gateway{
+				config.MainnetNetwork.Name: gw.Mock,
+			},
+			Logger:          logger,
+			State:           state,
+			SaveState:       true,
+			TargetDir:       "",
+			SkipDeployments: true,
+			SkipAlias:       true,
+			Name:            "FlowTokenCustom",
+			dependencies:    make(map[string]config.Dependency),
+		}
+
+		err := di.AddByCoreContractName("FlowToken")
+		assert.NoError(t, err, "Failed to add core contract with import alias")
+
+		// Check that the dependency was added with the import alias name
+		dep := state.Dependencies().ByName("FlowTokenCustom")
+		assert.NotNil(t, dep, "Dependency should exist with import alias name")
+		assert.Equal(t, "FlowToken", dep.Source.ContractName, "Source ContractName should be FlowToken")
+		assert.Equal(t, "FlowToken", dep.Canonical, "Canonical should be set to FlowToken for import aliasing")
+	})
+
+	t.Run("AddAllByNetworkAddressWithNameError", func(t *testing.T) {
+		// This test doesn't need gateways since it returns an error before making any gateway calls
+		di := &DependencyInstaller{
+			Logger:    logger,
+			State:     state,
+			SaveState: true,
+			TargetDir: "",
+			Name:      "SomeName",
+		}
+
+		err := di.AddAllByNetworkAddress(fmt.Sprintf("%s://%s", config.EmulatorNetwork.Name, serviceAddress.String()))
+		assert.Error(t, err, "Should error when using --name with network://address format")
+		assert.Contains(t, err.Error(), "--name flag is not supported when installing all contracts", "Error message should mention name flag limitation")
+	})
+}

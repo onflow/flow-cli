@@ -21,7 +21,6 @@ package cadence
 import (
 	"errors"
 	"fmt"
-	"path/filepath"
 	"strings"
 
 	"github.com/onflow/flow-cli/internal/util"
@@ -196,10 +195,17 @@ func (l *linter) handleImport(
 			Elaboration: helpersChecker.Elaboration,
 		}, nil
 	default:
+		// Normalize relative path imports to absolute paths
+		if util.IsPathLocation(importedLocation) {
+			importedLocation = util.NormalizePathLocation(checker.Location, importedLocation)
+		}
+
 		filepath, err := l.resolveImportFilepath(importedLocation, checker.Location)
 		if err != nil {
 			return nil, err
 		}
+
+		fileLocation := common.StringLocation(filepath)
 
 		importedChecker, ok := l.checkers[filepath]
 		if !ok {
@@ -219,7 +225,7 @@ func (l *linter) handleImport(
 				}
 			}
 
-			importedChecker, err = checker.SubChecker(importedProgram, importedLocation)
+			importedChecker, err = checker.SubChecker(importedProgram, fileLocation)
 			if err != nil {
 				return nil, err
 			}
@@ -246,7 +252,7 @@ func (l *linter) resolveImportFilepath(
 ) {
 	switch location := location.(type) {
 	case common.StringLocation:
-		// If the location is not a cadence file try getting the code by identifier
+		// Resolve by contract name from flowkit config
 		if !strings.Contains(location.String(), ".cdc") {
 			contract, err := l.state.Contracts().ByName(location.String())
 			if err != nil {
@@ -256,14 +262,7 @@ func (l *linter) resolveImportFilepath(
 			return contract.Location, nil
 		}
 
-		// If the location is a cadence file, resolve relative to the parent location
-		parentPath := ""
-		if parentLocation != nil {
-			parentPath = parentLocation.String()
-		}
-
-		resolvedPath := filepath.Join(filepath.Dir(parentPath), location.String())
-		return resolvedPath, nil
+		return location.String(), nil
 	default:
 		return "", fmt.Errorf("unsupported location: %T", location)
 	}

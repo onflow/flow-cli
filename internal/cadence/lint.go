@@ -20,6 +20,8 @@ package cadence
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"golang.org/x/exp/slices"
@@ -53,10 +55,14 @@ var lintFlags = lintFlagsCollection{}
 
 var lintCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "lint [files]",
-		Short:   "Lint Cadence code to identify potential issues or errors",
-		Example: "flow cadence lint **/*.cdc",
-		Args:    cobra.MinimumNArgs(1),
+		Use:   "lint [files...]",
+		Short: "Lint Cadence code to identify potential issues or errors",
+		Example: `# Lint all .cdc files in the project
+flow cadence lint
+
+# Lint specific files
+flow cadence lint file1.cdc file2.cdc`,
+		Args: cobra.ArbitraryArgs,
 	},
 	Flags: &lintFlags,
 	RunS:  lint,
@@ -76,7 +82,20 @@ func lint(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	filePaths := args
+	var filePaths []string
+	if len(args) == 0 {
+		var err error
+		filePaths, err = findAllCadenceFiles(".")
+		if err != nil {
+			return nil, fmt.Errorf("error finding Cadence files: %w", err)
+		}
+		if len(filePaths) == 0 {
+			return nil, fmt.Errorf("no .cdc files found in the project")
+		}
+	} else {
+		filePaths = args
+	}
+
 	result, err := lintFiles(state, filePaths...)
 	if err != nil {
 		return nil, err
@@ -219,7 +238,7 @@ func (r *lintResult) String() string {
 	return sb.String()
 }
 
-func (r *lintResult) JSON() interface{} {
+func (r *lintResult) JSON() any {
 	return r
 }
 
@@ -235,4 +254,25 @@ func (r *lintResult) Oneliner() string {
 
 func (r *lintResult) ExitCode() int {
 	return r.exitCode
+}
+
+func findAllCadenceFiles(baseDir string) ([]string, error) {
+	var filenames []string
+	err := filepath.Walk(baseDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if !strings.HasSuffix(path, ".cdc") {
+			return nil
+		}
+
+		filenames = append(filenames, path)
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return filenames, nil
 }

@@ -211,7 +211,7 @@ func TestExecutingTests(t *testing.T) {
 		assert.ErrorContains(
 			t,
 			err,
-			"could not find the address of contract: Hello",
+			"could not resolve address of contract Hello",
 		)
 	})
 
@@ -376,7 +376,7 @@ func TestExecutingTests(t *testing.T) {
 			coverageReport.ExcludedLocationIDs(),
 		)
 
-		expected := "Coverage: 93.9% of statements"
+		expected := "Coverage: 90.4% of statements"
 
 		assert.Equal(
 			t,
@@ -712,8 +712,8 @@ Seed: 1521
 		assert.Len(t, result.Results, 2)
 		assert.NoError(t, result.Results[scriptPassing.Filename][0].Error)
 		assert.Error(t, result.Results[scriptFailing.Filename][0].Error)
-		var assertionErr *stdlib.AssertionError
-		assert.ErrorAs(t, result.Results[scriptFailing.Filename][0].Error, &assertionErr)
+		var assertionErr2 *stdlib.AssertionError
+		assert.ErrorAs(t, result.Results[scriptFailing.Filename][0].Error, &assertionErr2)
 
 		assert.Contains(
 			t,
@@ -754,4 +754,149 @@ Seed: 1521
 			result.Oneliner(),
 		)
 	})
+}
+
+func TestForkMode_UsesMainnetAliases(t *testing.T) {
+	t.Parallel()
+
+	_, state, _ := util.TestMocks(t)
+
+	// Use a real mainnet address (FlowToken system contract)
+	// This verifies fork mode correctly resolves mainnet aliases
+	mainnetAliases := config.Aliases{{
+		Network: "mainnet",
+		Address: flowsdk.HexToAddress("0x1654653399040a61"), // FlowToken on mainnet
+	}}
+
+	// Create a simple test contract to deploy
+	testContractSource := []byte(`
+		access(all) contract TestContract {
+			access(all) var value: Int
+			init() { self.value = 42 }
+			access(all) fun getValue(): Int { return self.value }
+		}
+	`)
+	_ = state.ReaderWriter().WriteFile("TestContract.cdc", testContractSource, 0644)
+
+	c := config.Contract{
+		Name:     "TestContract",
+		Location: "TestContract.cdc",
+		Aliases:  mainnetAliases,
+	}
+	state.Contracts().AddOrUpdate(c)
+
+	// Test script that deploys and uses the contract
+	testScript := []byte(`
+		import Test
+
+		access(all) fun testDeployAndUse() {
+			let err = Test.deployContract(
+				name: "TestContract",
+				path: "TestContract.cdc",
+				arguments: []
+			)
+			Test.expect(err, Test.beNil())
+			
+			// Verify the contract deployed and works
+			let script = "import TestContract from 0x1654653399040a61\naccess(all) fun main(): Int { return TestContract.getValue() }"
+			let result = Test.executeScript(script, [])
+			Test.expect(result, Test.beSucceeded())
+			Test.assertEqual(42, result.returnValue! as! Int)
+		}
+	`)
+
+	testFiles := map[string][]byte{
+		"test_mainnet_fork.cdc": testScript,
+	}
+
+	flags := flagsTests{
+		ForkHost: "access.mainnet.nodes.onflow.org:9000",
+		Fork:     "mainnet",
+	}
+
+	result, err := testCode(testFiles, state, flags)
+
+	require.NoError(t, err)
+	require.Len(t, result.Results, 1)
+	assert.NoError(t, result.Results["test_mainnet_fork.cdc"][0].Error)
+}
+
+func TestForkMode_UsesTestnetAliasesExplicit(t *testing.T) {
+	t.Parallel()
+
+	_, state, _ := util.TestMocks(t)
+
+	// Use a real testnet address (FlowToken system contract testnet address)
+	// This verifies fork mode correctly resolves testnet aliases
+	testnetAliases := config.Aliases{{
+		Network: "testnet",
+		Address: flowsdk.HexToAddress("0x7e60df042a9c0868"), // FlowToken on testnet
+	}}
+
+	// Create a simple test contract to deploy
+	testContractSource := []byte(`
+		access(all) contract TestContract {
+			access(all) var value: String
+			init() { self.value = "testnet" }
+			access(all) fun getValue(): String { return self.value }
+		}
+	`)
+	_ = state.ReaderWriter().WriteFile("TestContract.cdc", testContractSource, 0644)
+
+	c := config.Contract{
+		Name:     "TestContract",
+		Location: "TestContract.cdc",
+		Aliases:  testnetAliases,
+	}
+	state.Contracts().AddOrUpdate(c)
+
+	// Test script that deploys and uses the contract
+	testScript := []byte(`
+		import Test
+
+		access(all) fun testDeployAndUse() {
+			let err = Test.deployContract(
+				name: "TestContract",
+				path: "TestContract.cdc",
+				arguments: []
+			)
+			Test.expect(err, Test.beNil())
+			
+			// Verify the contract deployed and works
+			let script = "import TestContract from 0x7e60df042a9c0868\naccess(all) fun main(): String { return TestContract.getValue() }"
+			let result = Test.executeScript(script, [])
+			Test.expect(result, Test.beSucceeded())
+			Test.assertEqual("testnet", result.returnValue! as! String)
+		}
+	`)
+
+	testFiles := map[string][]byte{
+		"test_testnet_fork.cdc": testScript,
+	}
+
+	flags := flagsTests{
+		ForkHost: "access.testnet.nodes.onflow.org:9000",
+		Fork:     "testnet",
+	}
+
+	result, err := testCode(testFiles, state, flags)
+
+	require.NoError(t, err)
+	require.Len(t, result.Results, 1)
+	assert.NoError(t, result.Results["test_testnet_fork.cdc"][0].Error)
+}
+
+func TestForkMode_AutodetectFailureRequiresExplicitNetwork(t *testing.T) {
+	t.Parallel()
+
+	_, state, _ := util.TestMocks(t)
+
+	// No network hints in URL; expect early error
+	flags := flagsTests{
+		ForkHost: "rpc.foobar.org:9000",
+	}
+
+	_, err := testCode(map[string][]byte{}, state, flags)
+	require.Error(t, err)
+	assert.ErrorContains(t, err, "failed to get chain ID from fork host")
 }

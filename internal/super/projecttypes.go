@@ -124,73 +124,72 @@ func getProjectTypeConfigs() map[ProjectType]*ProjectTypeConfig {
 			CoreContracts: []string{"FungibleToken", "FlowToken"},
 			CustomDependencies: []flowkitConfig.Dependency{
 				{
-					Name: "DeFiActionsMathUtils",
-					Source: flowkitConfig.Source{
-						NetworkName:  flowkitConfig.MainnetNetwork.Name,
-						Address:      flowsdk.HexToAddress("92195d814edf9cb0"),
-						ContractName: "DeFiActionsMathUtils",
-					},
-					Aliases: flowkitConfig.Aliases{
-						{
-							Network: "mainnet",
-							Address: flowsdk.HexToAddress("92195d814edf9cb0"),
-						},
-						{
-							Network: "testnet",
-							Address: flowsdk.HexToAddress("4c2ff9dd03ab442f"),
-						},
-						{
-							Network: "testing",
-							Address: flowsdk.HexToAddress("0000000000000006"),
-						},
-					},
-				},
-				{
 					Name: "DeFiActionsUtils",
 					Source: flowkitConfig.Source{
 						NetworkName:  flowkitConfig.MainnetNetwork.Name,
-						Address:      flowsdk.HexToAddress("92195d814edf9cb0"),
+						Address:      flowsdk.HexToAddress("6d888f175c158410"),
 						ContractName: "DeFiActionsUtils",
 					},
 					Aliases: flowkitConfig.Aliases{
-						{
-							Network: "mainnet",
-							Address: flowsdk.HexToAddress("92195d814edf9cb0"),
-						},
-						{
-							Network: "testnet",
-							Address: flowsdk.HexToAddress("4c2ff9dd03ab442f"),
-						},
-						{
-							Network: "testing",
-							Address: flowsdk.HexToAddress("0000000000000006"),
-						},
+						{Network: "mainnet", Address: flowsdk.HexToAddress("6d888f175c158410")},
+						{Network: "testnet", Address: flowsdk.HexToAddress("0b11b1848a8aa2c0")},
+						{Network: "testing", Address: flowsdk.HexToAddress("0000000000000007")},
 					},
 				},
 				{
 					Name: "DeFiActions",
 					Source: flowkitConfig.Source{
 						NetworkName:  flowkitConfig.MainnetNetwork.Name,
-						Address:      flowsdk.HexToAddress("92195d814edf9cb0"),
+						Address:      flowsdk.HexToAddress("6d888f175c158410"),
 						ContractName: "DeFiActions",
 					},
 					Aliases: flowkitConfig.Aliases{
-						{
-							Network: "mainnet",
-							Address: flowsdk.HexToAddress("92195d814edf9cb0"),
-						},
-						{
-							Network: "testnet",
-							Address: flowsdk.HexToAddress("4c2ff9dd03ab442f"),
-						},
-						{
-							Network: "testing",
-							Address: flowsdk.HexToAddress("0000000000000006"),
-						},
+						{Network: "mainnet", Address: flowsdk.HexToAddress("6d888f175c158410")},
+						{Network: "testnet", Address: flowsdk.HexToAddress("0b11b1848a8aa2c0")},
+						{Network: "testing", Address: flowsdk.HexToAddress("0000000000000007")},
+					},
+				},
+				{
+					Name: "stFlowToken",
+					Source: flowkitConfig.Source{
+						NetworkName:  flowkitConfig.MainnetNetwork.Name,
+						Address:      flowsdk.HexToAddress("d6f80565193ad727"),
+						ContractName: "stFlowToken",
+					},
+					Aliases: flowkitConfig.Aliases{
+						{Network: "mainnet", Address: flowsdk.HexToAddress("d6f80565193ad727")},
+						{Network: "testnet", Address: flowsdk.HexToAddress("7c11edb826692404")},
+						{Network: "testing", Address: flowsdk.HexToAddress("0000000000000008")},
+					},
+				},
+				{
+					Name: "SwapConfig",
+					Source: flowkitConfig.Source{
+						NetworkName:  flowkitConfig.MainnetNetwork.Name,
+						Address:      flowsdk.HexToAddress("b78ef7afa52ff906"),
+						ContractName: "SwapConfig",
+					},
+					Aliases: flowkitConfig.Aliases{
+						{Network: "mainnet", Address: flowsdk.HexToAddress("b78ef7afa52ff906")},
+						{Network: "testnet", Address: flowsdk.HexToAddress("b063c16cac85dbd1")},
+						{Network: "testing", Address: flowsdk.HexToAddress("0000000000000009")},
+					},
+				},
+				{
+					Name: "IncrementFiSwapConnectors",
+					Source: flowkitConfig.Source{
+						NetworkName:  flowkitConfig.MainnetNetwork.Name,
+						Address:      flowsdk.HexToAddress("e844c7cf7430a77c"),
+						ContractName: "IncrementFiSwapConnectors",
+					},
+					Aliases: flowkitConfig.Aliases{
+						{Network: "mainnet", Address: flowsdk.HexToAddress("e844c7cf7430a77c")},
+						{Network: "testnet", Address: flowsdk.HexToAddress("494536c102537e1e")},
+						{Network: "testing", Address: flowsdk.HexToAddress("000000000000000a")},
 					},
 				},
 			},
-			ContractNames:     []string{"DeFiActionsMathUtils", "DeFiActionsUtils", "DeFiActions", "ExampleConnectors"},
+			ContractNames:     []string{"ExampleConnectors"},
 			DeploymentAccount: "emulator-account",
 		},
 		ProjectTypeCustom: {
@@ -214,7 +213,7 @@ func getProjectTypeConfig(projectType ProjectType) *ProjectTypeConfig {
 }
 
 // getProjectTemplates returns a slice of templates based on the project type.
-// Supported types: ProjectTypeDefault, ProjectTypeScheduledTransactions
+// Supported types: ProjectTypeDefault, ProjectTypeScheduledTransactions, ProjectTypeStablecoin, ProjectTypeDeFiActions
 func getProjectTemplates(projectType ProjectType, targetDir string, state *flowkit.State) []generator.TemplateItem {
 	switch projectType {
 	case ProjectTypeScheduledTransactions:
@@ -236,12 +235,12 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 			generator.ScriptTemplate{
 				Name:         "GetCounter",
 				TemplatePath: "script_counter.cdc.tmpl",
-				Data:         map[string]interface{}{"ContractName": "Counter"},
+				Data:         map[string]any{"ContractName": "Counter"},
 			},
 			generator.TransactionTemplate{
 				Name:         "IncrementCounter",
 				TemplatePath: "transaction_counter.cdc.tmpl",
-				Data:         map[string]interface{}{"ContractName": "Counter"},
+				Data:         map[string]any{"ContractName": "Counter"},
 			},
 			generator.TransactionTemplate{
 				Name:         "ScheduleIncrementCounter",
@@ -258,24 +257,24 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 			generator.FileTemplate{
 				TemplatePath: "README_scheduled_transactions.md.tmpl",
 				TargetPath:   getReadmeFileName(targetDir),
-				Data: map[string]interface{}{
-					"Dependencies": (func() []map[string]interface{} {
-						contracts := []map[string]interface{}{}
+				Data: map[string]any{
+					"Dependencies": (func() []map[string]any {
+						contracts := []map[string]any{}
 						for _, dep := range *state.Dependencies() {
-							contracts = append(contracts, map[string]interface{}{
+							contracts = append(contracts, map[string]any{
 								"Name": dep.Name,
 							})
 						}
 						return contracts
 					})(),
-					"Contracts": []map[string]interface{}{
+					"Contracts": []map[string]any{
 						{"Name": "Counter"},
 						{"Name": "CounterTransactionHandler"},
 					},
-					"Scripts": []map[string]interface{}{
+					"Scripts": []map[string]any{
 						{"Name": "GetCounter"},
 					},
-					"Transactions": []map[string]interface{}{
+					"Transactions": []map[string]any{
 						{"Name": "IncrementCounter"},
 						{"Name": "ScheduleIncrementCounter"},
 						{"Name": "InitSchedulerManager"},
@@ -286,22 +285,22 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 			generator.FileTemplate{
 				TemplatePath: "cursor/agent_rules.mdc.tmpl",
 				TargetPath:   ".cursor/rules/scheduledtransactions/agent-rules.mdc",
-				Data:         map[string]interface{}{},
+				Data:         map[string]any{},
 			},
 			generator.FileTemplate{
 				TemplatePath: "cursor/flip.md.tmpl",
 				TargetPath:   ".cursor/rules/scheduledtransactions/flip.md",
-				Data:         map[string]interface{}{},
+				Data:         map[string]any{},
 			},
 			generator.FileTemplate{
 				TemplatePath: "cursor/index.md.tmpl",
 				TargetPath:   ".cursor/rules/scheduledtransactions/index.md",
-				Data:         map[string]interface{}{},
+				Data:         map[string]any{},
 			},
 			generator.FileTemplate{
 				TemplatePath: "cursor/quick_checklist.md.tmpl",
 				TargetPath:   ".cursor/rules/scheduledtransactions/quick-checklist.md",
-				Data:         map[string]interface{}{},
+				Data:         map[string]any{},
 			},
 		}
 	case ProjectTypeDeFiActions:
@@ -320,10 +319,18 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 				Name:         "DepositViaSink",
 				TemplatePath: "transaction_deposit_via_sink.cdc.tmpl",
 			},
+			generator.TransactionTemplate{
+				Name:         "incrementfi_swap",
+				TemplatePath: "transaction_incrementfi_swap.cdc.tmpl",
+			},
+			generator.TestTemplate{
+				Name:         "incrementfi_swap_on_fork",
+				TemplatePath: "test_incrementfi_swap_on_fork.cdc.tmpl",
+			},
 			generator.FileTemplate{
 				TemplatePath: "README_defi_actions.md.tmpl",
 				TargetPath:   getReadmeFileName(targetDir),
-				Data:         map[string]interface{}{},
+				Data:         map[string]any{},
 			},
 		}
 	case ProjectTypeStablecoin:
@@ -396,7 +403,7 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 			generator.FileTemplate{
 				TemplatePath: "README_stablecoin.md.tmpl",
 				TargetPath:   getReadmeFileName(targetDir),
-				Data:         map[string]interface{}{},
+				Data:         map[string]any{},
 			},
 		}
 	default:
@@ -409,33 +416,33 @@ func getProjectTemplates(projectType ProjectType, targetDir string, state *flowk
 			generator.ScriptTemplate{
 				Name:         "GetCounter",
 				TemplatePath: "script_counter.cdc.tmpl",
-				Data:         map[string]interface{}{"ContractName": "Counter"},
+				Data:         map[string]any{"ContractName": "Counter"},
 			},
 			generator.TransactionTemplate{
 				Name:         "IncrementCounter",
 				TemplatePath: "transaction_counter.cdc.tmpl",
-				Data:         map[string]interface{}{"ContractName": "Counter"},
+				Data:         map[string]any{"ContractName": "Counter"},
 			},
 			generator.FileTemplate{
 				TemplatePath: "README.md.tmpl",
 				TargetPath:   getReadmeFileName(targetDir),
-				Data: map[string]interface{}{
-					"Dependencies": (func() []map[string]interface{} {
-						contracts := []map[string]interface{}{}
+				Data: map[string]any{
+					"Dependencies": (func() []map[string]any {
+						contracts := []map[string]any{}
 						for _, dep := range *state.Dependencies() {
-							contracts = append(contracts, map[string]interface{}{
+							contracts = append(contracts, map[string]any{
 								"Name": dep.Name,
 							})
 						}
 						return contracts
 					})(),
-					"Contracts": []map[string]interface{}{
+					"Contracts": []map[string]any{
 						{"Name": "Counter"},
 					},
-					"Scripts": []map[string]interface{}{
+					"Scripts": []map[string]any{
 						{"Name": "GetCounter"},
 					},
-					"Transactions": []map[string]interface{}{
+					"Transactions": []map[string]any{
 						{"Name": "IncrementCounter"},
 					},
 				},

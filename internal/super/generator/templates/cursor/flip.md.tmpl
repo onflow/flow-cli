@@ -179,7 +179,7 @@ This design ensures high throughput, predictable scheduling behavior, and resili
 
 ## API
 
-The contract defines a `Scheduler` resource interface, which is instantiated as part of the scheduler contract as a singleton. This implementation pattern is suggested so we can issue entitlements to the `ScheduledTransaction` for cancelation and status retrival, and have this fine grained-access control, which would not be possible if we would only implement the methods as part of the contract without the underlaying singleton resource.
+The contract defines a `Scheduler` resource interface, which is instantiated as part of the scheduler contract as a singleton. This implementation pattern is suggested so we can issue entitlements to the `ScheduledTransaction` for cancellation and status retrival, and have this fine grained-access control, which would not be possible if we would only implement the methods as part of the contract without the underlying singleton resource.
 
 ### `schedule`
 

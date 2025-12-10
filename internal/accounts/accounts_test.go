@@ -250,18 +250,41 @@ func Test_Create(t *testing.T) {
 }
 
 func Test_Get(t *testing.T) {
-	srv, _, _ := util.TestMocks(t)
+	srv, state, _ := util.TestMocks(t)
 
-	t.Run("Success", func(t *testing.T) {
-		inArgs := []string{"0x01"}
+	t.Run("Success with address", func(t *testing.T) {
+		// Use the emulator service account address which is always valid
+		inArgs := []string{"f8d6e0586b0a20c7"}
 
 		srv.GetAccount.Run(func(args mock.Arguments) {
 			addr := args.Get(1).(flow.Address)
-			assert.Equal(t, "0000000000000001", addr.String())
+			assert.Equal(t, "f8d6e0586b0a20c7", addr.String())
 			srv.GetAccount.Return(tests.NewAccountWithAddress(inArgs[0]), nil)
 		})
 
-		result, err := get(inArgs, command.GlobalFlags{}, util.NoLogger, nil, srv.Mock)
+		result, err := get(inArgs, command.GlobalFlags{Network: "emulator"}, util.NoLogger, srv.Mock, state)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+	})
+
+	t.Run("Success with account name", func(t *testing.T) {
+		testAddr := flow.HexToAddress("f8d6e0586b0a20c7")
+		testAccount := &accounts.Account{
+			Name:    "test-account",
+			Address: testAddr,
+			Key:     accounts.NewHexKeyFromPrivateKey(0, crypto.SHA3_256, util.GenerateTestPrivateKey()),
+		}
+		state.Accounts().AddOrUpdate(testAccount)
+
+		inArgs := []string{"test-account"}
+
+		srv.GetAccount.Run(func(args mock.Arguments) {
+			addr := args.Get(1).(flow.Address)
+			assert.Equal(t, "f8d6e0586b0a20c7", addr.String())
+			srv.GetAccount.Return(tests.NewAccountWithAddress(addr.Hex()), nil)
+		})
+
+		result, err := get(inArgs, command.GlobalFlags{Network: "emulator"}, util.NoLogger, srv.Mock, state)
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 	})

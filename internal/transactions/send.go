@@ -35,14 +35,15 @@ import (
 )
 
 type Flags struct {
-	ArgsJSON    string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
-	Signer      string   `default:"" flag:"signer" info:"Account name from configuration used to sign the transaction as proposer, payer and suthorizer"`
-	Proposer    string   `default:"" flag:"proposer" info:"Account name from configuration used as proposer"`
-	Payer       string   `default:"" flag:"payer" info:"Account name from configuration used as payer"`
-	Authorizers []string `default:"" flag:"authorizer" info:"Name of a single or multiple comma-separated accounts used as authorizers from configuration"`
-	Include     []string `default:"" flag:"include" info:"Fields to include in the output"`
-	Exclude     []string `default:"" flag:"exclude" info:"Fields to exclude from the output (events)"`
-	GasLimit    uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
+	ArgsJSON     string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
+	Signer       string   `default:"" flag:"signer" info:"Account name from configuration used to sign the transaction as proposer, payer and suthorizer"`
+	Proposer     string   `default:"" flag:"proposer" info:"Account name from configuration used as proposer"`
+	Payer        string   `default:"" flag:"payer" info:"Account name from configuration used as payer"`
+	Authorizers  []string `default:"" flag:"authorizer" info:"Name of a single or multiple comma-separated accounts used as authorizers from configuration"`
+	Include      []string `default:"" flag:"include" info:"Fields to include in the output"`
+	Exclude      []string `default:"" flag:"exclude" info:"Fields to exclude from the output (events)"`
+	ComputeLimit uint64   `default:"1000" flag:"compute-limit" info:"transaction compute limit"`
+	GasLimit     uint64   `default:"" flag:"gas-limit" info:"(deprecated: use compute-limit) transaction gas limit"`
 }
 
 var flags = Flags{}
@@ -61,7 +62,7 @@ var sendCommand = &command.Command{
 func send(
 	args []string,
 	_ command.GlobalFlags,
-	_ output.Logger,
+	logger output.Logger,
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
@@ -72,10 +73,10 @@ func send(
 		return nil, fmt.Errorf("error loading transaction file: %w", err)
 	}
 
-	return SendTransaction(code, args, filename, flow, state, flags)
+	return SendTransaction(code, args, filename, flow, state, flags, logger)
 }
 
-func SendTransaction(code []byte, args []string, location string, flow flowkit.Services, state *flowkit.State, sendFlags Flags) (result command.Result, err error) {
+func SendTransaction(code []byte, args []string, location string, flow flowkit.Services, state *flowkit.State, sendFlags Flags, logger output.Logger) (result command.Result, err error) {
 	proposerName := sendFlags.Proposer
 	var proposer *accounts.Account
 	if proposerName != "" {
@@ -138,6 +139,13 @@ func SendTransaction(code []byte, args []string, location string, flow flowkit.S
 		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
 	}
 
+	// Use GasLimit if set (for backwards compatibility), otherwise use ComputeLimit
+	computeLimit := sendFlags.ComputeLimit
+	if sendFlags.GasLimit > 0 {
+		logger.Info("⚠️  Warning: --gas-limit flag is deprecated, please use --compute-limit instead")
+		computeLimit = sendFlags.GasLimit
+	}
+
 	tx, txResult, err := flow.SendTransaction(
 		context.Background(),
 		transactions.AccountRoles{
@@ -146,7 +154,7 @@ func SendTransaction(code []byte, args []string, location string, flow flowkit.S
 			Payer:       *payer,
 		},
 		flowkit.Script{Code: code, Args: transactionArgs, Location: location},
-		sendFlags.GasLimit,
+		computeLimit,
 	)
 	if err != nil {
 		return nil, err
