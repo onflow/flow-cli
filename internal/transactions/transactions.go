@@ -29,6 +29,7 @@ import (
 
 	"github.com/onflow/flowkit/v2/output"
 
+	"github.com/onflow/flow-cli/common/branding"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/events"
 	"github.com/onflow/flow-cli/internal/util"
@@ -135,61 +136,67 @@ func (r *transactionResult) String() string {
 	const feeDeductedEvent = "FeesDeducted"
 
 	if r.result != nil {
-		_, _ = fmt.Fprintf(writer, "Block ID\t%s\n", r.result.BlockID)
-		_, _ = fmt.Fprintf(writer, "Block Height\t%d\n", r.result.BlockHeight)
+		_, _ = fmt.Fprintf(writer, "%s\t%s\n", branding.GrayStyle.Render("Block ID"), branding.PurpleStyle.Render(r.result.BlockID.String()))
+		_, _ = fmt.Fprintf(writer, "%s\t%d\n", branding.GrayStyle.Render("Block Height"), r.result.BlockHeight)
 		if r.result.Error != nil {
-			_, _ = fmt.Fprintf(writer, "%s Transaction Error \n%s\n\n\n", output.ErrorEmoji(), r.result.Error.Error())
+			_, _ = fmt.Fprintf(writer, "%s %s\n%s\n\n\n", output.ErrorEmoji(), branding.GrayStyle.Render("Transaction Error"), branding.ErrorStyle.Render(r.result.Error.Error()))
 		}
 
 		statusBadge := ""
+		statusText := r.result.Status.String()
 		if r.result.Status == flow.TransactionStatusSealed {
 			statusBadge = output.OkEmoji()
+			statusText = branding.GreenStyle.Render(statusText)
 		}
-		_, _ = fmt.Fprintf(writer, "Status\t%s %s\n", statusBadge, r.result.Status)
+		// leave uncolored for non-sealed statuses
+		_, _ = fmt.Fprintf(writer, "%s\t%s %s\n", branding.GrayStyle.Render("Status"), statusBadge, statusText)
 	}
 
-	_, _ = fmt.Fprintf(writer, "ID\t%s\n", r.tx.ID())
+	_, _ = fmt.Fprintf(writer, "%s\t%s\n", branding.GrayStyle.Render("ID"), branding.PurpleStyle.Render(r.tx.ID().String()))
 
-	_, _ = fmt.Fprintf(writer, "Payer\t%s\n", r.tx.Payer.Hex())
-	_, _ = fmt.Fprintf(writer, "Authorizers\t%s\n", r.tx.Authorizers)
+	_, _ = fmt.Fprintf(writer, "%s\t%s\n", branding.GrayStyle.Render("Payer"), branding.PurpleStyle.Render(r.tx.Payer.Hex()))
+	_, _ = fmt.Fprintf(writer, "%s\t%s\n", branding.GrayStyle.Render("Authorizers"), branding.PurpleStyle.Render(fmt.Sprintf("%s", r.tx.Authorizers)))
 
 	_, _ = fmt.Fprintf(writer,
-		"\nProposal Key:\t\n    Address\t%s\n    Index\t%v\n    Sequence\t%v\n",
-		r.tx.ProposalKey.Address, r.tx.ProposalKey.KeyIndex, r.tx.ProposalKey.SequenceNumber,
+		"\n%s\t\n    %s\t%s\n    %s\t%v\n    %s\t%v\n",
+		branding.GrayStyle.Render("Proposal Key:"),
+		branding.GrayStyle.Render("Address"), branding.PurpleStyle.Render(r.tx.ProposalKey.Address.String()),
+		branding.GrayStyle.Render("Index"), r.tx.ProposalKey.KeyIndex,
+		branding.GrayStyle.Render("Sequence"), r.tx.ProposalKey.SequenceNumber,
 	)
 
 	if len(r.tx.PayloadSignatures) == 0 {
-		_, _ = fmt.Fprintf(writer, "\nNo Payload Signatures\n")
+		_, _ = fmt.Fprintf(writer, "\n%s\n", branding.GrayStyle.Render("No Payload Signatures"))
 	}
 
 	if len(r.tx.EnvelopeSignatures) == 0 {
-		_, _ = fmt.Fprintf(writer, "\nNo Envelope Signatures\n")
+		_, _ = fmt.Fprintf(writer, "\n%s\n", branding.GrayStyle.Render("No Envelope Signatures"))
 	}
 
 	for i, e := range r.tx.PayloadSignatures {
 		if command.ContainsFlag(r.include, "signatures") {
-			_, _ = fmt.Fprintf(writer, "\nPayload Signature %v:\n", i)
-			_, _ = fmt.Fprintf(writer, "    Address\t%s\n", e.Address)
-			_, _ = fmt.Fprintf(writer, "    Signature\t%x\n", e.Signature)
-			_, _ = fmt.Fprintf(writer, "    Key Index\t%d\n", e.KeyIndex)
+			_, _ = fmt.Fprintf(writer, "\n%s %d:\n", branding.GrayStyle.Render("Payload Signature"), i)
+			_, _ = fmt.Fprintf(writer, "    %s\t%s\n", branding.GrayStyle.Render("Address"), branding.PurpleStyle.Render(e.Address.String()))
+			_, _ = fmt.Fprintf(writer, "    %s\t%x\n", branding.GrayStyle.Render("Signature"), e.Signature)
+			_, _ = fmt.Fprintf(writer, "    %s\t%d\n", branding.GrayStyle.Render("Key Index"), e.KeyIndex)
 		} else {
-			_, _ = fmt.Fprintf(writer, "\nPayload Signature %v: %s", i, e.Address)
+			_, _ = fmt.Fprintf(writer, "\n%s %d: %s", branding.GrayStyle.Render("Payload Signature"), i, branding.PurpleStyle.Render(e.Address.String()))
 		}
 	}
 
 	for i, e := range r.tx.EnvelopeSignatures {
 		if command.ContainsFlag(r.include, "signatures") {
-			_, _ = fmt.Fprintf(writer, "\nEnvelope Signature %v:\n", i)
-			_, _ = fmt.Fprintf(writer, "    Address\t%s\n", e.Address)
-			_, _ = fmt.Fprintf(writer, "    Signature\t%x\n", e.Signature)
-			_, _ = fmt.Fprintf(writer, "    Key Index\t%d\n", e.KeyIndex)
+			_, _ = fmt.Fprintf(writer, "\n%s %d:\n", branding.GrayStyle.Render("Envelope Signature"), i)
+			_, _ = fmt.Fprintf(writer, "    %s\t%s\n", branding.GrayStyle.Render("Address"), branding.PurpleStyle.Render(e.Address.String()))
+			_, _ = fmt.Fprintf(writer, "    %s\t%x\n", branding.GrayStyle.Render("Signature"), e.Signature)
+			_, _ = fmt.Fprintf(writer, "    %s\t%d\n", branding.GrayStyle.Render("Key Index"), e.KeyIndex)
 		} else {
-			_, _ = fmt.Fprintf(writer, "\nEnvelope Signature %v: %s", i, e.Address)
+			_, _ = fmt.Fprintf(writer, "\n%s %d: %s", branding.GrayStyle.Render("Envelope Signature"), i, branding.PurpleStyle.Render(e.Address.String()))
 		}
 	}
 
 	if !command.ContainsFlag(r.include, "signatures") {
-		_, _ = fmt.Fprintf(writer, "\nSignatures (minimized, use --include signatures)")
+		_, _ = fmt.Fprintf(writer, "\n%s", branding.GrayStyle.Render("Signatures (minimized, use --include signatures)"))
 	}
 
 	if r.result != nil && !command.ContainsFlag(r.exclude, "events") {
@@ -212,38 +219,38 @@ func (r *transactionResult) String() string {
 			eventsOutput = "None"
 		}
 
-		_, _ = fmt.Fprintf(writer, "\n\nEvents:\t %s\n", eventsOutput)
+		_, _ = fmt.Fprintf(writer, "\n\n%s\t %s\n", branding.GrayStyle.Render("Events:"), eventsOutput)
 	}
 
 	if r.tx.Script != nil {
 		if command.ContainsFlag(r.include, "code") {
 			if len(r.tx.Arguments) == 0 {
-				_, _ = fmt.Fprintf(writer, "\n\nArguments\tNo arguments\n")
+				_, _ = fmt.Fprintf(writer, "\n\n%s\tNo arguments\n", branding.GrayStyle.Render("Arguments"))
 			} else {
-				_, _ = fmt.Fprintf(writer, "\n\nArguments (%d):\n", len(r.tx.Arguments))
+				_, _ = fmt.Fprintf(writer, "\n\n%s (%d)\n", branding.GrayStyle.Render("Arguments"), len(r.tx.Arguments))
 				for i, argument := range r.tx.Arguments {
-					_, _ = fmt.Fprintf(writer, "    - Argument %d: %s\n", i, argument)
+					_, _ = fmt.Fprintf(writer, "    - %s %d: %s\n", branding.GrayStyle.Render("Argument"), i, string(argument))
 				}
 			}
 
-			_, _ = fmt.Fprintf(writer, "\nCode\n\n%s\n", r.tx.Script)
+			_, _ = fmt.Fprintf(writer, "\n%s\n\n%s\n", branding.GrayStyle.Render("Code"), string(r.tx.Script))
 		} else {
-			_, _ = fmt.Fprint(writer, "\n\nCode (hidden, use --include code)")
+			_, _ = fmt.Fprint(writer, "\n\n"+branding.GrayStyle.Render("Code (hidden, use --include code)"))
 		}
 	}
 
 	if command.ContainsFlag(r.include, "payload") {
-		_, _ = fmt.Fprintf(writer, "\n\nPayload:\n%x", r.tx.Encode())
+		_, _ = fmt.Fprintf(writer, "\n\n%s\n%x", branding.GrayStyle.Render("Payload"), r.tx.Encode())
 	} else {
-		_, _ = fmt.Fprint(writer, "\n\nPayload (hidden, use --include payload)")
+		_, _ = fmt.Fprint(writer, "\n\n"+branding.GrayStyle.Render("Payload (hidden, use --include payload)"))
 	}
 
 	if !command.ContainsFlag(r.include, "fee-events") && !command.ContainsFlag(r.exclude, "events") {
-		_, _ = fmt.Fprint(writer, "\n\nFee Events (hidden, use --include fee-events)")
+		_, _ = fmt.Fprint(writer, "\n\n"+branding.GrayStyle.Render("Fee Events (hidden, use --include fee-events)"))
 	}
 
 	if blockExplorerLink := r.getBlockExplorerLink(); blockExplorerLink != "" {
-		_, _ = fmt.Fprintf(writer, "\n\n🔗 View on Block Explorer:\n%s", blockExplorerLink)
+		_, _ = fmt.Fprintf(writer, "\n\n%s\n%s", branding.GrayStyle.Render("🔗 View on Block Explorer:"), branding.PurpleStyle.Render(blockExplorerLink))
 	}
 
 	_ = writer.Flush()
