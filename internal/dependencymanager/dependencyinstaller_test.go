@@ -915,10 +915,10 @@ func TestDependencyInstallerAliasTracking(t *testing.T) {
 			TargetDir:       "",
 			SkipDeployments: true,
 			SkipAlias:       false,
-		dependencies:    make(map[string]config.Dependency),
-		accountAliases:  make(map[string]map[string]flow.Address),
-		prompter:        &mockPrompter{responses: []bool{}},
-	}
+			dependencies:    make(map[string]config.Dependency),
+			accountAliases:  make(map[string]map[string]flow.Address),
+			prompter:        &mockPrompter{responses: []bool{}},
+		}
 
 		dep1 := config.Dependency{
 			Name: "ContractOne",
