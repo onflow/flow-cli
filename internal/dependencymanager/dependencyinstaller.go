@@ -135,6 +135,17 @@ type DependencyInstaller struct {
 	accountAliases    map[string]map[string]flowsdk.Address // network -> account -> alias
 	installCount      int                                   // Track number of dependencies installed
 	pendingPrompts    []pendingPrompt                       // Dependencies that need prompts after tree display
+	prompter          Prompter                              // Optional: for testing. If nil, uses real prompts
+}
+
+type Prompter interface {
+	GenericBoolPrompt(msg string) (bool, error)
+}
+
+type prompter struct{}
+
+func (prompter) GenericBoolPrompt(msg string) (bool, error) {
+	return prompt.GenericBoolPrompt(msg)
 }
 
 // NewDependencyInstaller creates a new instance of DependencyInstaller
@@ -175,6 +186,7 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State, saveStat
 		logs:              categorizedLogs{},
 		accountAliases:    make(map[string]map[string]flowsdk.Address),
 		pendingPrompts:    make([]pendingPrompt, 0),
+		prompter:          prompter{},
 	}, nil
 }
 
@@ -560,18 +572,20 @@ func (di *DependencyInstaller) fetchDependenciesWithDepth(dependency config.Depe
 	return nil
 }
 
-func (di *DependencyInstaller) contractFileExists(address, contractName string) bool {
+func (di *DependencyInstaller) getContractFilePath(address, contractName string) string {
 	fileName := fmt.Sprintf("%s.cdc", contractName)
-	path := filepath.Join("imports", address, fileName)
+	return filepath.Join("imports", address, fileName)
+}
 
+func (di *DependencyInstaller) contractFileExists(address, contractName string) bool {
+	path := di.getContractFilePath(address, contractName)
 	_, err := di.State.ReaderWriter().Stat(path)
-
 	return err == nil
 }
 
 func (di *DependencyInstaller) createContractFile(address, contractName, data string) error {
-	fileName := fmt.Sprintf("%s.cdc", contractName)
-	path := filepath.Join(di.TargetDir, "imports", address, fileName)
+	relativePath := di.getContractFilePath(address, contractName)
+	path := filepath.Join(di.TargetDir, relativePath)
 	dir := filepath.Dir(path)
 
 	if err := di.State.ReaderWriter().MkdirAll(dir, 0755); err != nil {
@@ -629,8 +643,14 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 	if existingDependency != nil && existingDependency.Hash != "" && existingDependency.Hash != originalContractDataHash {
 		// If skip update prompts flag is set, don't prompt and keep existing version
 		if di.SkipUpdatePrompts {
-			msg := util.MessageWithEmojiPrefix("⏸️", fmt.Sprintf("%s kept at current version (update available)", dependency.Name))
-			di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
+			// Warn if file doesn't exist - incomplete project state
+			if !di.contractFileExists(contractAddr, contractName) {
+				msg := util.MessageWithEmojiPrefix("❗", fmt.Sprintf("%s kept at current version (update available), but file does not exist locally. Your project may be incomplete. Remove --skip-update-prompts flag and accept the update to fix this.", dependency.Name))
+				di.logs.issues = append(di.logs.issues, msg)
+			} else {
+				msg := util.MessageWithEmojiPrefix("⏸️", fmt.Sprintf("%s kept at current version (update available)", dependency.Name))
+				di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
+			}
 			return nil
 		}
 
@@ -916,7 +936,7 @@ func (di *DependencyInstaller) processPendingPrompts() error {
 
 	setupDeployments := false
 	if hasDeployments {
-		result, err := prompt.GenericBoolPrompt("Do you want to set up deployments for these dependencies?")
+		result, err := di.prompter.GenericBoolPrompt("Do you want to set up deployments for these dependencies?")
 		if err != nil {
 			return err
 		}
@@ -925,7 +945,7 @@ func (di *DependencyInstaller) processPendingPrompts() error {
 
 	setupAliases := false
 	if hasAliases {
-		result, err := prompt.GenericBoolPrompt("Do you want to set up aliases for these dependencies?")
+		result, err := di.prompter.GenericBoolPrompt("Do you want to set up aliases for these dependencies?")
 		if err != nil {
 			return err
 		}
@@ -936,7 +956,7 @@ func (di *DependencyInstaller) processPendingPrompts() error {
 	for _, pending := range di.pendingPrompts {
 		if pending.needsUpdate {
 			msg := fmt.Sprintf("The latest version of %s is different from the one you have locally. Do you want to update it?", pending.contractName)
-			shouldUpdate, err := prompt.GenericBoolPrompt(msg)
+			shouldUpdate, err := di.prompter.GenericBoolPrompt(msg)
 			if err != nil {
 				return err
 			}
@@ -949,20 +969,25 @@ func (di *DependencyInstaller) processPendingPrompts() error {
 						return err
 					}
 
-					// Write the updated contract file
-					err = di.handleFileSystem(pending.contractAddr, pending.contractName, pending.contractData, pending.networkName)
-					if err != nil {
+					// Write the updated contract file (force overwrite)
+					if err := di.createContractFile(pending.contractAddr, pending.contractName, pending.contractData); err != nil {
 						di.Logger.Error(fmt.Sprintf("Error updating contract file: %v", err))
-						return err
+						return fmt.Errorf("failed to update contract file: %w", err)
 					}
 
 					msg := util.MessageWithEmojiPrefix("✅", fmt.Sprintf("%s updated to latest version", pending.contractName))
 					di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
 				}
 			} else {
-				// User chose not to update - keep the existing file and hash as is
-				msg := util.MessageWithEmojiPrefix("⏸️", fmt.Sprintf("%s kept at current version", pending.contractName))
-				di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
+				// User chose not to update - keep existing file and hash
+				// Check if file exists - if not, warn about incomplete state
+				if !di.contractFileExists(pending.contractAddr, pending.contractName) {
+					msg := util.MessageWithEmojiPrefix("❗", fmt.Sprintf("%s kept at current version, but file does not exist locally. Your project may be incomplete. Run install again and accept the update to fix this.", pending.contractName))
+					di.logs.issues = append(di.logs.issues, msg)
+				} else {
+					msg := util.MessageWithEmojiPrefix("⏸️", fmt.Sprintf("%s kept at current version", pending.contractName))
+					di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
+				}
 			}
 		}
 	}
