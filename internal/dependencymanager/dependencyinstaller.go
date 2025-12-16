@@ -629,7 +629,7 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 	if existingDependency != nil && existingDependency.Hash != "" && existingDependency.Hash != originalContractDataHash {
 		// If skip update prompts flag is set, don't prompt and keep existing version
 		if di.SkipUpdatePrompts {
-			msg := util.MessageWithEmojiPrefix("⏸️ ", fmt.Sprintf("%s kept at current version (update available)", dependency.Name))
+			msg := util.MessageWithEmojiPrefix("⏸️", fmt.Sprintf("%s kept at current version (update available)", dependency.Name))
 			di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
 			return nil
 		}
