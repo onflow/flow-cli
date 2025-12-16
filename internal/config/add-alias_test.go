@@ -45,7 +45,7 @@ func Test_AddAlias(t *testing.T) {
 		// Set flags
 		addAliasFlags.Contract = "MyContract"
 		addAliasFlags.Network = "testnet"
-		addAliasFlags.Address = "0x1234567890abcdef"
+		addAliasFlags.Address = "0x9a0766d93b6608b7"
 
 		// Call the function
 		result, err := addAlias(
@@ -68,7 +68,7 @@ func Test_AddAlias(t *testing.T) {
 		// Verify the alias was added for the specified network
 		alias := updatedContract.Aliases.ByNetwork("testnet")
 		require.NotNil(t, alias)
-		assert.Equal(t, "1234567890abcdef", alias.Address.String())
+		assert.Equal(t, "9a0766d93b6608b7", alias.Address.String())
 
 		// Reset flags
 		addAliasFlags = flagsAddAlias{}
@@ -95,7 +95,7 @@ func Test_AddAlias(t *testing.T) {
 		// Add testnet alias
 		addAliasFlags.Contract = "MultiContract"
 		addAliasFlags.Network = "testnet"
-		addAliasFlags.Address = "0xabcdef1234567890"
+		addAliasFlags.Address = "0x631e88ae7f1d7c20"
 
 		result, err := addAlias(
 			[]string{},
@@ -118,7 +118,7 @@ func Test_AddAlias(t *testing.T) {
 
 		testnetAlias := updatedContract.Aliases.ByNetwork("testnet")
 		require.NotNil(t, testnetAlias)
-		assert.Equal(t, "abcdef1234567890", testnetAlias.Address.String())
+		assert.Equal(t, "631e88ae7f1d7c20", testnetAlias.Address.String())
 
 		// Reset flags
 		addAliasFlags = flagsAddAlias{}
@@ -129,7 +129,7 @@ func Test_AddAlias(t *testing.T) {
 
 		addAliasFlags.Contract = "NonExistentContract"
 		addAliasFlags.Network = "testnet"
-		addAliasFlags.Address = "0x1234567890abcdef"
+		addAliasFlags.Address = "0x9a0766d93b6608b7"
 
 		result, err := addAlias(
 			[]string{},
@@ -159,7 +159,7 @@ func Test_AddAlias(t *testing.T) {
 		// Set flags
 		addAliasFlags.Contract = "TestContract"
 		addAliasFlags.Network = "mainnet"
-		addAliasFlags.Address = "0xabcdef1234567890"
+		addAliasFlags.Address = "0xf233dcee88fe0abe"
 
 		// Call the function
 		result, err := addAlias(
@@ -197,7 +197,7 @@ func Test_AddAlias(t *testing.T) {
 		// Verify mainnet alias exists with correct address (stored without 0x prefix)
 		mainnetAlias, ok := aliases["mainnet"].(string)
 		require.True(t, ok, "mainnet alias should exist")
-		assert.Equal(t, "abcdef1234567890", mainnetAlias)
+		assert.Equal(t, "f233dcee88fe0abe", mainnetAlias)
 
 		// Reset flags
 		addAliasFlags = flagsAddAlias{}
@@ -209,7 +209,7 @@ func Test_FlagsToAliasData(t *testing.T) {
 		flags := flagsAddAlias{
 			Contract: "TestContract",
 			Network:  "testnet",
-			Address:  "0x1234567890abcdef",
+			Address:  "0x9a0766d93b6608b7",
 		}
 
 		data, flagsProvided, err := flagsToAliasData(flags)
@@ -218,7 +218,7 @@ func Test_FlagsToAliasData(t *testing.T) {
 		assert.True(t, flagsProvided)
 		assert.Equal(t, "TestContract", data.Contract)
 		assert.Equal(t, "testnet", data.Network)
-		assert.Equal(t, "0x1234567890abcdef", data.Address)
+		assert.Equal(t, "0x9a0766d93b6608b7", data.Address)
 	})
 
 	t.Run("No flags provided", func(t *testing.T) {
@@ -234,7 +234,7 @@ func Test_FlagsToAliasData(t *testing.T) {
 	t.Run("Fail missing contract name", func(t *testing.T) {
 		flags := flagsAddAlias{
 			Network: "testnet",
-			Address: "0x1234567890abcdef",
+			Address: "0x9a0766d93b6608b7",
 		}
 
 		data, flagsProvided, err := flagsToAliasData(flags)
@@ -247,7 +247,7 @@ func Test_FlagsToAliasData(t *testing.T) {
 	t.Run("Fail missing network", func(t *testing.T) {
 		flags := flagsAddAlias{
 			Contract: "TestContract",
-			Address:  "0x1234567890abcdef",
+			Address:  "0x9a0766d93b6608b7",
 		}
 
 		data, flagsProvided, err := flagsToAliasData(flags)
@@ -301,14 +301,56 @@ func Test_FlagsToAliasData(t *testing.T) {
 	t.Run("Success with address without 0x prefix", func(t *testing.T) {
 		flags := flagsAddAlias{
 			Contract: "TestContract",
-			Network:  "testnet",
-			Address:  "1234567890abcdef",
+			Network:  "mainnet",
+			Address:  "1d7e57aa55817448",
 		}
 
 		data, flagsProvided, err := flagsToAliasData(flags)
 
 		require.NoError(t, err)
 		assert.True(t, flagsProvided)
-		assert.Equal(t, "1234567890abcdef", data.Address)
+		assert.Equal(t, "1d7e57aa55817448", data.Address)
+	})
+
+	t.Run("Fail testnet address used for mainnet", func(t *testing.T) {
+		flags := flagsAddAlias{
+			Contract: "TestContract",
+			Network:  "mainnet",
+			Address:  "0x9a0766d93b6608b7", // Testnet address
+		}
+
+		data, flagsProvided, err := flagsToAliasData(flags)
+
+		assert.Nil(t, data)
+		assert.True(t, flagsProvided)
+		assert.ErrorContains(t, err, "not valid for network mainnet")
+	})
+
+	t.Run("Fail mainnet address used for testnet", func(t *testing.T) {
+		flags := flagsAddAlias{
+			Contract: "TestContract",
+			Network:  "testnet",
+			Address:  "0xf233dcee88fe0abe", // Mainnet address
+		}
+
+		data, flagsProvided, err := flagsToAliasData(flags)
+
+		assert.Nil(t, data)
+		assert.True(t, flagsProvided)
+		assert.ErrorContains(t, err, "not valid for network testnet")
+	})
+
+	t.Run("Fail emulator address used for testnet", func(t *testing.T) {
+		flags := flagsAddAlias{
+			Contract: "TestContract",
+			Network:  "testnet",
+			Address:  "0xf8d6e0586b0a20c7", // Emulator address
+		}
+
+		data, flagsProvided, err := flagsToAliasData(flags)
+
+		assert.Nil(t, data)
+		assert.True(t, flagsProvided)
+		assert.ErrorContains(t, err, "not valid for network testnet")
 	})
 }

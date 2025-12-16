@@ -22,8 +22,9 @@ import (
 	"fmt"
 
 	"github.com/onflow/flow-cli/internal/prompt"
+	"github.com/onflow/flow-cli/internal/util"
 
-	"github.com/onflow/flow-go-sdk"
+	flow "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flowkit/v2"
@@ -106,8 +107,9 @@ func flagsToAliasData(flags flagsAddAlias) (*prompt.AliasData, bool, error) {
 		return nil, true, fmt.Errorf("address must be provided")
 	}
 
-	if flow.HexToAddress(flags.Address) == flow.EmptyAddress {
-		return nil, true, fmt.Errorf("invalid address")
+	// Validate address is valid for the specified network
+	if !util.IsAddressValidForNetwork(address, flags.Network) {
+		return nil, true, fmt.Errorf("address %s is not valid for network %s", flags.Address, flags.Network)
 	}
 
 	return &prompt.AliasData{
