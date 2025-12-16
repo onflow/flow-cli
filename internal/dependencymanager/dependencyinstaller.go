@@ -59,6 +59,8 @@ type categorizedLogs struct {
 type pendingPrompt struct {
 	contractName    string
 	networkName     string
+	contractAddr    string
+	contractData    string
 	needsDeployment bool
 	needsAlias      bool
 	needsUpdate     bool
@@ -125,6 +127,7 @@ type DependencyInstaller struct {
 	TargetDir         string
 	SkipDeployments   bool
 	SkipAlias         bool
+	SkipUpdatePrompts bool
 	DeploymentAccount string
 	Name              string
 	logs              categorizedLogs
@@ -165,6 +168,7 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State, saveStat
 		TargetDir:         targetDir,
 		SkipDeployments:   flags.skipDeployments,
 		SkipAlias:         flags.skipAlias,
+		SkipUpdatePrompts: flags.skipUpdatePrompts,
 		DeploymentAccount: flags.deploymentAccount,
 		Name:              flags.name,
 		dependencies:      make(map[string]config.Dependency),
@@ -620,15 +624,24 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 	}
 
 	// Check if remote source version is different from local version
-	// If it is, defer the prompt until after the tree is displayed
+	// If it is, defer the prompt until after the tree is displayed (unless skip flag is set)
 	// If no hash, ignore
 	if existingDependency != nil && existingDependency.Hash != "" && existingDependency.Hash != originalContractDataHash {
+		// If skip update prompts flag is set, don't prompt and keep existing version
+		if di.SkipUpdatePrompts {
+			msg := util.MessageWithEmojiPrefix("⏸️ ", fmt.Sprintf("%s kept at current version (update available)", dependency.Name))
+			di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
+			return nil
+		}
+
 		// Find existing pending prompt for this contract or create new one
 		found := false
 		for i := range di.pendingPrompts {
 			if di.pendingPrompts[i].contractName == dependency.Name {
 				di.pendingPrompts[i].needsUpdate = true
 				di.pendingPrompts[i].updateHash = originalContractDataHash
+				di.pendingPrompts[i].contractAddr = contractAddr
+				di.pendingPrompts[i].contractData = contractData
 				found = true
 				break
 			}
@@ -637,10 +650,13 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 			di.pendingPrompts = append(di.pendingPrompts, pendingPrompt{
 				contractName: dependency.Name,
 				networkName:  networkName,
+				contractAddr: contractAddr,
+				contractData: contractData,
 				needsUpdate:  true,
 				updateHash:   originalContractDataHash,
 			})
 		}
+
 		return nil
 	}
 
@@ -707,7 +723,7 @@ func (di *DependencyInstaller) handleAdditionalDependencyTasks(networkName, cont
 	// If the contract is not a core contract and the user does not want to skip aliasing, then collect for prompting later
 	needsAlias := !di.SkipAlias && !util.IsCoreContract(contractName) && !isDefiActionsContract(contractName)
 
-	// Only add to pending prompts if we need to prompt for something
+	// Only add/update pending prompts if we need to prompt for something
 	if needsDeployment || needsAlias {
 		di.pendingPrompts = append(di.pendingPrompts, pendingPrompt{
 			contractName:    contractName,
@@ -932,9 +948,21 @@ func (di *DependencyInstaller) processPendingPrompts() error {
 						di.Logger.Error(fmt.Sprintf("Error updating dependency: %v", err))
 						return err
 					}
+
+					// Write the updated contract file
+					err = di.handleFileSystem(pending.contractAddr, pending.contractName, pending.contractData, pending.networkName)
+					if err != nil {
+						di.Logger.Error(fmt.Sprintf("Error updating contract file: %v", err))
+						return err
+					}
+
 					msg := util.MessageWithEmojiPrefix("✅", fmt.Sprintf("%s updated to latest version", pending.contractName))
 					di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
 				}
+			} else {
+				// User chose not to update - keep the existing file and hash as is
+				msg := util.MessageWithEmojiPrefix("⏸️", fmt.Sprintf("%s kept at current version", pending.contractName))
+				di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
 			}
 		}
 	}
