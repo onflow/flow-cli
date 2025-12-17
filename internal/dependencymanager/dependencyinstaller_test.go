@@ -111,6 +111,25 @@ func TestDependencyInstallerInstall(t *testing.T) {
 		assert.NoError(t, err, "Failed to read generated file")
 		assert.NotNil(t, fileContent)
 	})
+
+	t.Run("Conflicting flags error", func(t *testing.T) {
+		_, state, _ := util.TestMocks(t)
+
+		// Try to create installer with both --update and --skip-update-prompts
+		_, err := NewDependencyInstaller(
+			logger,
+			state,
+			true,
+			"",
+			DependencyFlags{
+				update:            true,
+				skipUpdatePrompts: true,
+			},
+		)
+
+		assert.Error(t, err, "Should fail when both flags are set")
+		assert.Contains(t, err.Error(), "cannot use both", "Error should mention conflicting flags")
+	})
 }
 
 func TestDependencyInstallerInstallFromFreshClone(t *testing.T) {
@@ -329,22 +348,11 @@ func TestDependencyInstallerInstallFromFreshClone(t *testing.T) {
 		}
 
 		err := di.Install()
-		assert.NoError(t, err, "Failed to install dependencies")
-
-		// Verify file was NOT created
-		filePath := fmt.Sprintf("imports/%s/%s.cdc", serviceAddress.String(), "Hello")
-		_, err = state.ReaderWriter().ReadFile(filePath)
-		assert.Error(t, err, "File should not exist when user declines update")
-
-		// Verify hash was NOT updated
-		updatedDep := state.Dependencies().ByName("Hello")
-		assert.NotNil(t, updatedDep)
-		assert.Equal(t, "old_hash_from_previous_version", updatedDep.Hash, "Hash should remain unchanged")
-
-		// Verify warning was logged about incomplete state
-		assert.NotEmpty(t, di.logs.issues, "Should have warning about incomplete state")
-		assert.Contains(t, di.logs.issues[0], "does not exist locally", "Warning should mention missing file")
-		assert.Contains(t, di.logs.issues[0], "incomplete", "Warning should mention incomplete state")
+		// Should FAIL because user declined and file doesn't exist (can't fetch old version)
+		assert.Error(t, err, "Should fail when user declines update and file doesn't exist")
+		assert.Contains(t, err.Error(), "Hello", "Error should mention the dependency name")
+		assert.Contains(t, err.Error(), "does not exist locally", "Error should mention missing file")
+		assert.Contains(t, err.Error(), "no way to fetch", "Error should explain can't fetch old version")
 	})
 
 	t.Run("First install, outdated hash - skip flag", func(t *testing.T) {
@@ -401,22 +409,90 @@ func TestDependencyInstallerInstallFromFreshClone(t *testing.T) {
 		}
 
 		err := di.Install()
-		assert.NoError(t, err, "Failed to install dependencies")
+		// Should FAIL because hash mismatch with skip flag (can't guarantee frozen deps, we have no way to fetch them)
+		assert.Error(t, err, "Should fail when hash mismatches with --skip-update-prompts")
+		assert.Contains(t, err.Error(), "hash mismatch", "Error should mention hash mismatch")
+		assert.Contains(t, err.Error(), "Hello", "Error should mention the dependency name")
+	})
 
-		// Verify file was NOT created (hash mismatch triggers prompt, but we skipped it)
+	t.Run("First install, outdated hash - update flag", func(t *testing.T) {
+		// Fresh state for this test
+		_, state, _ := util.TestMocks(t)
+
+		// Network has a newer version of the contract
+		newContractCode := []byte(`access(all) contract Hello { access(all) fun sayHello(): String { return "Hello, World! v2" } }`)
+
+		// Calculate the new hash
+		newHash := sha256.New()
+		newHash.Write(newContractCode)
+		newContractHash := hex.EncodeToString(newHash.Sum(nil))
+
+		// Simulate a dependency that exists in flow.json with an OLD hash
+		dep := config.Dependency{
+			Name: "Hello",
+			Source: config.Source{
+				NetworkName:  "emulator",
+				Address:      serviceAddress,
+				ContractName: "Hello",
+			},
+			Hash: "old_hash_from_previous_version",
+		}
+
+		state.Dependencies().AddOrUpdate(dep)
+
+		gw := mocks.DefaultMockGateway()
+
+		gw.GetAccount.Run(func(args mock.Arguments) {
+			addr := args.Get(1).(flow.Address)
+			assert.Equal(t, addr.String(), serviceAddress.String())
+			acc := tests.NewAccountWithAddress(addr.String())
+			acc.Contracts = map[string][]byte{
+				"Hello": newContractCode,
+			}
+
+			gw.GetAccount.Return(acc, nil)
+		})
+
+		// No prompter needed - --update auto-accepts
+		di := &DependencyInstaller{
+			Gateways: map[string]gateway.Gateway{
+				config.EmulatorNetwork.Name: gw.Mock,
+				config.TestnetNetwork.Name:  gw.Mock,
+				config.MainnetNetwork.Name:  gw.Mock,
+			},
+			Logger:            logger,
+			State:             state,
+			SaveState:         true,
+			TargetDir:         "",
+			SkipDeployments:   true,
+			SkipAlias:         true,
+			SkipUpdatePrompts: false,
+			Update:            true, // Auto-accept updates
+			dependencies:      make(map[string]config.Dependency),
+			accountAliases:    make(map[string]map[string]flow.Address),
+			pendingPrompts:    make([]pendingPrompt, 0),
+			prompter:          &mockPrompter{responses: []bool{}},
+		}
+
+		err := di.Install()
+		assert.NoError(t, err, "Should succeed with --update flag")
+
+		// Verify file WAS created with new version
 		filePath := fmt.Sprintf("imports/%s/%s.cdc", serviceAddress.String(), "Hello")
-		_, err = state.ReaderWriter().ReadFile(filePath)
-		assert.Error(t, err, "File should not exist when update is skipped")
+		fileContent, err := state.ReaderWriter().ReadFile(filePath)
+		assert.NoError(t, err, "File should exist after auto-update")
+		assert.NotNil(t, fileContent)
+		assert.Contains(t, string(fileContent), "Hello, World! v2", "Should have the new contract version")
 
-		// Verify hash was NOT updated (kept old version)
+		// Verify hash WAS updated
 		updatedDep := state.Dependencies().ByName("Hello")
 		assert.NotNil(t, updatedDep)
-		assert.Equal(t, "old_hash_from_previous_version", updatedDep.Hash, "Hash should remain unchanged")
+		assert.Equal(t, newContractHash, updatedDep.Hash, "Hash should be updated to new version")
+		assert.NotEqual(t, "old_hash_from_previous_version", updatedDep.Hash, "Should not have old hash")
 
-		// Verify warning was logged about incomplete state
-		assert.NotEmpty(t, di.logs.issues, "Should have warning about incomplete state")
-		assert.Contains(t, di.logs.issues[0], "does not exist locally", "Warning should mention missing file")
-		assert.Contains(t, di.logs.issues[0], "incomplete", "Warning should mention incomplete state")
+		// Verify success message logged
+		assert.NotEmpty(t, di.logs.stateUpdates, "Should have state update messages")
+		assert.Contains(t, di.logs.stateUpdates[0], "updated to latest version", "Should log update message")
 	})
 
 	t.Run("Already installed, up-to-date hash", func(t *testing.T) {
@@ -682,6 +758,97 @@ func TestDependencyInstallerInstallFromFreshClone(t *testing.T) {
 
 		// Verify no warnings (file exists, so no incomplete state)
 		assert.Empty(t, di.logs.issues, "Should have no warnings when file exists")
+	})
+
+	t.Run("Already installed, outdated hash - update flag", func(t *testing.T) {
+		// Fresh state for this test
+		_, state, _ := util.TestMocks(t)
+
+		oldContractCode := []byte(`access(all) contract Hello { access(all) fun sayHello(): String { return "Hello, World! v1" } }`)
+		newContractCode := []byte(`access(all) contract Hello { access(all) fun sayHello(): String { return "Hello, World! v2" } }`)
+
+		// Calculate the old hash
+		oldHash := sha256.New()
+		oldHash.Write(oldContractCode)
+		oldContractHash := hex.EncodeToString(oldHash.Sum(nil))
+
+		// Calculate the new hash
+		newHash := sha256.New()
+		newHash.Write(newContractCode)
+		newContractHash := hex.EncodeToString(newHash.Sum(nil))
+
+		// Simulate a dependency that exists in flow.json with an OLD hash
+		dep := config.Dependency{
+			Name: "Hello",
+			Source: config.Source{
+				NetworkName:  "emulator",
+				Address:      serviceAddress,
+				ContractName: "Hello",
+			},
+			Hash: oldContractHash,
+		}
+
+		state.Dependencies().AddOrUpdate(dep)
+
+		// Create the old file first
+		filePath := fmt.Sprintf("imports/%s/Hello.cdc", serviceAddress.String())
+		err := state.ReaderWriter().MkdirAll(filepath.Dir(filePath), 0755)
+		assert.NoError(t, err)
+		err = state.ReaderWriter().WriteFile(filePath, oldContractCode, 0644)
+		assert.NoError(t, err)
+
+		gw := mocks.DefaultMockGateway()
+
+		gw.GetAccount.Run(func(args mock.Arguments) {
+			addr := args.Get(1).(flow.Address)
+			assert.Equal(t, addr.String(), serviceAddress.String())
+			acc := tests.NewAccountWithAddress(addr.String())
+			acc.Contracts = map[string][]byte{
+				"Hello": newContractCode,
+			}
+
+			gw.GetAccount.Return(acc, nil)
+		})
+
+		// No prompter needed - --update auto-accepts
+		di := &DependencyInstaller{
+			Gateways: map[string]gateway.Gateway{
+				config.EmulatorNetwork.Name: gw.Mock,
+				config.TestnetNetwork.Name:  gw.Mock,
+				config.MainnetNetwork.Name:  gw.Mock,
+			},
+			Logger:            logger,
+			State:             state,
+			SaveState:         true,
+			TargetDir:         "",
+			SkipDeployments:   true,
+			SkipAlias:         true,
+			SkipUpdatePrompts: false,
+			Update:            true, // Auto-accept updates
+			dependencies:      make(map[string]config.Dependency),
+			accountAliases:    make(map[string]map[string]flow.Address),
+			pendingPrompts:    make([]pendingPrompt, 0),
+			prompter:          &mockPrompter{responses: []bool{}},
+		}
+
+		err = di.Install()
+		assert.NoError(t, err, "Should succeed with --update flag")
+
+		// Verify file WAS overwritten with new version
+		fileContent, err := state.ReaderWriter().ReadFile(filePath)
+		assert.NoError(t, err, "File should exist after auto-update")
+		assert.NotNil(t, fileContent)
+		assert.Contains(t, string(fileContent), "Hello, World! v2", "Should have the new contract version")
+		assert.NotContains(t, string(fileContent), "v1", "Should not have old version")
+
+		// Verify hash WAS updated
+		updatedDep := state.Dependencies().ByName("Hello")
+		assert.NotNil(t, updatedDep)
+		assert.Equal(t, newContractHash, updatedDep.Hash, "Hash should be updated to new version")
+
+		// Verify success message logged
+		assert.NotEmpty(t, di.logs.stateUpdates, "Should have state update messages")
+		assert.Contains(t, di.logs.stateUpdates[0], "updated to latest version", "Should log update message")
 	})
 }
 

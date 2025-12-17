@@ -104,6 +104,7 @@ type DependencyFlags struct {
 	skipDeployments   bool   `default:"false" flag:"skip-deployments" info:"Skip adding the dependency to deployments"`
 	skipAlias         bool   `default:"false" flag:"skip-alias" info:"Skip prompting for an alias"`
 	skipUpdatePrompts bool   `default:"false" flag:"skip-update-prompts" info:"Skip prompting to update existing dependencies"`
+	update            bool   `default:"false" flag:"update" info:"Automatically accept all dependency updates"`
 	deploymentAccount string `default:"" flag:"deployment-account,d" info:"Account name to use for deployments (skips deployment account prompt)"`
 	name              string `default:"" flag:"name" info:"Import alias name for the dependency (sets canonical field for Cadence import aliasing)"`
 }
@@ -128,6 +129,7 @@ type DependencyInstaller struct {
 	SkipDeployments   bool
 	SkipAlias         bool
 	SkipUpdatePrompts bool
+	Update            bool
 	DeploymentAccount string
 	Name              string
 	logs              categorizedLogs
@@ -150,6 +152,11 @@ func (prompter) GenericBoolPrompt(msg string) (bool, error) {
 
 // NewDependencyInstaller creates a new instance of DependencyInstaller
 func NewDependencyInstaller(logger output.Logger, state *flowkit.State, saveState bool, targetDir string, flags DependencyFlags) (*DependencyInstaller, error) {
+	// Validate flags: --update and --skip-update-prompts are mutually exclusive
+	if flags.update && flags.skipUpdatePrompts {
+		return nil, fmt.Errorf("cannot use both --update and --skip-update-prompts flags together")
+	}
+
 	emulatorGateway, err := gateway.NewGrpcGateway(config.EmulatorNetwork)
 	if err != nil {
 		return nil, fmt.Errorf("error creating emulator gateway: %v", err)
@@ -180,6 +187,7 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State, saveStat
 		SkipDeployments:   flags.skipDeployments,
 		SkipAlias:         flags.skipAlias,
 		SkipUpdatePrompts: flags.skipUpdatePrompts,
+		Update:            flags.update,
 		DeploymentAccount: flags.deploymentAccount,
 		Name:              flags.name,
 		dependencies:      make(map[string]config.Dependency),
@@ -641,16 +649,33 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 	// If it is, defer the prompt until after the tree is displayed (unless skip flag is set)
 	// If no hash, ignore
 	if existingDependency != nil && existingDependency.Hash != "" && existingDependency.Hash != originalContractDataHash {
-		// If skip update prompts flag is set, don't prompt and keep existing version
+		// If skip update prompts flag is set, fail immediately - can't guarantee frozen dependencies
 		if di.SkipUpdatePrompts {
-			// Warn if file doesn't exist - incomplete project state
-			if !di.contractFileExists(contractAddr, contractName) {
-				msg := util.MessageWithEmojiPrefix("❗", fmt.Sprintf("%s kept at current version (update available), but file does not exist locally. Your project may be incomplete. Remove --skip-update-prompts flag and accept the update to fix this.", dependency.Name))
-				di.logs.issues = append(di.logs.issues, msg)
-			} else {
-				msg := util.MessageWithEmojiPrefix("⏸️", fmt.Sprintf("%s kept at current version (update available)", dependency.Name))
-				di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
+			return fmt.Errorf(
+				"dependency %s has changed on-chain (hash mismatch). Expected hash %s but got %s. Cannot install with --skip-update-prompts flag when dependencies have been updated on-chain. Either remove the flag to accept updates interactively, or update your flow.json to the new hash",
+				dependency.Name,
+				existingDependency.Hash,
+				originalContractDataHash,
+			)
+		}
+
+		// If --update flag is set, auto-accept the update without prompting
+		if di.Update {
+			// Update the hash in state
+			err := di.updateDependencyState(*existingDependency, originalContractDataHash)
+			if err != nil {
+				return fmt.Errorf("error updating dependency state: %w", err)
 			}
+
+			// Create/overwrite the file with new version
+			err = di.createContractFile(contractAddr, contractName, contractData)
+			if err != nil {
+				return fmt.Errorf("error creating contract file: %w", err)
+			}
+
+			msg := util.MessageWithEmojiPrefix("✅", fmt.Sprintf("%s updated to latest version", dependency.Name))
+			di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
+
 			return nil
 		}
 
@@ -979,15 +1004,14 @@ func (di *DependencyInstaller) processPendingPrompts() error {
 					di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
 				}
 			} else {
-				// User chose not to update - keep existing file and hash
-				// Check if file exists - if not, warn about incomplete state
+				// User chose not to update
+				// If file doesn't exist, we MUST fail - can't guarantee frozen deps (no way to fetch old version)
 				if !di.contractFileExists(pending.contractAddr, pending.contractName) {
-					msg := util.MessageWithEmojiPrefix("❗", fmt.Sprintf("%s kept at current version, but file does not exist locally. Your project may be incomplete. Run install again and accept the update to fix this.", pending.contractName))
-					di.logs.issues = append(di.logs.issues, msg)
-				} else {
-					msg := util.MessageWithEmojiPrefix("⏸️", fmt.Sprintf("%s kept at current version", pending.contractName))
-					di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
+					return fmt.Errorf("dependency %s has changed on-chain but file does not exist locally. Cannot keep at current version because we have no way to fetch the old version from the blockchain. Either accept the update or manually add the contract file", pending.contractName)
 				}
+				// File exists - keep it at current version
+				msg := util.MessageWithEmojiPrefix("⏸️", fmt.Sprintf("%s kept at current version", pending.contractName))
+				di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
 			}
 		}
 	}
