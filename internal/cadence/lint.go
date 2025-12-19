@@ -29,6 +29,8 @@ import (
 	"github.com/logrusorgru/aurora/v4"
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/cadence/ast"
+	"github.com/onflow/cadence/common"
 	"github.com/onflow/cadence/tools/analysis"
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/output"
@@ -118,7 +120,17 @@ func lintFiles(
 	for _, location := range filePaths {
 		diagnostics, err := l.lintFile(location)
 		if err != nil {
-			return nil, err
+			// If there's an internal error (like a panic), convert it to a diagnostic
+			// and continue processing other files
+			diagnostics = []analysis.Diagnostic{
+				{
+					Location: common.StringLocation(location),
+					Category: ErrorCategory,
+					Message:  err.Error(),
+					Range:    ast.Range{},
+				},
+			}
+			exitCode = 1
 		}
 
 		// Sort for consistent output

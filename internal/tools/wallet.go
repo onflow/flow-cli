@@ -82,6 +82,8 @@ func wallet(
 	fmt.Printf("%s Starting dev wallet server on port %d\n", output.SuccessEmoji(), walletFlags.Port)
 	fmt.Printf("%s  Make sure the emulator is running\n", output.WarningEmoji())
 
-	srv.Start()
+	if err := srv.Start(); err != nil {
+		return nil, err
+	}
 	return nil, nil
 }
