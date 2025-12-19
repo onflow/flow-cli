@@ -262,7 +262,7 @@ func startInteractiveInit(
 	projectTypes := []ProjectType{
 		ProjectTypeDefault,
 		ProjectTypeScheduledTransactions,
-		ProjectTypeStablecoin,
+		// ProjectTypeStablecoin, // Temporarily disabled
 		ProjectTypeDeFiActions,
 		ProjectTypeCustom,
 	}
@@ -296,7 +296,7 @@ func startInteractiveInit(
 			return "", err
 		}
 		projectType = ProjectTypeDefault
-	case ProjectTypeScheduledTransactions, ProjectTypeStablecoin, ProjectTypeDeFiActions:
+	case ProjectTypeScheduledTransactions, ProjectTypeDeFiActions: // ProjectTypeStablecoin temporarily disabled
 		err := installProjectDependencies(logger, state, tempDir, projectType)
 		if err != nil {
 			return "", err
@@ -312,7 +312,7 @@ func startInteractiveInit(
 	}
 
 	// Add project-specific contract deployments
-	if projectType == ProjectTypeScheduledTransactions || projectType == ProjectTypeStablecoin || projectType == ProjectTypeDeFiActions {
+	if projectType == ProjectTypeScheduledTransactions || projectType == ProjectTypeDeFiActions { // ProjectTypeStablecoin temporarily disabled
 		err = addContractDeployments(state, projectType)
 		if err != nil {
 			return "", err
