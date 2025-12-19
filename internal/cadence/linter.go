@@ -243,17 +243,17 @@ func (l *linter) checkAccountAccess(checker *sema.Checker, memberLocation common
 		return false
 	}
 
+	checkerContract, err := l.state.Contracts().ByName(checkerContractName)
+	if err != nil {
+		return false
+	}
+
+	memberContract, err := l.state.Contracts().ByName(memberContractName)
+	if err != nil {
+		return false
+	}
+
 	for _, network := range *networks {
-		checkerContract, err := l.state.Contracts().ByName(checkerContractName)
-		if err != nil {
-			continue
-		}
-
-		memberContract, err := l.state.Contracts().ByName(memberContractName)
-		if err != nil {
-			continue
-		}
-
 		checkerAddr, err := l.state.ContractAddress(checkerContract, network)
 		if err != nil || checkerAddr == nil {
 			continue
