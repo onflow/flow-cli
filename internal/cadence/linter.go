@@ -21,6 +21,7 @@ package cadence
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/onflow/flow-cli/internal/util"
@@ -75,16 +76,21 @@ func newLinter(state *flowkit.State) *linter {
 
 func (l *linter) lintFile(
 	filePath string,
-) (
-	[]analysis.Diagnostic,
-	error,
-) {
-	diagnostics := make([]analysis.Diagnostic, 0)
+) (diagnostics []analysis.Diagnostic, err error) {
+	// Recover from panics in the Cadence checker
+	defer func() {
+		if r := recover(); r != nil {
+			// Convert panic to error instead of crashing
+			err = fmt.Errorf("internal error: %v", r)
+		}
+	}()
+
+	diagnostics = make([]analysis.Diagnostic, 0)
 	location := common.StringLocation(filePath)
 
-	code, err := l.state.ReadFile(filePath)
-	if err != nil {
-		return nil, err
+	code, readErr := l.state.ReadFile(filePath)
+	if readErr != nil {
+		return nil, readErr
 	}
 	codeStr := string(code)
 
@@ -151,13 +157,132 @@ func (l *linter) lintFile(
 	return diagnostics, nil
 }
 
+// isContractName returns true if the location string is a contract name (not a file path)
+func isContractName(locationString string) bool {
+	return !strings.HasSuffix(locationString, ".cdc")
+}
+
+// resolveContractName attempts to resolve a location to a contract name
+func (l *linter) resolveContractName(location common.StringLocation) string {
+	locationString := location.String()
+
+	// If it's already a contract name, return it
+	if isContractName(locationString) {
+		return locationString
+	}
+
+	// Otherwise, try to find the contract by file path
+	if l.state == nil {
+		return ""
+	}
+
+	contracts := l.state.Contracts()
+	if contracts == nil {
+		return ""
+	}
+
+	// Normalize the location path
+	absLocation, err := filepath.Abs(locationString)
+	if err != nil {
+		absLocation = locationString
+	}
+
+	// Search for matching contract
+	for _, contract := range *contracts {
+		contractPath := contract.Location
+		absContractPath, err := filepath.Abs(contractPath)
+		if err != nil {
+			absContractPath = contractPath
+		}
+
+		if absLocation == absContractPath {
+			return contract.Name
+		}
+	}
+
+	return ""
+}
+
+// checkAccountAccess determines if checker and member locations are on the same account
+func (l *linter) checkAccountAccess(checker *sema.Checker, memberLocation common.Location) bool {
+	// If both are AddressLocation, directly compare addresses
+	if checkerAddr, ok := checker.Location.(common.AddressLocation); ok {
+		if memberAddr, ok := memberLocation.(common.AddressLocation); ok {
+			return checkerAddr.Address == memberAddr.Address
+		}
+	}
+
+	// For StringLocations, resolve to contract names and check deployments
+	checkerLocation, ok := checker.Location.(common.StringLocation)
+	if !ok {
+		return false
+	}
+
+	memberStringLocation, ok := memberLocation.(common.StringLocation)
+	if !ok {
+		return false
+	}
+
+	checkerContractName := l.resolveContractName(checkerLocation)
+	if checkerContractName == "" {
+		return false
+	}
+
+	memberContractName := l.resolveContractName(memberStringLocation)
+	if memberContractName == "" {
+		return false
+	}
+
+	if l.state == nil {
+		return false
+	}
+
+	// Check across all networks if they're deployed to the same account
+	networks := l.state.Networks()
+	if networks == nil {
+		return false
+	}
+
+	checkerContract, err := l.state.Contracts().ByName(checkerContractName)
+	if err != nil {
+		return false
+	}
+
+	memberContract, err := l.state.Contracts().ByName(memberContractName)
+	if err != nil {
+		return false
+	}
+
+	for _, network := range *networks {
+		checkerAddr, err := l.state.ContractAddress(checkerContract, network)
+		if err != nil || checkerAddr == nil {
+			continue
+		}
+
+		memberAddr, err := l.state.ContractAddress(memberContract, network)
+		if err != nil || memberAddr == nil {
+			continue
+		}
+
+		// If they're on the same account for this network, allow access
+		if *checkerAddr == *memberAddr {
+			return true
+		}
+	}
+
+	return false
+}
+
 // Create a new checker config with the given standard library
 func (l *linter) newCheckerConfig(standardLibrary *util.StandardLibrary) *sema.Config {
 	return &sema.Config{
 		BaseValueActivationHandler: func(location common.Location) *sema.VariableActivation {
 			return standardLibrary.BaseValueActivation
 		},
-		AccessCheckMode:            sema.AccessCheckModeStrict,
+		MemberAccountAccessHandler: func(checker *sema.Checker, memberLocation common.Location) bool {
+			return l.checkAccountAccess(checker, memberLocation)
+		},
+		AccessCheckMode:            sema.AccessCheckModeNotSpecifiedUnrestricted,
 		PositionInfoEnabled:        true, // Must be enabled for linters
 		ExtendedElaborationEnabled: true, // Must be enabled for linters
 		ImportHandler:              l.handleImport,
