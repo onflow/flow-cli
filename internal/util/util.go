@@ -39,6 +39,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	emulatorUtils "github.com/onflow/flow-emulator/utils"
+
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"
 )
@@ -243,12 +245,16 @@ func NetworkToChainID(network string) (flow.ChainID, error) {
 }
 
 // GetChainIDFromHost queries the given host directly to get its chain ID.
+// It will retry transient failures with exponential backoff using the emulator's gRPC retry interceptor.
 func GetChainIDFromHost(host string) (flowGo.ChainID, error) {
-
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	conn, err := grpc.NewClient(host, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(
+		host,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		emulatorUtils.DefaultGRPCRetryInterceptor(),
+	)
 	if err != nil {
 		return "", fmt.Errorf("failed to connect to %s: %w", host, err)
 	}
