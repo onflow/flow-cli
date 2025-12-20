@@ -22,7 +22,6 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
-	"slices"
 	"strings"
 
 	"github.com/onflow/flow-cli/internal/util"
@@ -37,6 +36,7 @@ import (
 	"github.com/onflow/cadence/stdlib"
 	"github.com/onflow/cadence/tools/analysis"
 	"github.com/onflow/flowkit/v2"
+	"golang.org/x/exp/maps"
 )
 
 type linter struct {
@@ -58,25 +58,7 @@ const (
 	ErrorCategory         = "error"
 )
 
-// getAnalyzers returns analyzers in deterministic order (sorted by name)
-// to ensure consistent lint results across runs
-func getAnalyzers() []*analysis.Analyzer {
-	// Get keys into a slice
-	keys := make([]string, 0, len(cdclint.Analyzers))
-	for key := range cdclint.Analyzers {
-		keys = append(keys, key)
-	}
-
-	// Sort keys for deterministic order
-	slices.Sort(keys)
-
-	// Build analyzer list in sorted order
-	analyzers := make([]*analysis.Analyzer, 0, len(keys))
-	for _, key := range keys {
-		analyzers = append(analyzers, cdclint.Analyzers[key])
-	}
-	return analyzers
-}
+var analyzers = maps.Values(cdclint.Analyzers)
 
 func newLinter(state *flowkit.State) *linter {
 	l := &linter{
@@ -170,7 +152,7 @@ func (l *linter) lintFile(
 	report := func(diagnostic analysis.Diagnostic) {
 		diagnostics = append(diagnostics, diagnostic)
 	}
-	analysisProgram.Run(getAnalyzers(), report)
+	analysisProgram.Run(analyzers, report)
 
 	return diagnostics, nil
 }
