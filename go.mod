@@ -12,17 +12,17 @@ require (
 	github.com/getsentry/sentry-go v0.40.0
 	github.com/gosuri/uilive v0.0.4
 	github.com/logrusorgru/aurora/v4 v4.0.0
-	github.com/onflow/cadence v1.8.7
+	github.com/onflow/cadence v1.9.2
 	github.com/onflow/cadence-tools/languageserver v1.7.4
 	github.com/onflow/cadence-tools/lint v1.6.4
 	github.com/onflow/cadence-tools/test v1.9.2
 	github.com/onflow/fcl-dev-wallet v0.9.1
 	github.com/onflow/flixkit-go/v2 v2.6.2
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.9.2
-	github.com/onflow/flow-emulator v1.14.0
+	github.com/onflow/flow-emulator v1.15.0
 	github.com/onflow/flow-evm-gateway v1.4.3
 	github.com/onflow/flow-go v0.45.0-experimental-cadence-v1.8.7-vm-test.1
-	github.com/onflow/flow-go-sdk v1.9.6
+	github.com/onflow/flow-go-sdk v1.9.8
 	github.com/onflow/flow/protobuf/go/flow v0.4.18
 	github.com/onflow/flowkit/v2 v2.9.0
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
@@ -43,7 +43,7 @@ require (
 
 require (
 	cloud.google.com/go v0.121.6 // indirect
-	cloud.google.com/go/auth v0.16.4 // indirect
+	cloud.google.com/go/auth v0.17.0 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
 	cloud.google.com/go/compute/metadata v0.9.0 // indirect
 	cloud.google.com/go/iam v1.5.3 // indirect
@@ -130,7 +130,7 @@ require (
 	github.com/google/pprof v0.0.0-20250630185457-6e76a2b096b5 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/googleapis/enterprise-certificate-proxy v0.3.6 // indirect
+	github.com/googleapis/enterprise-certificate-proxy v0.3.7 // indirect
 	github.com/googleapis/gax-go/v2 v2.15.0 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
@@ -282,18 +282,18 @@ require (
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/crypto v0.45.0 // indirect
 	golang.org/x/net v0.47.0 // indirect
-	golang.org/x/oauth2 v0.32.0 // indirect
+	golang.org/x/oauth2 v0.33.0 // indirect
 	golang.org/x/sync v0.18.0 // indirect
 	golang.org/x/sys v0.39.0 // indirect
 	golang.org/x/text v0.31.0 // indirect
-	golang.org/x/time v0.12.0 // indirect
+	golang.org/x/time v0.14.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	gonum.org/v1/gonum v0.16.0 // indirect
-	google.golang.org/api v0.247.0 // indirect
+	google.golang.org/api v0.257.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto v0.0.0-20251111163417-95abcf5c77ba // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20251103181224-f26f9409b101 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20251103181224-f26f9409b101 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20251124214823-79d6a2a48846 // indirect
 	google.golang.org/protobuf v1.36.10 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
