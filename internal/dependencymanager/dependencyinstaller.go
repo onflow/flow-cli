@@ -620,6 +620,40 @@ func (di *DependencyInstaller) handleFileSystem(contractAddr, contractName, cont
 	return nil
 }
 
+// verifyLocalFileIntegrity checks if the local file matches the expected hash in flow.json
+func (di *DependencyInstaller) verifyLocalFileIntegrity(contractAddr, contractName, expectedHash string) error {
+	if !di.contractFileExists(contractAddr, contractName) {
+		return nil // File doesn't exist, nothing to verify
+	}
+
+	if expectedHash == "" {
+		return nil // No hash stored, can't verify (legacy state)
+	}
+
+	filePath := di.getContractFilePath(contractAddr, contractName)
+	fileContent, err := di.State.ReaderWriter().ReadFile(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to read file for integrity check: %w", err)
+	}
+
+	// Calculate hash of existing file
+	fileHash := sha256.New()
+	fileHash.Write(fileContent)
+	existingFileHash := hex.EncodeToString(fileHash.Sum(nil))
+
+	// Compare hashes
+	if expectedHash != existingFileHash {
+		return fmt.Errorf(
+			"dependency %s: local file has been modified (hash mismatch). Expected hash %s but file has %s. The file content does not match what is recorded in flow.json. Run 'flow dependencies install --update' to sync with the network version, or restore the file to match the stored hash",
+			contractName,
+			expectedHash,
+			existingFileHash,
+		)
+	}
+
+	return nil
+}
+
 func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency, program *project.Program) error {
 	networkName := dependency.Source.NetworkName
 	contractAddr := dependency.Source.Address.String()
@@ -751,6 +785,12 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 	err = di.handleFileSystem(contractAddr, contractName, contractData, networkName)
 	if err != nil {
 		return fmt.Errorf("error handling file system: %w", err)
+	}
+
+	// Verify local file integrity matches stored hash (if file exists and hash is stored)
+	err = di.verifyLocalFileIntegrity(contractAddr, contractName, contractDataHash)
+	if err != nil {
+		return err
 	}
 
 	return nil
