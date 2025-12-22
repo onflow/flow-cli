@@ -750,9 +750,9 @@ func TestDependencyInstallerInstallFromFreshClone(t *testing.T) {
 		assert.Empty(t, di.logs.stateUpdates, "Should have no state updates")
 	})
 
-	t.Run("Already installed, up-to-date hash BUT modified local file", func(t *testing.T) {
-		// This is the CRITICAL test case: network hash matches flow.json hash,
-		// but local file has been tampered with. This should FAIL.
+	t.Run("Already installed, up-to-date hash BUT modified local file - user repairs", func(t *testing.T) {
+		// Network hash matches flow.json hash, but local file has been tampered with
+		// Should auto-repair WITHOUT prompting (flow.json is source of truth)
 		_, state, _ := util.TestMocks(t)
 
 		contractCode := []byte(`access(all) contract Hello { access(all) fun sayHello(): String { return "Hello, World!" } }`)
@@ -796,7 +796,7 @@ func TestDependencyInstallerInstallFromFreshClone(t *testing.T) {
 			gw.GetAccount.Return(acc, nil)
 		})
 
-		// Mock prompter - should NOT be called (no update prompt since hashes match)
+		// No prompter needed - auto-repairs when network agrees with flow.json
 		mockPrompter := &mockPrompter{responses: []bool{}}
 
 		di := &DependencyInstaller{
@@ -819,14 +819,99 @@ func TestDependencyInstallerInstallFromFreshClone(t *testing.T) {
 		}
 
 		err = di.Install()
-		// Should FAIL because local file has been modified (tampering detected)
-		assert.Error(t, err, "Should fail when local file is modified even if network hash matches")
-		assert.Contains(t, err.Error(), "local file has been modified", "Error should mention file modification")
-		assert.Contains(t, err.Error(), "hash mismatch", "Error should mention hash mismatch")
-		assert.Contains(t, err.Error(), "Hello", "Error should mention the dependency name")
+		// Should SUCCEED - auto-repaired without prompting
+		assert.NoError(t, err, "Should auto-repair when network agrees with flow.json")
 
-		// Verify no prompts occurred (integrity check happens before any prompts)
-		assert.Equal(t, 0, mockPrompter.index, "No prompts should have been shown")
+		// Verify file WAS repaired
+		fileContent, err := state.ReaderWriter().ReadFile(filePath)
+		assert.NoError(t, err)
+		assert.Contains(t, string(fileContent), "Hello, World!", "Should have correct version")
+		assert.NotContains(t, string(fileContent), "HACKED", "Should not have hacked version")
+
+		// Verify NO prompt was shown (auto-repair because network agrees with flow.json)
+		assert.Equal(t, 0, mockPrompter.index, "Should not prompt when network agrees with flow.json")
+	})
+
+	t.Run("Already installed, up-to-date hash BUT modified local file - skip prompts mode", func(t *testing.T) {
+		// Network hash matches flow.json hash, but local file has been tampered with
+		// Should auto-repair even with --skip-update-prompts (no network change)
+		_, state, _ := util.TestMocks(t)
+
+		contractCode := []byte(`access(all) contract Hello { access(all) fun sayHello(): String { return "Hello, World!" } }`)
+		modifiedContractCode := []byte(`access(all) contract Hello { access(all) fun sayHello(): String { return "Hello, HACKED!" } }`)
+
+		// Calculate the hash of the correct contract
+		hash := sha256.New()
+		hash.Write(contractCode)
+		contractHash := hex.EncodeToString(hash.Sum(nil))
+
+		// Simulate a dependency with matching hash in flow.json
+		dep := config.Dependency{
+			Name: "Hello",
+			Source: config.Source{
+				NetworkName:  "emulator",
+				Address:      serviceAddress,
+				ContractName: "Hello",
+			},
+			Hash: contractHash, // Hash matches what's on network
+		}
+
+		state.Dependencies().AddOrUpdate(dep)
+
+		// Create a MODIFIED file (different from what hash says it should be)
+		filePath := fmt.Sprintf("imports/%s/Hello.cdc", serviceAddress.String())
+		err := state.ReaderWriter().MkdirAll(filepath.Dir(filePath), 0755)
+		assert.NoError(t, err)
+		err = state.ReaderWriter().WriteFile(filePath, modifiedContractCode, 0644)
+		assert.NoError(t, err)
+
+		gw := mocks.DefaultMockGateway()
+
+		gw.GetAccount.Run(func(args mock.Arguments) {
+			addr := args.Get(1).(flow.Address)
+			assert.Equal(t, addr.String(), serviceAddress.String())
+			acc := tests.NewAccountWithAddress(addr.String())
+			acc.Contracts = map[string][]byte{
+				"Hello": contractCode, // Network has the correct version
+			}
+
+			gw.GetAccount.Return(acc, nil)
+		})
+
+		// No prompter needed - auto-repairs regardless of flags
+		mockPrompter := &mockPrompter{responses: []bool{}}
+
+		di := &DependencyInstaller{
+			Gateways: map[string]gateway.Gateway{
+				config.EmulatorNetwork.Name: gw.Mock,
+				config.TestnetNetwork.Name:  gw.Mock,
+				config.MainnetNetwork.Name:  gw.Mock,
+			},
+			Logger:            logger,
+			State:             state,
+			SaveState:         true,
+			TargetDir:         "",
+			SkipDeployments:   true,
+			SkipAlias:         true,
+			SkipUpdatePrompts: true, // Should still auto-repair (no network change)
+			dependencies:      make(map[string]config.Dependency),
+			accountAliases:    make(map[string]map[string]flow.Address),
+			pendingPrompts:    make([]pendingPrompt, 0),
+			prompter:          mockPrompter,
+		}
+
+		err = di.Install()
+		// Should SUCCEED - auto-repaired even with --skip-update-prompts
+		assert.NoError(t, err, "Should succeed even with --skip-update-prompts (no network change)")
+
+		// Verify file WAS repaired
+		fileContent, err := state.ReaderWriter().ReadFile(filePath)
+		assert.NoError(t, err)
+		assert.Contains(t, string(fileContent), "Hello, World!", "Should have correct version")
+		assert.NotContains(t, string(fileContent), "HACKED", "Should not have hacked version")
+
+		// Verify no prompts (auto-repair because network agrees with flow.json)
+		assert.Equal(t, 0, mockPrompter.index, "Should not prompt when network agrees with flow.json")
 	})
 
 	t.Run("Already installed, outdated hash - user accepts", func(t *testing.T) {

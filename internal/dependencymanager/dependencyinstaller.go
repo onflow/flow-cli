@@ -716,11 +716,16 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 		}
 	}
 
-	// Install or update the dependency
-	// This is the shared installation path for:
-	// - New dependencies (no hash mismatch)
-	// - Hash mismatch with --skip-update-prompts and no local file
-	// - Hash mismatch with --update flag
+	// Check if file exists and needs repair (out of sync with flow.json)
+	fileExists := di.contractFileExists(contractAddr, contractName)
+	fileModified := false
+	if fileExists {
+		if err := di.verifyLocalFileIntegrity(contractAddr, contractName, contractDataHash); err != nil {
+			fileModified = true
+		}
+	}
+
+	// Install or update: new deps, out-of-sync files, or network updates with --update/--skip-update-prompts
 	isNewDep := di.State.Dependencies().ByName(dependency.Name) == nil
 
 	err := di.updateDependencyState(dependency, contractDataHash)
@@ -729,14 +734,18 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 		return err
 	}
 
-	// Log if this was an auto-update
-	if hashMismatch && di.Update {
+	// Log if this was an auto-update (with --update flag) or file repair
+	if (hashMismatch || fileModified) && di.Update {
 		msg := util.MessageWithEmojiPrefix("✅", fmt.Sprintf("%s updated to latest version", dependency.Name))
+		di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
+	} else if fileModified {
+		// File repair without --update flag (common after git clone)
+		msg := util.MessageWithEmojiPrefix("✅", fmt.Sprintf("%s synced", dependency.Name))
 		di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
 	}
 
 	// Handle additional tasks for new dependencies or when contract file doesn't exist
-	if isNewDep || !di.contractFileExists(contractAddr, contractName) {
+	if isNewDep || !fileExists {
 		err := di.handleAdditionalDependencyTasks(networkName, dependency.Name)
 		if err != nil {
 			di.Logger.Error(fmt.Sprintf("Error handling additional dependency tasks: %v", err))
@@ -744,11 +753,8 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 		}
 	}
 
-	// Handle file creation/update
-	fileExists := di.contractFileExists(contractAddr, contractName)
-	forceOverwrite := hashMismatch && di.Update
-
-	if !fileExists || forceOverwrite {
+	// Create or overwrite file
+	if !fileExists || fileModified || (hashMismatch && di.Update) {
 		err = di.createContractFile(contractAddr, contractName, contractData)
 		if err != nil {
 			return fmt.Errorf("error creating contract file: %w", err)
@@ -757,14 +763,6 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 		if !fileExists {
 			msg := util.MessageWithEmojiPrefix("✅️", fmt.Sprintf("Contract %s from %s on %s installed", contractName, contractAddr, networkName))
 			di.logs.fileSystemActions = append(di.logs.fileSystemActions, msg)
-		}
-	}
-
-	// Verify local file integrity matches stored hash (if file exists and we didn't just overwrite it)
-	if fileExists && !forceOverwrite {
-		err = di.verifyLocalFileIntegrity(contractAddr, contractName, contractDataHash)
-		if err != nil {
-			return err
 		}
 	}
 
