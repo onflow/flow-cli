@@ -690,25 +690,16 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 		// If skip update prompts flag is set, fail immediately - can't guarantee frozen dependencies
 		if di.SkipUpdatePrompts {
 			// First check if local file has been modified before reporting network hash mismatch
-			if di.contractFileExists(contractAddr, contractName) {
-				filePath := di.getContractFilePath(contractAddr, contractName)
-				fileContent, err := di.State.ReaderWriter().ReadFile(filePath)
-				if err == nil {
-					fileHash := sha256.New()
-					fileHash.Write(fileContent)
-					existingFileHash := hex.EncodeToString(fileHash.Sum(nil))
-
-					if existingDependency.Hash != existingFileHash {
-						return fmt.Errorf(
-							"dependency %s: local file has been modified (hash mismatch). Expected hash %s but file has %s. Cannot install with --skip-update-prompts flag when local files have been modified. Either restore the file to match the stored hash or remove the flag to update interactively",
-							dependency.Name,
-							existingDependency.Hash,
-							existingFileHash,
-						)
-					}
-				}
+			if err := di.verifyLocalFileIntegrity(contractAddr, contractName, existingDependency.Hash); err != nil {
+				// Local file was modified - report that specifically
+				return fmt.Errorf(
+					"dependency %s: local file has been modified (hash mismatch). Cannot install with --skip-update-prompts flag when local files have been modified. Either restore the file to match the stored hash or remove the flag to update interactively. %w",
+					dependency.Name,
+					err,
+				)
 			}
 
+			// File is OK, but network has changed
 			return fmt.Errorf(
 				"dependency %s has changed on-chain (hash mismatch). Expected hash %s but got %s. Cannot install with --skip-update-prompts flag when dependencies have been updated on-chain. Either remove the flag to accept updates interactively, or update your flow.json to the new hash",
 				dependency.Name,
@@ -1074,31 +1065,15 @@ func (di *DependencyInstaller) processPendingPrompts() error {
 					return fmt.Errorf("dependency %s has changed on-chain but file does not exist locally. Cannot keep at current version because we have no way to fetch the old version from the blockchain. Either accept the update or manually add the contract file", pending.contractName)
 				}
 
-				// Verify the existing file's hash matches what's in flow.json to ensure integrity
-				filePath := di.getContractFilePath(pending.contractAddr, pending.contractName)
-				fileContent, err := di.State.ReaderWriter().ReadFile(filePath)
-				if err != nil {
-					return fmt.Errorf("failed to read existing file for %s: %w", pending.contractName, err)
-				}
-
-				// Calculate hash of existing file
-				fileHash := sha256.New()
-				fileHash.Write(fileContent)
-				existingFileHash := hex.EncodeToString(fileHash.Sum(nil))
-
 				// Get the stored hash from flow.json
 				dependency := di.State.Dependencies().ByName(pending.contractName)
 				if dependency == nil {
 					return fmt.Errorf("dependency %s not found in state", pending.contractName)
 				}
 
-				// Compare hashes - file content should match what's recorded in flow.json
-				if dependency.Hash != existingFileHash {
-					return fmt.Errorf("dependency %s: local file has been modified (hash mismatch). Expected hash %s but file has %s. The file content does not match what is recorded in flow.json. Either accept the update to sync with the network version, or restore the file to match the stored hash",
-						pending.contractName,
-						dependency.Hash,
-						existingFileHash,
-					)
+				// Verify the existing file's hash matches what's in flow.json to ensure integrity
+				if err := di.verifyLocalFileIntegrity(pending.contractAddr, pending.contractName, dependency.Hash); err != nil {
+					return err
 				}
 
 				// File exists and hash matches - keep it at current version
