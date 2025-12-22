@@ -355,12 +355,17 @@ func TestDependencyInstallerInstallFromFreshClone(t *testing.T) {
 		assert.Contains(t, err.Error(), "no way to fetch", "Error should explain can't fetch old version")
 	})
 
-	t.Run("First install, outdated hash - skip flag", func(t *testing.T) {
+	t.Run("First install, outdated hash - skip flag WITHOUT file", func(t *testing.T) {
 		// Fresh state for this test
 		_, state, _ := util.TestMocks(t)
 
 		// Network has a newer version of the contract
 		newContractCode := []byte(`access(all) contract Hello { access(all) fun sayHello(): String { return "Hello, World! v2" } }`)
+
+		// Calculate the new hash
+		newHash := sha256.New()
+		newHash.Write(newContractCode)
+		newContractHash := hex.EncodeToString(newHash.Sum(nil))
 
 		// Simulate a dependency that exists in flow.json with an OLD hash
 		// (like what you'd have after cloning a repo where the network has been updated)
@@ -401,7 +406,7 @@ func TestDependencyInstallerInstallFromFreshClone(t *testing.T) {
 			TargetDir:         "",
 			SkipDeployments:   true,
 			SkipAlias:         true,
-			SkipUpdatePrompts: true, // Skip prompts - should NOT update
+			SkipUpdatePrompts: true, // Skip prompts
 			dependencies:      make(map[string]config.Dependency),
 			accountAliases:    make(map[string]map[string]flow.Address),
 			pendingPrompts:    make([]pendingPrompt, 0),
@@ -409,10 +414,99 @@ func TestDependencyInstallerInstallFromFreshClone(t *testing.T) {
 		}
 
 		err := di.Install()
-		// Should FAIL because hash mismatch with skip flag (can't guarantee frozen deps, we have no way to fetch them)
-		assert.Error(t, err, "Should fail when hash mismatches with --skip-update-prompts")
-		assert.Contains(t, err.Error(), "hash mismatch", "Error should mention hash mismatch")
-		assert.Contains(t, err.Error(), "Hello", "Error should mention the dependency name")
+		// Should SUCCEED - file doesn't exist, so just install from network
+		assert.NoError(t, err, "Should succeed when file doesn't exist - just install from network")
+
+		// Verify file WAS created with network version
+		filePath := fmt.Sprintf("imports/%s/%s.cdc", serviceAddress.String(), "Hello")
+		fileContent, err := state.ReaderWriter().ReadFile(filePath)
+		assert.NoError(t, err, "File should exist after install")
+		assert.Contains(t, string(fileContent), "Hello, World! v2", "Should have the new network version")
+
+		// Verify hash WAS updated to match network
+		updatedDep := state.Dependencies().ByName("Hello")
+		assert.NotNil(t, updatedDep)
+		assert.Equal(t, newContractHash, updatedDep.Hash, "Hash should be updated to network version")
+	})
+
+	t.Run("First install, outdated hash - skip flag with matching file", func(t *testing.T) {
+		// Fresh state for this test
+		_, state, _ := util.TestMocks(t)
+
+		oldContractCode := []byte(`access(all) contract Hello { access(all) fun sayHello(): String { return "Hello, World! v1" } }`)
+		newContractCode := []byte(`access(all) contract Hello { access(all) fun sayHello(): String { return "Hello, World! v2" } }`)
+
+		// Calculate the old hash
+		oldHash := sha256.New()
+		oldHash.Write(oldContractCode)
+		oldContractHash := hex.EncodeToString(oldHash.Sum(nil))
+
+		// Simulate a dependency that exists in flow.json with an OLD hash
+		dep := config.Dependency{
+			Name: "Hello",
+			Source: config.Source{
+				NetworkName:  "emulator",
+				Address:      serviceAddress,
+				ContractName: "Hello",
+			},
+			Hash: oldContractHash,
+		}
+
+		state.Dependencies().AddOrUpdate(dep)
+
+		// Create the OLD file that matches the stored hash
+		filePath := fmt.Sprintf("imports/%s/Hello.cdc", serviceAddress.String())
+		err := state.ReaderWriter().MkdirAll(filepath.Dir(filePath), 0755)
+		assert.NoError(t, err)
+		err = state.ReaderWriter().WriteFile(filePath, oldContractCode, 0644)
+		assert.NoError(t, err)
+
+		gw := mocks.DefaultMockGateway()
+
+		gw.GetAccount.Run(func(args mock.Arguments) {
+			addr := args.Get(1).(flow.Address)
+			assert.Equal(t, addr.String(), serviceAddress.String())
+			acc := tests.NewAccountWithAddress(addr.String())
+			acc.Contracts = map[string][]byte{
+				"Hello": newContractCode, // Network has new version
+			}
+
+			gw.GetAccount.Return(acc, nil)
+		})
+
+		di := &DependencyInstaller{
+			Gateways: map[string]gateway.Gateway{
+				config.EmulatorNetwork.Name: gw.Mock,
+				config.TestnetNetwork.Name:  gw.Mock,
+				config.MainnetNetwork.Name:  gw.Mock,
+			},
+			Logger:            logger,
+			State:             state,
+			SaveState:         true,
+			TargetDir:         "",
+			SkipDeployments:   true,
+			SkipAlias:         true,
+			SkipUpdatePrompts: true, // Skip prompts flag set
+			dependencies:      make(map[string]config.Dependency),
+			accountAliases:    make(map[string]map[string]flow.Address),
+			pendingPrompts:    make([]pendingPrompt, 0),
+			prompter:          &mockPrompter{responses: []bool{}},
+		}
+
+		err = di.Install()
+		// Should SUCCEED because local file exists and matches stored hash (frozen deps are valid)
+		assert.NoError(t, err, "Should succeed when file exists and matches stored hash with --skip-update-prompts")
+
+		// Verify file was NOT changed (still has v1)
+		fileContent, err := state.ReaderWriter().ReadFile(filePath)
+		assert.NoError(t, err)
+		assert.Contains(t, string(fileContent), "Hello, World! v1", "Should keep the old version")
+		assert.NotContains(t, string(fileContent), "v2", "Should not have new version")
+
+		// Verify hash was NOT updated in flow.json
+		updatedDep := state.Dependencies().ByName("Hello")
+		assert.NotNil(t, updatedDep)
+		assert.Equal(t, oldContractHash, updatedDep.Hash, "Hash should remain at old version")
 	})
 
 	t.Run("First install, outdated hash - skip flag with modified file", func(t *testing.T) {

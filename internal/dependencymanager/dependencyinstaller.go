@@ -607,19 +607,6 @@ func (di *DependencyInstaller) createContractFile(address, contractName, data st
 	return nil
 }
 
-func (di *DependencyInstaller) handleFileSystem(contractAddr, contractName, contractData, networkName string) error {
-	if !di.contractFileExists(contractAddr, contractName) {
-		if err := di.createContractFile(contractAddr, contractName, contractData); err != nil {
-			return fmt.Errorf("failed to create contract file: %w", err)
-		}
-
-		msg := util.MessageWithEmojiPrefix("✅️", fmt.Sprintf("Contract %s from %s on %s installed", contractName, contractAddr, networkName))
-		di.logs.fileSystemActions = append(di.logs.fileSystemActions, msg)
-	}
-
-	return nil
-}
-
 // verifyLocalFileIntegrity checks if the local file matches the expected hash in flow.json
 func (di *DependencyInstaller) verifyLocalFileIntegrity(contractAddr, contractName, expectedHash string) error {
 	if !di.contractFileExists(contractAddr, contractName) {
@@ -684,14 +671,15 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 	}
 
 	// Check if remote source version is different from local version
-	// If it is, defer the prompt until after the tree is displayed (unless skip flag is set)
-	// If no hash, ignore
-	if existingDependency != nil && existingDependency.Hash != "" && existingDependency.Hash != contractDataHash {
-		// If skip update prompts flag is set, fail immediately - can't guarantee frozen dependencies
-		if di.SkipUpdatePrompts {
-			// First check if local file has been modified before reporting network hash mismatch
+	// Decide what to do: defer prompt, skip (frozen), or auto-update
+	hashMismatch := existingDependency != nil && existingDependency.Hash != "" && existingDependency.Hash != contractDataHash
+
+	if hashMismatch {
+		// If skip update prompts flag is set, check if we can keep frozen dependencies
+		if di.SkipUpdatePrompts && di.contractFileExists(contractAddr, contractName) {
+			// File exists - verify it matches stored hash
 			if err := di.verifyLocalFileIntegrity(contractAddr, contractName, existingDependency.Hash); err != nil {
-				// Local file was modified - report that specifically
+				// Local file was modified - FAIL
 				return fmt.Errorf(
 					"dependency %s: local file has been modified (hash mismatch). Cannot install with --skip-update-prompts flag when local files have been modified. Either restore the file to match the stored hash or remove the flag to update interactively. %w",
 					dependency.Name,
@@ -699,62 +687,44 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 				)
 			}
 
-			// File is OK, but network has changed
-			return fmt.Errorf(
-				"dependency %s has changed on-chain (hash mismatch). Expected hash %s but got %s. Cannot install with --skip-update-prompts flag when dependencies have been updated on-chain. Either remove the flag to accept updates interactively, or update your flow.json to the new hash",
-				dependency.Name,
-				existingDependency.Hash,
-				contractDataHash,
-			)
-		}
-
-		// If --update flag is set, auto-accept the update without prompting
-		if di.Update {
-			// Update the hash in state
-			err := di.updateDependencyState(*existingDependency, contractDataHash)
-			if err != nil {
-				return fmt.Errorf("error updating dependency state: %w", err)
-			}
-
-			// Create/overwrite the file with new version
-			err = di.createContractFile(contractAddr, contractName, contractData)
-			if err != nil {
-				return fmt.Errorf("error creating contract file: %w", err)
-			}
-
-			msg := util.MessageWithEmojiPrefix("✅", fmt.Sprintf("%s updated to latest version", dependency.Name))
-			di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
-
+			// File exists and matches stored hash - keep using it (frozen at old version)
 			return nil
 		}
 
-		// Find existing pending prompt for this contract or create new one
-		found := false
-		for i := range di.pendingPrompts {
-			if di.pendingPrompts[i].contractName == dependency.Name {
-				di.pendingPrompts[i].needsUpdate = true
-				di.pendingPrompts[i].updateHash = contractDataHash
-				di.pendingPrompts[i].contractAddr = contractAddr
-				di.pendingPrompts[i].contractData = contractData
-				found = true
-				break
+		// If --update flag is set, auto-accept the update (fall through to install)
+		// If --skip-update-prompts with no file, install from network (fall through to install)
+		// Otherwise (normal mode), defer prompt until after tree display
+		if !di.Update && !di.SkipUpdatePrompts {
+			found := false
+			for i := range di.pendingPrompts {
+				if di.pendingPrompts[i].contractName == dependency.Name {
+					di.pendingPrompts[i].needsUpdate = true
+					di.pendingPrompts[i].updateHash = contractDataHash
+					di.pendingPrompts[i].contractAddr = contractAddr
+					di.pendingPrompts[i].contractData = contractData
+					found = true
+					break
+				}
 			}
+			if !found {
+				di.pendingPrompts = append(di.pendingPrompts, pendingPrompt{
+					contractName: dependency.Name,
+					networkName:  networkName,
+					contractAddr: contractAddr,
+					contractData: contractData,
+					needsUpdate:  true,
+					updateHash:   contractDataHash,
+				})
+			}
+			return nil
 		}
-		if !found {
-			di.pendingPrompts = append(di.pendingPrompts, pendingPrompt{
-				contractName: dependency.Name,
-				networkName:  networkName,
-				contractAddr: contractAddr,
-				contractData: contractData,
-				needsUpdate:  true,
-				updateHash:   contractDataHash,
-			})
-		}
-
-		return nil
 	}
 
-	// Check if this is a new dependency before updating state
+	// Install or update the dependency
+	// This is the shared installation path for:
+	// - New dependencies (no hash mismatch)
+	// - Hash mismatch with --skip-update-prompts and no local file
+	// - Hash mismatch with --update flag
 	isNewDep := di.State.Dependencies().ByName(dependency.Name) == nil
 
 	err := di.updateDependencyState(dependency, contractDataHash)
@@ -763,8 +733,13 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 		return err
 	}
 
+	// Log if this was an auto-update
+	if hashMismatch && di.Update {
+		msg := util.MessageWithEmojiPrefix("✅", fmt.Sprintf("%s updated to latest version", dependency.Name))
+		di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
+	}
+
 	// Handle additional tasks for new dependencies or when contract file doesn't exist
-	// This makes sure prompts are collected for new dependencies regardless of whether contract file exists
 	if isNewDep || !di.contractFileExists(contractAddr, contractName) {
 		err := di.handleAdditionalDependencyTasks(networkName, dependency.Name)
 		if err != nil {
@@ -773,15 +748,28 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 		}
 	}
 
-	err = di.handleFileSystem(contractAddr, contractName, contractData, networkName)
-	if err != nil {
-		return fmt.Errorf("error handling file system: %w", err)
+	// Handle file creation/update
+	fileExists := di.contractFileExists(contractAddr, contractName)
+	forceOverwrite := hashMismatch && di.Update
+
+	if !fileExists || forceOverwrite {
+		err = di.createContractFile(contractAddr, contractName, contractData)
+		if err != nil {
+			return fmt.Errorf("error creating contract file: %w", err)
+		}
+
+		if !fileExists {
+			msg := util.MessageWithEmojiPrefix("✅️", fmt.Sprintf("Contract %s from %s on %s installed", contractName, contractAddr, networkName))
+			di.logs.fileSystemActions = append(di.logs.fileSystemActions, msg)
+		}
 	}
 
-	// Verify local file integrity matches stored hash (if file exists and hash is stored)
-	err = di.verifyLocalFileIntegrity(contractAddr, contractName, contractDataHash)
-	if err != nil {
-		return err
+	// Verify local file integrity matches stored hash (if file exists and we didn't just overwrite it)
+	if fileExists && !forceOverwrite {
+		err = di.verifyLocalFileIntegrity(contractAddr, contractName, contractDataHash)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
