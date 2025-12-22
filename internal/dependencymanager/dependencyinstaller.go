@@ -613,10 +613,6 @@ func (di *DependencyInstaller) verifyLocalFileIntegrity(contractAddr, contractNa
 		return nil // File doesn't exist, nothing to verify
 	}
 
-	if expectedHash == "" {
-		return nil // No hash stored, can't verify (legacy state)
-	}
-
 	filePath := di.getContractFilePath(contractAddr, contractName)
 	fileContent, err := di.State.ReaderWriter().ReadFile(filePath)
 	if err != nil {
