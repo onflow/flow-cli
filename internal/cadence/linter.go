@@ -35,6 +35,7 @@ import (
 	"github.com/onflow/cadence/sema"
 	"github.com/onflow/cadence/stdlib"
 	"github.com/onflow/cadence/tools/analysis"
+	"github.com/onflow/flow-core-contracts/lib/go/contracts"
 	"github.com/onflow/flowkit/v2"
 	"golang.org/x/exp/maps"
 )
@@ -318,6 +319,41 @@ func (l *linter) handleImport(
 		helpersChecker := cdctests.BlockchainHelpersChecker()
 		return sema.ElaborationImport{
 			Elaboration: helpersChecker.Elaboration,
+		}, nil
+	case stdlib.CryptoContractLocation:
+		cryptoChecker, ok := l.checkers[stdlib.CryptoContractLocation.String()]
+		if !ok {
+			cryptoCode := contracts.Crypto()
+			cryptoProgram, err := parser.ParseProgram(nil, cryptoCode, parser.Config{})
+			if err != nil {
+				return nil, err
+			}
+			if cryptoProgram == nil {
+				return nil, &sema.CheckerError{
+					Errors: []error{fmt.Errorf("cannot parse Crypto contract")},
+				}
+			}
+
+			cryptoChecker, err = sema.NewChecker(
+				cryptoProgram,
+				stdlib.CryptoContractLocation,
+				nil,
+				l.checkerStandardConfig,
+			)
+			if err != nil {
+				return nil, err
+			}
+
+			err = cryptoChecker.Check()
+			if err != nil {
+				return nil, err
+			}
+
+			l.checkers[stdlib.CryptoContractLocation.String()] = cryptoChecker
+		}
+
+		return sema.ElaborationImport{
+			Elaboration: cryptoChecker.Elaboration,
 		}, nil
 	default:
 		// Normalize relative path imports to absolute paths
