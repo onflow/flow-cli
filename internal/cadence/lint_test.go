@@ -300,6 +300,28 @@ func Test_Lint(t *testing.T) {
 		)
 	})
 
+	t.Run("resolves stdlib imports Crypto", func(t *testing.T) {
+		t.Parallel()
+
+		state := setupMockState(t)
+
+		results, err := lintFiles(state, "StdlibImportsCrypto.cdc")
+		require.NoError(t, err)
+
+		require.Equal(t,
+			&lintResult{
+				Results: []fileResult{
+					{
+						FilePath:    "StdlibImportsCrypto.cdc",
+						Diagnostics: []analysis.Diagnostic{},
+					},
+				},
+				exitCode: 0,
+			},
+			results,
+		)
+	})
+
 	t.Run("resolves nested imports when contract imported by name", func(t *testing.T) {
 		t.Parallel()
 
@@ -392,6 +414,15 @@ func setupMockState(t *testing.T) *flowkit.State {
 		let foo = getAuthAccount<&Account>(0x01)
 		log(RLP.getType())
 	}`), 0644)
+	_ = afero.WriteFile(mockFs, "StdlibImportsCrypto.cdc", []byte(`
+	import Crypto
+
+	access(all) contract CryptoImportTest {
+		access(all) fun test(): Void {
+			let _ = Crypto.hash([1, 2, 3], algorithm: HashAlgorithm.SHA3_256)
+		}
+	}
+	`), 0644)
 
 	// Regression test files for nested import bug
 	_ = afero.WriteFile(mockFs, "Helper.cdc", []byte(`
