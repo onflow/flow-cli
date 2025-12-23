@@ -223,7 +223,6 @@ func (di *DependencyInstaller) Install() error {
 	// Phase 1: Process all dependencies and display tree (no prompts)
 	for _, dependency := range *di.State.Dependencies() {
 		if err := di.processDependency(dependency); err != nil {
-			di.Logger.Error(fmt.Sprintf("Error processing dependency: %v", err))
 			return err
 		}
 	}
