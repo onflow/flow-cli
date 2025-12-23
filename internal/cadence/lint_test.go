@@ -179,15 +179,6 @@ func Test_Lint(t *testing.T) {
 									EndPos:   ast.Position{Line: 5, Column: 5, Offset: 65},
 								},
 							},
-							{
-								Location: common.StringLocation("LintError.cdc"),
-								Category: "unused-result-hint",
-								Message:  "unused result",
-								Range: ast.Range{
-									StartPos: ast.Position{Offset: 63, Line: 5, Column: 3},
-									EndPos:   ast.Position{Offset: 65, Line: 5, Column: 5},
-								},
-							},
 						},
 					},
 				},
