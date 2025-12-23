@@ -29,14 +29,6 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: ./go.mod
-
-      - name: Disk report (pre-build)
-        run: |
-          df -h
-          du -hs .git || true
-          du -hs ~/go/pkg/mod || true
-          du -hs ~/go/build-cache || true
-
       - name: Codebase security check
         continue-on-error: true
         uses: snyk/actions/golang@master
