@@ -23,7 +23,7 @@ import (
 )
 
 var addCmd = &cobra.Command{
-	Use:              "add <account|contract|deployment|network>",
+	Use:              "add <account|contract|deployment|network|alias>",
 	Short:            "Add resource to configuration",
 	Example:          "flow config add account",
 	Args:             cobra.ExactArgs(1),
@@ -32,6 +32,7 @@ var addCmd = &cobra.Command{
 
 func init() {
 	addAccountCommand.AddToParent(addCmd)
+	addAliasCommand.AddToParent(addCmd)
 	addContractCommand.AddToParent(addCmd)
 	addDeploymentCommand.AddToParent(addCmd)
 	addNetworkCommand.AddToParent(addCmd)
