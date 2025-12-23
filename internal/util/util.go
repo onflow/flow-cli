@@ -32,11 +32,12 @@ import (
 	"time"
 
 	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/access/grpc"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/onflow/flow-go/fvm/systemcontracts"
 	flowGo "github.com/onflow/flow-go/model/flow"
 	flowaccess "github.com/onflow/flow/protobuf/go/flow/access"
-	"google.golang.org/grpc"
+	grpcOpts "google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
 	emulatorUtils "github.com/onflow/flow-emulator/utils"
@@ -52,7 +53,8 @@ func Exit(code int, msg string) {
 	os.Exit(code)
 }
 
-// IsAddressValidForNetwork checks if an address is valid for a specific network
+// IsAddressValidForNetwork checks if an address is valid for a specific network based on address format
+// This is used for address introspection only - use ValidateAddressForNetwork for actual validation
 func IsAddressValidForNetwork(address flow.Address, networkName string) bool {
 	switch networkName {
 	case "mainnet":
@@ -62,9 +64,35 @@ func IsAddressValidForNetwork(address flow.Address, networkName string) bool {
 	case "emulator", "testing":
 		return address.IsValid(flow.Emulator)
 	default:
-		// For custom networks, assume they use the same validation as emulator
 		return address.IsValid(flow.Emulator)
 	}
+}
+
+// ValidateAddressForNetwork validates that an address is valid for the specified network
+// by querying the access node to get the actual chain ID
+func ValidateAddressForNetwork(address flow.Address, network *config.Network) error {
+	// Create a grpc client to query the network
+	client, err := grpc.NewBaseClient(network.Host, grpcOpts.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return fmt.Errorf("failed to connect to access node: %w", err)
+	}
+	defer client.Close()
+
+	// Get the chain ID from the access node
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	params, err := client.GetNetworkParameters(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get chain ID from access node: %w", err)
+	}
+
+	// Validate the address against the chain ID returned from the access node
+	if !address.IsValid(params.ChainID) {
+		return fmt.Errorf("address %s is not valid for network %s (chain ID: %s)", address, network.Name, params.ChainID)
+	}
+
+	return nil
 }
 
 // entryExists checks if an entry already exists in the content
@@ -250,9 +278,9 @@ func GetChainIDFromHost(host string) (flowGo.ChainID, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	conn, err := grpc.NewClient(
+	conn, err := grpcOpts.NewClient(
 		host,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpcOpts.WithTransportCredentials(insecure.NewCredentials()),
 		emulatorUtils.DefaultGRPCRetryInterceptor(),
 	)
 	if err != nil {

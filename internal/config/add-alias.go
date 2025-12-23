@@ -56,16 +56,20 @@ func addAlias(
 	_ []string,
 	globalFlags command.GlobalFlags,
 	_ output.Logger,
-	_ flowkit.Services,
+	flowServices flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	raw, flagsProvided, err := flagsToAliasData(addAliasFlags)
+	raw, flagsProvided, err := flagsToAliasData(addAliasFlags, state)
 	if err != nil {
 		return nil, err
 	}
 
 	if !flagsProvided {
 		raw = prompt.NewAliasPrompt()
+		err = validateAliasData(raw, state)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	contract, err := state.Contracts().ByName(raw.Contract)
@@ -90,7 +94,21 @@ func addAlias(
 	}, nil
 }
 
-func flagsToAliasData(flags flagsAddAlias) (*prompt.AliasData, bool, error) {
+func validateAliasData(data *prompt.AliasData, state *flowkit.State) error {
+	address := flow.HexToAddress(data.Address)
+	if address == flow.EmptyAddress {
+		return fmt.Errorf("invalid address")
+	}
+
+	network, err := state.Networks().ByName(data.Network)
+	if err != nil {
+		return fmt.Errorf("network %s not found in configuration", data.Network)
+	}
+
+	return util.ValidateAddressForNetwork(address, network)
+}
+
+func flagsToAliasData(flags flagsAddAlias, state *flowkit.State) (*prompt.AliasData, bool, error) {
 	if flags.Contract == "" && flags.Network == "" && flags.Address == "" {
 		return nil, false, nil
 	}
@@ -107,14 +125,16 @@ func flagsToAliasData(flags flagsAddAlias) (*prompt.AliasData, bool, error) {
 		return nil, true, fmt.Errorf("address must be provided")
 	}
 
-	// Validate address is valid for the specified network
-	if !util.IsAddressValidForNetwork(address, flags.Network) {
-		return nil, true, fmt.Errorf("address %s is not valid for network %s", flags.Address, flags.Network)
-	}
-
-	return &prompt.AliasData{
+	data := &prompt.AliasData{
 		Contract: flags.Contract,
 		Network:  flags.Network,
 		Address:  flags.Address,
-	}, true, nil
+	}
+
+	err := validateAliasData(data, state)
+	if err != nil {
+		return nil, true, err
+	}
+
+	return data, true, nil
 }

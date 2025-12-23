@@ -206,13 +206,18 @@ func Test_AddAlias(t *testing.T) {
 
 func Test_FlagsToAliasData(t *testing.T) {
 	t.Run("Success with all flags", func(t *testing.T) {
+		_, state, _ := util.TestMocks(t)
+
+		// Add testnet network to state
+		state.Networks().AddOrUpdate(config.TestnetNetwork)
+
 		flags := flagsAddAlias{
 			Contract: "TestContract",
 			Network:  "testnet",
 			Address:  "0x9a0766d93b6608b7",
 		}
 
-		data, flagsProvided, err := flagsToAliasData(flags)
+		data, flagsProvided, err := flagsToAliasData(flags, state)
 
 		require.NoError(t, err)
 		assert.True(t, flagsProvided)
@@ -222,9 +227,10 @@ func Test_FlagsToAliasData(t *testing.T) {
 	})
 
 	t.Run("No flags provided", func(t *testing.T) {
+		_, state, _ := util.TestMocks(t)
 		flags := flagsAddAlias{}
 
-		data, flagsProvided, err := flagsToAliasData(flags)
+		data, flagsProvided, err := flagsToAliasData(flags, state)
 
 		require.NoError(t, err)
 		assert.False(t, flagsProvided)
@@ -232,12 +238,13 @@ func Test_FlagsToAliasData(t *testing.T) {
 	})
 
 	t.Run("Fail missing contract name", func(t *testing.T) {
+		_, state, _ := util.TestMocks(t)
 		flags := flagsAddAlias{
 			Network: "testnet",
 			Address: "0x9a0766d93b6608b7",
 		}
 
-		data, flagsProvided, err := flagsToAliasData(flags)
+		data, flagsProvided, err := flagsToAliasData(flags, state)
 
 		assert.Nil(t, data)
 		assert.True(t, flagsProvided)
@@ -245,12 +252,13 @@ func Test_FlagsToAliasData(t *testing.T) {
 	})
 
 	t.Run("Fail missing network", func(t *testing.T) {
+		_, state, _ := util.TestMocks(t)
 		flags := flagsAddAlias{
 			Contract: "TestContract",
 			Address:  "0x9a0766d93b6608b7",
 		}
 
-		data, flagsProvided, err := flagsToAliasData(flags)
+		data, flagsProvided, err := flagsToAliasData(flags, state)
 
 		assert.Nil(t, data)
 		assert.True(t, flagsProvided)
@@ -258,12 +266,13 @@ func Test_FlagsToAliasData(t *testing.T) {
 	})
 
 	t.Run("Fail missing address", func(t *testing.T) {
+		_, state, _ := util.TestMocks(t)
 		flags := flagsAddAlias{
 			Contract: "TestContract",
 			Network:  "testnet",
 		}
 
-		data, flagsProvided, err := flagsToAliasData(flags)
+		data, flagsProvided, err := flagsToAliasData(flags, state)
 
 		assert.Nil(t, data)
 		assert.True(t, flagsProvided)
@@ -271,13 +280,14 @@ func Test_FlagsToAliasData(t *testing.T) {
 	})
 
 	t.Run("Fail invalid address", func(t *testing.T) {
+		_, state, _ := util.TestMocks(t)
 		flags := flagsAddAlias{
 			Contract: "TestContract",
 			Network:  "testnet",
 			Address:  "invalid-address",
 		}
 
-		data, flagsProvided, err := flagsToAliasData(flags)
+		data, flagsProvided, err := flagsToAliasData(flags, state)
 
 		assert.Nil(t, data)
 		assert.True(t, flagsProvided)
@@ -285,13 +295,14 @@ func Test_FlagsToAliasData(t *testing.T) {
 	})
 
 	t.Run("Fail empty address", func(t *testing.T) {
+		_, state, _ := util.TestMocks(t)
 		flags := flagsAddAlias{
 			Contract: "TestContract",
 			Network:  "testnet",
 			Address:  "0x0000000000000000",
 		}
 
-		data, flagsProvided, err := flagsToAliasData(flags)
+		data, flagsProvided, err := flagsToAliasData(flags, state)
 
 		assert.Nil(t, data)
 		assert.True(t, flagsProvided)
@@ -299,13 +310,18 @@ func Test_FlagsToAliasData(t *testing.T) {
 	})
 
 	t.Run("Success with address without 0x prefix", func(t *testing.T) {
+		_, state, _ := util.TestMocks(t)
+
+		// Add mainnet network to state
+		state.Networks().AddOrUpdate(config.MainnetNetwork)
+
 		flags := flagsAddAlias{
 			Contract: "TestContract",
 			Network:  "mainnet",
 			Address:  "1d7e57aa55817448",
 		}
 
-		data, flagsProvided, err := flagsToAliasData(flags)
+		data, flagsProvided, err := flagsToAliasData(flags, state)
 
 		require.NoError(t, err)
 		assert.True(t, flagsProvided)
@@ -313,13 +329,18 @@ func Test_FlagsToAliasData(t *testing.T) {
 	})
 
 	t.Run("Fail testnet address used for mainnet", func(t *testing.T) {
+		_, state, _ := util.TestMocks(t)
+
+		// Add mainnet network to state
+		state.Networks().AddOrUpdate(config.MainnetNetwork)
+
 		flags := flagsAddAlias{
 			Contract: "TestContract",
 			Network:  "mainnet",
 			Address:  "0x9a0766d93b6608b7", // Testnet address
 		}
 
-		data, flagsProvided, err := flagsToAliasData(flags)
+		data, flagsProvided, err := flagsToAliasData(flags, state)
 
 		assert.Nil(t, data)
 		assert.True(t, flagsProvided)
@@ -327,13 +348,18 @@ func Test_FlagsToAliasData(t *testing.T) {
 	})
 
 	t.Run("Fail mainnet address used for testnet", func(t *testing.T) {
+		_, state, _ := util.TestMocks(t)
+
+		// Add testnet network to state
+		state.Networks().AddOrUpdate(config.TestnetNetwork)
+
 		flags := flagsAddAlias{
 			Contract: "TestContract",
 			Network:  "testnet",
 			Address:  "0xf233dcee88fe0abe", // Mainnet address
 		}
 
-		data, flagsProvided, err := flagsToAliasData(flags)
+		data, flagsProvided, err := flagsToAliasData(flags, state)
 
 		assert.Nil(t, data)
 		assert.True(t, flagsProvided)
@@ -341,13 +367,18 @@ func Test_FlagsToAliasData(t *testing.T) {
 	})
 
 	t.Run("Fail emulator address used for testnet", func(t *testing.T) {
+		_, state, _ := util.TestMocks(t)
+
+		// Add testnet network to state
+		state.Networks().AddOrUpdate(config.TestnetNetwork)
+
 		flags := flagsAddAlias{
 			Contract: "TestContract",
 			Network:  "testnet",
 			Address:  "0xf8d6e0586b0a20c7", // Emulator address
 		}
 
-		data, flagsProvided, err := flagsToAliasData(flags)
+		data, flagsProvided, err := flagsToAliasData(flags, state)
 
 		assert.Nil(t, data)
 		assert.True(t, flagsProvided)
