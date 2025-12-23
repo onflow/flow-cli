@@ -59,10 +59,21 @@ type categorizedLogs struct {
 type pendingPrompt struct {
 	contractName    string
 	networkName     string
+	contractAddr    string
+	contractData    string
 	needsDeployment bool
 	needsAlias      bool
 	needsUpdate     bool
 	updateHash      string
+}
+
+func (pp *pendingPrompt) matches(name, network string) bool {
+	return pp.contractName == name && pp.networkName == network
+}
+
+func (di *DependencyInstaller) logFileSystemAction(message string) {
+	msg := util.MessageWithEmojiPrefix("✅", message)
+	di.logs.fileSystemActions = append(di.logs.fileSystemActions, msg)
 }
 
 func (cl *categorizedLogs) LogAll(logger output.Logger) {
@@ -102,6 +113,7 @@ type DependencyFlags struct {
 	skipDeployments   bool   `default:"false" flag:"skip-deployments" info:"Skip adding the dependency to deployments"`
 	skipAlias         bool   `default:"false" flag:"skip-alias" info:"Skip prompting for an alias"`
 	skipUpdatePrompts bool   `default:"false" flag:"skip-update-prompts" info:"Skip prompting to update existing dependencies"`
+	update            bool   `default:"false" flag:"update" info:"Automatically accept all dependency updates"`
 	deploymentAccount string `default:"" flag:"deployment-account,d" info:"Account name to use for deployments (skips deployment account prompt)"`
 	name              string `default:"" flag:"name" info:"Import alias name for the dependency (sets canonical field for Cadence import aliasing)"`
 }
@@ -125,6 +137,8 @@ type DependencyInstaller struct {
 	TargetDir         string
 	SkipDeployments   bool
 	SkipAlias         bool
+	SkipUpdatePrompts bool
+	Update            bool
 	DeploymentAccount string
 	Name              string
 	logs              categorizedLogs
@@ -132,10 +146,26 @@ type DependencyInstaller struct {
 	accountAliases    map[string]map[string]flowsdk.Address // network -> account -> alias
 	installCount      int                                   // Track number of dependencies installed
 	pendingPrompts    []pendingPrompt                       // Dependencies that need prompts after tree display
+	prompter          Prompter                              // Optional: for testing. If nil, uses real prompts
+}
+
+type Prompter interface {
+	GenericBoolPrompt(msg string) (bool, error)
+}
+
+type prompter struct{}
+
+func (prompter) GenericBoolPrompt(msg string) (bool, error) {
+	return prompt.GenericBoolPrompt(msg)
 }
 
 // NewDependencyInstaller creates a new instance of DependencyInstaller
 func NewDependencyInstaller(logger output.Logger, state *flowkit.State, saveState bool, targetDir string, flags DependencyFlags) (*DependencyInstaller, error) {
+	// Validate flags: --update and --skip-update-prompts are mutually exclusive
+	if flags.update && flags.skipUpdatePrompts {
+		return nil, fmt.Errorf("cannot use both --update and --skip-update-prompts flags together")
+	}
+
 	emulatorGateway, err := gateway.NewGrpcGateway(config.EmulatorNetwork)
 	if err != nil {
 		return nil, fmt.Errorf("error creating emulator gateway: %v", err)
@@ -165,12 +195,15 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State, saveStat
 		TargetDir:         targetDir,
 		SkipDeployments:   flags.skipDeployments,
 		SkipAlias:         flags.skipAlias,
+		SkipUpdatePrompts: flags.skipUpdatePrompts,
+		Update:            flags.update,
 		DeploymentAccount: flags.deploymentAccount,
 		Name:              flags.name,
 		dependencies:      make(map[string]config.Dependency),
 		logs:              categorizedLogs{},
 		accountAliases:    make(map[string]map[string]flowsdk.Address),
 		pendingPrompts:    make([]pendingPrompt, 0),
+		prompter:          prompter{},
 	}, nil
 }
 
@@ -190,7 +223,6 @@ func (di *DependencyInstaller) Install() error {
 	// Phase 1: Process all dependencies and display tree (no prompts)
 	for _, dependency := range *di.State.Dependencies() {
 		if err := di.processDependency(dependency); err != nil {
-			di.Logger.Error(fmt.Sprintf("Error processing dependency: %v", err))
 			return err
 		}
 	}
@@ -556,18 +588,20 @@ func (di *DependencyInstaller) fetchDependenciesWithDepth(dependency config.Depe
 	return nil
 }
 
-func (di *DependencyInstaller) contractFileExists(address, contractName string) bool {
+func (di *DependencyInstaller) getContractFilePath(address, contractName string) string {
 	fileName := fmt.Sprintf("%s.cdc", contractName)
-	path := filepath.Join("imports", address, fileName)
+	return filepath.Join("imports", address, fileName)
+}
 
+func (di *DependencyInstaller) contractFileExists(address, contractName string) bool {
+	path := di.getContractFilePath(address, contractName)
 	_, err := di.State.ReaderWriter().Stat(path)
-
 	return err == nil
 }
 
 func (di *DependencyInstaller) createContractFile(address, contractName, data string) error {
-	fileName := fmt.Sprintf("%s.cdc", contractName)
-	path := filepath.Join(di.TargetDir, "imports", address, fileName)
+	relativePath := di.getContractFilePath(address, contractName)
+	path := filepath.Join(di.TargetDir, relativePath)
 	dir := filepath.Dir(path)
 
 	if err := di.State.ReaderWriter().MkdirAll(dir, 0755); err != nil {
@@ -581,14 +615,31 @@ func (di *DependencyInstaller) createContractFile(address, contractName, data st
 	return nil
 }
 
-func (di *DependencyInstaller) handleFileSystem(contractAddr, contractName, contractData, networkName string) error {
+// verifyLocalFileIntegrity checks if the local file matches the expected hash in flow.json
+func (di *DependencyInstaller) verifyLocalFileIntegrity(contractAddr, contractName, expectedHash string) error {
 	if !di.contractFileExists(contractAddr, contractName) {
-		if err := di.createContractFile(contractAddr, contractName, contractData); err != nil {
-			return fmt.Errorf("failed to create contract file: %w", err)
-		}
+		return nil // File doesn't exist, nothing to verify
+	}
 
-		msg := util.MessageWithEmojiPrefix("✅️", fmt.Sprintf("Contract %s from %s on %s installed", contractName, contractAddr, networkName))
-		di.logs.fileSystemActions = append(di.logs.fileSystemActions, msg)
+	filePath := di.getContractFilePath(contractAddr, contractName)
+	fileContent, err := di.State.ReaderWriter().ReadFile(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to read file for integrity check: %w", err)
+	}
+
+	// Calculate hash of existing file
+	fileHash := sha256.New()
+	fileHash.Write(fileContent)
+	existingFileHash := hex.EncodeToString(fileHash.Sum(nil))
+
+	// Compare hashes
+	if expectedHash != existingFileHash {
+		return fmt.Errorf(
+			"dependency %s: local file has been modified (hash mismatch). Expected hash %s but file has %s. The file content does not match what is recorded in flow.json. Run 'flow dependencies install --update' to sync with the network version, or restore the file to match the stored hash",
+			contractName,
+			expectedHash,
+			existingFileHash,
+		)
 	}
 
 	return nil
@@ -598,12 +649,16 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 	networkName := dependency.Source.NetworkName
 	contractAddr := dependency.Source.Address.String()
 	contractName := dependency.Source.ContractName
-	hash := sha256.New()
-	hash.Write(program.CodeWithUnprocessedImports())
-	originalContractDataHash := hex.EncodeToString(hash.Sum(nil))
 
 	program.ConvertAddressImports()
 	contractData := string(program.CodeWithUnprocessedImports())
+
+	// Calculate hash of converted contract (what gets written to disk)
+	// This is what we store in flow.json so we can verify file integrity later
+	// Imported contracts are still checked for consistency by traversing the dependency tree.
+	hash := sha256.New()
+	hash.Write([]byte(contractData))
+	contractDataHash := hex.EncodeToString(hash.Sum(nil))
 
 	existingDependency := di.State.Dependencies().ByName(dependency.Name)
 
@@ -620,42 +675,81 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 	}
 
 	// Check if remote source version is different from local version
-	// If it is, defer the prompt until after the tree is displayed
-	// If no hash, ignore
-	if existingDependency != nil && existingDependency.Hash != "" && existingDependency.Hash != originalContractDataHash {
-		// Find existing pending prompt for this contract or create new one
-		found := false
-		for i := range di.pendingPrompts {
-			if di.pendingPrompts[i].contractName == dependency.Name {
-				di.pendingPrompts[i].needsUpdate = true
-				di.pendingPrompts[i].updateHash = originalContractDataHash
-				found = true
-				break
+	// Decide what to do: defer prompt, skip (frozen), or auto-update
+	hashMismatch := existingDependency != nil && existingDependency.Hash != "" && existingDependency.Hash != contractDataHash
+
+	if hashMismatch {
+		// If skip update prompts flag is set, check if we can keep frozen dependencies
+		if di.SkipUpdatePrompts && di.contractFileExists(contractAddr, contractName) {
+			// File exists - verify it matches stored hash
+			if err := di.verifyLocalFileIntegrity(contractAddr, contractName, existingDependency.Hash); err != nil {
+				// Local file was modified - FAIL
+				return fmt.Errorf("cannot install with --skip-update-prompts flag when local files have been modified. %w", err)
 			}
+
+			// File exists and matches stored hash - keep using it (frozen at old version)
+			return nil
 		}
-		if !found {
-			di.pendingPrompts = append(di.pendingPrompts, pendingPrompt{
-				contractName: dependency.Name,
-				networkName:  networkName,
-				needsUpdate:  true,
-				updateHash:   originalContractDataHash,
-			})
+
+		// If --update flag is set, auto-accept the update (fall through to install)
+		// If --skip-update-prompts with no file, install from network (fall through to install)
+		// Otherwise (normal mode), defer prompt until after tree display
+		if !di.Update && !di.SkipUpdatePrompts {
+			found := false
+			for i := range di.pendingPrompts {
+				if di.pendingPrompts[i].matches(dependency.Name, networkName) {
+					di.pendingPrompts[i].needsUpdate = true
+					di.pendingPrompts[i].updateHash = contractDataHash
+					di.pendingPrompts[i].contractAddr = contractAddr
+					di.pendingPrompts[i].contractData = contractData
+					found = true
+					break
+				}
+			}
+			if !found {
+				di.pendingPrompts = append(di.pendingPrompts, pendingPrompt{
+					contractName: dependency.Name,
+					networkName:  networkName,
+					contractAddr: contractAddr,
+					contractData: contractData,
+					needsUpdate:  true,
+					updateHash:   contractDataHash,
+				})
+			}
+			return nil
 		}
-		return nil
 	}
 
-	// Check if this is a new dependency before updating state
+	// Check if file exists and needs repair (out of sync with flow.json)
+	fileExists := di.contractFileExists(contractAddr, contractName)
+	fileModified := false
+	if fileExists {
+		if err := di.verifyLocalFileIntegrity(contractAddr, contractName, contractDataHash); err != nil {
+			fileModified = true
+		}
+	}
+
+	// Install or update: new deps, out-of-sync files, or network updates with --update/--skip-update-prompts
 	isNewDep := di.State.Dependencies().ByName(dependency.Name) == nil
 
-	err := di.updateDependencyState(dependency, originalContractDataHash)
+	err := di.updateDependencyState(dependency, contractDataHash)
 	if err != nil {
 		di.Logger.Error(fmt.Sprintf("Error updating state: %v", err))
 		return err
 	}
 
+	// Log if this was an auto-update (with --update flag) or file repair
+	if (hashMismatch || fileModified) && di.Update {
+		msg := util.MessageWithEmojiPrefix("✅", fmt.Sprintf("%s updated to latest version", dependency.Name))
+		di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
+	} else if fileModified {
+		// File repair without --update flag (common after git clone)
+		msg := util.MessageWithEmojiPrefix("✅", fmt.Sprintf("%s synced", dependency.Name))
+		di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
+	}
+
 	// Handle additional tasks for new dependencies or when contract file doesn't exist
-	// This makes sure prompts are collected for new dependencies regardless of whether contract file exists
-	if isNewDep || !di.contractFileExists(contractAddr, contractName) {
+	if isNewDep || !fileExists {
 		err := di.handleAdditionalDependencyTasks(networkName, dependency.Name)
 		if err != nil {
 			di.Logger.Error(fmt.Sprintf("Error handling additional dependency tasks: %v", err))
@@ -663,9 +757,18 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 		}
 	}
 
-	err = di.handleFileSystem(contractAddr, contractName, contractData, networkName)
-	if err != nil {
-		return fmt.Errorf("error handling file system: %w", err)
+	// Create or overwrite file
+	shouldWrite := !fileExists || fileModified || (hashMismatch && di.Update)
+	if !shouldWrite {
+		return nil
+	}
+
+	if err := di.createContractFile(contractAddr, contractName, contractData); err != nil {
+		return fmt.Errorf("error creating contract file: %w", err)
+	}
+
+	if !fileExists {
+		di.logFileSystemAction(fmt.Sprintf("Contract %s from %s on %s installed", contractName, contractAddr, networkName))
 	}
 
 	return nil
@@ -707,7 +810,7 @@ func (di *DependencyInstaller) handleAdditionalDependencyTasks(networkName, cont
 	// If the contract is not a core contract and the user does not want to skip aliasing, then collect for prompting later
 	needsAlias := !di.SkipAlias && !util.IsCoreContract(contractName) && !isDefiActionsContract(contractName)
 
-	// Only add to pending prompts if we need to prompt for something
+	// Only add/update pending prompts if we need to prompt for something
 	if needsDeployment || needsAlias {
 		di.pendingPrompts = append(di.pendingPrompts, pendingPrompt{
 			contractName:    contractName,
@@ -900,7 +1003,7 @@ func (di *DependencyInstaller) processPendingPrompts() error {
 
 	setupDeployments := false
 	if hasDeployments {
-		result, err := prompt.GenericBoolPrompt("Do you want to set up deployments for these dependencies?")
+		result, err := di.prompter.GenericBoolPrompt("Do you want to set up deployments for these dependencies?")
 		if err != nil {
 			return err
 		}
@@ -909,7 +1012,7 @@ func (di *DependencyInstaller) processPendingPrompts() error {
 
 	setupAliases := false
 	if hasAliases {
-		result, err := prompt.GenericBoolPrompt("Do you want to set up aliases for these dependencies?")
+		result, err := di.prompter.GenericBoolPrompt("Do you want to set up aliases for these dependencies?")
 		if err != nil {
 			return err
 		}
@@ -920,7 +1023,7 @@ func (di *DependencyInstaller) processPendingPrompts() error {
 	for _, pending := range di.pendingPrompts {
 		if pending.needsUpdate {
 			msg := fmt.Sprintf("The latest version of %s is different from the one you have locally. Do you want to update it?", pending.contractName)
-			shouldUpdate, err := prompt.GenericBoolPrompt(msg)
+			shouldUpdate, err := di.prompter.GenericBoolPrompt(msg)
 			if err != nil {
 				return err
 			}
@@ -932,9 +1035,37 @@ func (di *DependencyInstaller) processPendingPrompts() error {
 						di.Logger.Error(fmt.Sprintf("Error updating dependency: %v", err))
 						return err
 					}
+
+					// Write the updated contract file (force overwrite)
+					if err := di.createContractFile(pending.contractAddr, pending.contractName, pending.contractData); err != nil {
+						di.Logger.Error(fmt.Sprintf("Error updating contract file: %v", err))
+						return fmt.Errorf("failed to update contract file: %w", err)
+					}
+
 					msg := util.MessageWithEmojiPrefix("✅", fmt.Sprintf("%s updated to latest version", pending.contractName))
 					di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
 				}
+			} else {
+				// User chose not to update
+				// If file doesn't exist, we MUST fail - can't guarantee frozen deps (no way to fetch old version)
+				if !di.contractFileExists(pending.contractAddr, pending.contractName) {
+					return fmt.Errorf("dependency %s has changed on-chain but file does not exist locally. Cannot keep at current version because we have no way to fetch the old version from the blockchain. Either accept the update or manually add the contract file", pending.contractName)
+				}
+
+				// Get the stored hash from flow.json
+				dependency := di.State.Dependencies().ByName(pending.contractName)
+				if dependency == nil {
+					return fmt.Errorf("dependency %s not found in state", pending.contractName)
+				}
+
+				// Verify the existing file's hash matches what's in flow.json to ensure integrity
+				if err := di.verifyLocalFileIntegrity(pending.contractAddr, pending.contractName, dependency.Hash); err != nil {
+					return err
+				}
+
+				// File exists and hash matches - keep it at current version
+				msg := util.MessageWithEmojiPrefix("⏸️", fmt.Sprintf("%s kept at current version", pending.contractName))
+				di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
 			}
 		}
 	}

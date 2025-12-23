@@ -178,7 +178,6 @@ func install(
 		logger.Info(util.MessageWithEmojiPrefix("🔄", "Installing added dependencies..."))
 
 		if err := installer.Install(); err != nil {
-			logger.Error(fmt.Sprintf("Error installing dependencies: %v", err))
 			return nil, err
 		}
 
@@ -190,7 +189,6 @@ func install(
 	logger.Info(util.MessageWithEmojiPrefix("🔄", "Installing dependencies from flow.json..."))
 
 	if err := installer.Install(); err != nil {
-		logger.Error(fmt.Sprintf("Error installing dependencies: %v", err))
 		return nil, err
 	}
 
