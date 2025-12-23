@@ -52,8 +52,6 @@ jobs:
           echo 'VERSION=${{ github.event.release.tag_name }}' >> .release-env
           echo 'GITHUB_TOKEN=${{ secrets.FLOW_CLI_RELEASE }}' >> .release-env
           mkdir -p "${GITHUB_WORKSPACE}/tmp"
-          # echo "TMPDIR=${GITHUB_WORKSPACE}/tmp" >> .release-env
-          # echo "GOTMPDIR=${GITHUB_WORKSPACE}/tmp" >> .release-env
           echo "TMPDIR=/tmp" >> .release-env
           echo "GOTMPDIR=/tmp" >> .release-env
 
