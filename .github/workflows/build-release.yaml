@@ -3,6 +3,7 @@ name: Build Release
 on:
   release:
     types: [published]
+  push:
 
 jobs:
   release:
