@@ -67,6 +67,15 @@ type pendingPrompt struct {
 	updateHash      string
 }
 
+func (pp *pendingPrompt) matches(name, network string) bool {
+	return pp.contractName == name && pp.networkName == network
+}
+
+func (di *DependencyInstaller) logFileSystemAction(message string) {
+	msg := util.MessageWithEmojiPrefix("✅", message)
+	di.logs.fileSystemActions = append(di.logs.fileSystemActions, msg)
+}
+
 func (cl *categorizedLogs) LogAll(logger output.Logger) {
 	logger.Info(util.MessageWithEmojiPrefix("📝", "Dependency Manager Actions Summary"))
 	logger.Info("") // Add a line break after the section
@@ -676,11 +685,7 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 			// File exists - verify it matches stored hash
 			if err := di.verifyLocalFileIntegrity(contractAddr, contractName, existingDependency.Hash); err != nil {
 				// Local file was modified - FAIL
-				return fmt.Errorf(
-					"dependency %s: local file has been modified (hash mismatch). Cannot install with --skip-update-prompts flag when local files have been modified. Either restore the file to match the stored hash or remove the flag to update interactively. %w",
-					dependency.Name,
-					err,
-				)
+				return fmt.Errorf("cannot install with --skip-update-prompts flag when local files have been modified. %w", err)
 			}
 
 			// File exists and matches stored hash - keep using it (frozen at old version)
@@ -693,7 +698,7 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 		if !di.Update && !di.SkipUpdatePrompts {
 			found := false
 			for i := range di.pendingPrompts {
-				if di.pendingPrompts[i].contractName == dependency.Name {
+				if di.pendingPrompts[i].matches(dependency.Name, networkName) {
 					di.pendingPrompts[i].needsUpdate = true
 					di.pendingPrompts[i].updateHash = contractDataHash
 					di.pendingPrompts[i].contractAddr = contractAddr
@@ -754,16 +759,17 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 	}
 
 	// Create or overwrite file
-	if !fileExists || fileModified || (hashMismatch && di.Update) {
-		err = di.createContractFile(contractAddr, contractName, contractData)
-		if err != nil {
-			return fmt.Errorf("error creating contract file: %w", err)
-		}
+	shouldWrite := !fileExists || fileModified || (hashMismatch && di.Update)
+	if !shouldWrite {
+		return nil
+	}
 
-		if !fileExists {
-			msg := util.MessageWithEmojiPrefix("✅️", fmt.Sprintf("Contract %s from %s on %s installed", contractName, contractAddr, networkName))
-			di.logs.fileSystemActions = append(di.logs.fileSystemActions, msg)
-		}
+	if err := di.createContractFile(contractAddr, contractName, contractData); err != nil {
+		return fmt.Errorf("error creating contract file: %w", err)
+	}
+
+	if !fileExists {
+		di.logFileSystemAction(fmt.Sprintf("Contract %s from %s on %s installed", contractName, contractAddr, networkName))
 	}
 
 	return nil
