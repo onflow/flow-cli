@@ -64,7 +64,9 @@ func IsAddressValidForNetwork(address flow.Address, networkName string) bool {
 	case "emulator", "testing":
 		return address.IsValid(flow.Emulator)
 	default:
-		return address.IsValid(flow.Emulator)
+		// For custom networks, we can't validate the address format without knowing the chain ID,
+		// so we allow all addresses
+		return true
 	}
 }
 
