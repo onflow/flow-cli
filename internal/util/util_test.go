@@ -22,9 +22,47 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestIsAddressValidForNetwork(t *testing.T) {
+	testnetAddr := flow.HexToAddress("8efde57e98c557fa")  // Valid testnet address
+	emulatorAddr := flow.HexToAddress("f8d6e0586b0a20c7") // Valid emulator address
+	mainnetAddr := flow.HexToAddress("1654653399040a61")  // Valid mainnet address
+
+	t.Run("mainnet address valid for mainnet", func(t *testing.T) {
+		assert.True(t, IsAddressValidForNetwork(mainnetAddr, "mainnet"))
+	})
+
+	t.Run("mainnet address invalid for testnet", func(t *testing.T) {
+		assert.False(t, IsAddressValidForNetwork(mainnetAddr, "testnet"))
+	})
+
+	t.Run("testnet address valid for testnet", func(t *testing.T) {
+		assert.True(t, IsAddressValidForNetwork(testnetAddr, "testnet"))
+	})
+
+	t.Run("testnet address invalid for mainnet", func(t *testing.T) {
+		assert.False(t, IsAddressValidForNetwork(testnetAddr, "mainnet"))
+	})
+
+	t.Run("emulator address valid for emulator", func(t *testing.T) {
+		assert.True(t, IsAddressValidForNetwork(emulatorAddr, "emulator"))
+	})
+
+	t.Run("emulator address valid for testing", func(t *testing.T) {
+		assert.True(t, IsAddressValidForNetwork(emulatorAddr, "testing"))
+	})
+
+	t.Run("custom network allows any address", func(t *testing.T) {
+		// Custom networks should allow all addresses since we can't validate without knowing the chain ID
+		assert.True(t, IsAddressValidForNetwork(mainnetAddr, "my-custom-network"))
+		assert.True(t, IsAddressValidForNetwork(testnetAddr, "my-custom-network"))
+		assert.True(t, IsAddressValidForNetwork(emulatorAddr, "my-custom-network"))
+	})
+}
 
 func TestAddFlowEntriesToGitIgnore_NoDuplicates(t *testing.T) {
 	_, state, _ := TestMocks(t)
