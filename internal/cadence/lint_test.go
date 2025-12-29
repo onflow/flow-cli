@@ -406,6 +406,38 @@ func Test_Lint(t *testing.T) {
 			results,
 		)
 	})
+
+	t.Run("allows access(account) when dependencies have Source but no Aliases", func(t *testing.T) {
+		t.Parallel()
+
+		state := setupMockStateWithSourceOnly(t)
+
+		// Verify that AddDependencyAsContract automatically adds Source to Aliases
+		sourceAContract, _ := state.Contracts().ByName("SourceA")
+		require.NotNil(t, sourceAContract, "SourceA contract should exist")
+
+		// Check if the alias was automatically added from Source
+		alias := sourceAContract.Aliases.ByNetwork("testnet")
+		require.NotNil(t, alias, "Alias should be automatically created from Source")
+		require.Equal(t, "dfc20aee650fcbdf", alias.Address.String(), "Alias address should match Source address")
+
+		results, err := lintFiles(state, "imports/testaddr/SourceA.cdc")
+		require.NoError(t, err)
+
+		// Should have no errors since SourceA and SourceB have same Source.Address (converted to Aliases)
+		require.Equal(t,
+			&lintResult{
+				Results: []fileResult{
+					{
+						FilePath:    "imports/testaddr/SourceA.cdc",
+						Diagnostics: []analysis.Diagnostic{},
+					},
+				},
+				exitCode: 0,
+			},
+			results,
+		)
+	})
 }
 
 func setupMockState(t *testing.T) *flowkit.State {
@@ -725,6 +757,86 @@ func setupMockStateWithDependencies(t *testing.T) *flowkit.State {
 	depBContract, _ := state.Contracts().ByName("DepB")
 	if depBContract != nil {
 		depBContract.Location = "imports/testaddr/DepB.cdc"
+	}
+
+	return state
+}
+
+func setupMockStateWithSourceOnly(t *testing.T) *flowkit.State {
+	// Test dependencies with ONLY Source (no Aliases) to see if we need to check Source
+	mockFs := afero.NewMemMapFs()
+
+	// SourceB has an access(account) function
+	_ = afero.WriteFile(mockFs, "imports/testaddr/SourceB.cdc", []byte(`
+	access(all) contract SourceB {
+		access(account) fun sourceOnlyFunction() {
+			log("This requires account access")
+		}
+		init() {}
+	}
+	`), 0644)
+
+	// SourceA imports and calls SourceB's account function
+	_ = afero.WriteFile(mockFs, "imports/testaddr/SourceA.cdc", []byte(`
+	import SourceB from "SourceB"
+	
+	access(all) contract SourceA {
+		access(all) fun callSourceB() {
+			SourceB.sourceOnlyFunction()
+		}
+		init() {}
+	}
+	`), 0644)
+
+	rw := afero.Afero{Fs: mockFs}
+	state, err := flowkit.Init(rw)
+	require.NoError(t, err)
+
+	// Add network
+	state.Networks().AddOrUpdate(config.Network{
+		Name: "testnet",
+		Host: "access.testnet.nodes.onflow.org:9000",
+	})
+
+	// Add dependencies with ONLY Source, NO Aliases
+	state.Dependencies().AddOrUpdate(config.Dependency{
+		Name: "SourceA",
+		Source: config.Source{
+			NetworkName:  "testnet",
+			Address:      flowsdk.HexToAddress("dfc20aee650fcbdf"),
+			ContractName: "SourceA",
+		},
+		// NO Aliases!
+	})
+
+	state.Dependencies().AddOrUpdate(config.Dependency{
+		Name: "SourceB",
+		Source: config.Source{
+			NetworkName:  "testnet",
+			Address:      flowsdk.HexToAddress("dfc20aee650fcbdf"),
+			ContractName: "SourceB",
+		},
+		// NO Aliases!
+	})
+
+	// Add as contracts for import resolution
+	state.Contracts().AddDependencyAsContract(
+		*state.Dependencies().ByName("SourceA"),
+		"testnet",
+	)
+	state.Contracts().AddDependencyAsContract(
+		*state.Dependencies().ByName("SourceB"),
+		"testnet",
+	)
+
+	// Set the Location field so imports can resolve
+	sourceAContract, _ := state.Contracts().ByName("SourceA")
+	if sourceAContract != nil {
+		sourceAContract.Location = "imports/testaddr/SourceA.cdc"
+	}
+	sourceBContract, _ := state.Contracts().ByName("SourceB")
+	if sourceBContract != nil {
+		sourceBContract.Location = "imports/testaddr/SourceB.cdc"
 	}
 
 	return state
