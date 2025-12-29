@@ -36,6 +36,7 @@ import (
 	"github.com/onflow/cadence/stdlib"
 	"github.com/onflow/cadence/tools/analysis"
 	"github.com/onflow/flow-core-contracts/lib/go/contracts"
+	flowGo "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit/v2"
 	"golang.org/x/exp/maps"
 )
@@ -244,29 +245,38 @@ func (l *linter) checkAccountAccess(checker *sema.Checker, memberLocation common
 		return false
 	}
 
-	checkerContract, err := l.state.Contracts().ByName(checkerContractName)
-	if err != nil {
-		return false
-	}
-
-	memberContract, err := l.state.Contracts().ByName(memberContractName)
-	if err != nil {
-		return false
-	}
-
+	// Build contract name -> address mapping per network
 	for _, network := range *networks {
-		checkerAddr, err := l.state.ContractAddress(checkerContract, network)
-		if err != nil || checkerAddr == nil {
-			continue
+		contractNameToAddress := make(map[string]flowGo.Address)
+
+		// Add aliases first
+		contracts := l.state.Contracts()
+		if contracts != nil {
+			for _, contract := range *contracts {
+				if alias := contract.Aliases.ByNetwork(network.Name); alias != nil {
+					contractNameToAddress[contract.Name] = alias.Address
+				}
+			}
 		}
 
-		memberAddr, err := l.state.ContractAddress(memberContract, network)
-		if err != nil || memberAddr == nil {
-			continue
+		// Add deployments (overwrites aliases, giving deployments priority)
+		deployedContracts, err := l.state.DeploymentContractsByNetwork(network)
+		if err == nil {
+			for _, deployedContract := range deployedContracts {
+				contract, err := l.state.Contracts().ByName(deployedContract.Name)
+				if err == nil {
+					address, err := l.state.ContractAddress(contract, network)
+					if err == nil && address != nil {
+						contractNameToAddress[deployedContract.Name] = *address
+					}
+				}
+			}
 		}
 
-		// If they're on the same account for this network, allow access
-		if *checkerAddr == *memberAddr {
+		// Check if both contracts exist at the same address on this network
+		checkerAddress, checkerExists := contractNameToAddress[checkerContractName]
+		memberAddress, memberExists := contractNameToAddress[memberContractName]
+		if checkerExists && memberExists && checkerAddress == memberAddress {
 			return true
 		}
 	}

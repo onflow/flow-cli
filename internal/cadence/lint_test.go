@@ -24,6 +24,7 @@ import (
 	"github.com/onflow/cadence/ast"
 	"github.com/onflow/cadence/common"
 	"github.com/onflow/cadence/tools/analysis"
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"
 	"github.com/spf13/afero"
@@ -343,6 +344,68 @@ func Test_Lint(t *testing.T) {
 			results,
 		)
 	})
+
+	t.Run("allows access(account) when contracts on same account", func(t *testing.T) {
+		t.Parallel()
+
+		state := setupMockStateWithAccountAccess(t)
+
+		results, err := lintFiles(state, "ContractA.cdc")
+		require.NoError(t, err)
+
+		// Should have no errors since ContractA and ContractB are on same account
+		require.Equal(t,
+			&lintResult{
+				Results: []fileResult{
+					{
+						FilePath:    "ContractA.cdc",
+						Diagnostics: []analysis.Diagnostic{},
+					},
+				},
+				exitCode: 0,
+			},
+			results,
+		)
+	})
+
+	t.Run("denies access(account) when contracts on different accounts", func(t *testing.T) {
+		t.Parallel()
+
+		state := setupMockStateWithAccountAccess(t)
+
+		results, err := lintFiles(state, "ContractC.cdc")
+		require.NoError(t, err)
+
+		// Should have error since ContractC and ContractB are on different accounts
+		require.Len(t, results.Results, 1)
+		require.Len(t, results.Results[0].Diagnostics, 1)
+		require.Equal(t, "semantic-error", results.Results[0].Diagnostics[0].Category)
+		require.Contains(t, results.Results[0].Diagnostics[0].Message, "access denied")
+		require.Equal(t, 1, results.exitCode)
+	})
+
+	t.Run("allows access(account) when dependencies on same account (peak-money repro)", func(t *testing.T) {
+		t.Parallel()
+
+		state := setupMockStateWithDependencies(t)
+
+		results, err := lintFiles(state, "imports/testaddr/DepA.cdc")
+		require.NoError(t, err)
+
+		// Should have no errors since DepA and DepB are dependencies on same address
+		require.Equal(t,
+			&lintResult{
+				Results: []fileResult{
+					{
+						FilePath:    "imports/testaddr/DepA.cdc",
+						Diagnostics: []analysis.Diagnostic{},
+					},
+				},
+				exitCode: 0,
+			},
+			results,
+		)
+	})
 }
 
 func setupMockState(t *testing.T) *flowkit.State {
@@ -477,6 +540,192 @@ func setupMockState(t *testing.T) *flowkit.State {
 		Name:     "ContractWithNestedImports",
 		Location: "ContractWithNestedImports.cdc",
 	})
+
+	return state
+}
+
+func setupMockStateWithAccountAccess(t *testing.T) *flowkit.State {
+	// Mock file system
+	mockFs := afero.NewMemMapFs()
+
+	// ContractB has an access(account) function
+	_ = afero.WriteFile(mockFs, "ContractB.cdc", []byte(`
+	access(all) contract ContractB {
+		access(account) fun accountOnlyFunction() {
+			log("This requires account access")
+		}
+		init() {}
+	}
+	`), 0644)
+
+	// ContractA imports and calls ContractB's account function - should work (same account)
+	_ = afero.WriteFile(mockFs, "ContractA.cdc", []byte(`
+	import ContractB from "ContractB"
+	
+	access(all) contract ContractA {
+		access(all) fun callB() {
+			ContractB.accountOnlyFunction()
+		}
+		init() {}
+	}
+	`), 0644)
+
+	// ContractC imports and calls ContractB's account function - should fail (different account)
+	_ = afero.WriteFile(mockFs, "ContractC.cdc", []byte(`
+	import ContractB from "ContractB"
+	
+	access(all) contract ContractC {
+		access(all) fun callB() {
+			ContractB.accountOnlyFunction()
+		}
+		init() {}
+	}
+	`), 0644)
+
+	rw := afero.Afero{Fs: mockFs}
+	state, err := flowkit.Init(rw)
+	require.NoError(t, err)
+
+	// Configure contracts with deployments
+	// ContractA and ContractB are on the same account (0x01)
+	state.Contracts().AddOrUpdate(config.Contract{
+		Name:     "ContractA",
+		Location: "ContractA.cdc",
+		Aliases: config.Aliases{
+			{
+				Network: "testnet",
+				Address: flowsdk.HexToAddress("0000000000000001"),
+			},
+		},
+	})
+
+	state.Contracts().AddOrUpdate(config.Contract{
+		Name:     "ContractB",
+		Location: "ContractB.cdc",
+		Aliases: config.Aliases{
+			{
+				Network: "testnet",
+				Address: flowsdk.HexToAddress("0000000000000001"),
+			},
+		},
+	})
+
+	// ContractC is on a different account (0x02)
+	state.Contracts().AddOrUpdate(config.Contract{
+		Name:     "ContractC",
+		Location: "ContractC.cdc",
+		Aliases: config.Aliases{
+			{
+				Network: "testnet",
+				Address: flowsdk.HexToAddress("0000000000000002"),
+			},
+		},
+	})
+
+	// Add network
+	state.Networks().AddOrUpdate(config.Network{
+		Name: "testnet",
+		Host: "access.testnet.nodes.onflow.org:9000",
+	})
+
+	return state
+}
+
+func setupMockStateWithDependencies(t *testing.T) *flowkit.State {
+	// Reproduce peak-money structure: dependencies with aliases, not contracts
+	mockFs := afero.NewMemMapFs()
+
+	// DepB has an access(account) function (like FlowEVMBridgeCustomAssociations)
+	_ = afero.WriteFile(mockFs, "imports/testaddr/DepB.cdc", []byte(`
+	access(all) contract DepB {
+		access(account) fun pauseConfig(forType: Type) {
+			log("This requires account access")
+		}
+		init() {}
+	}
+	`), 0644)
+
+	// DepA imports and calls DepB's account function (like FlowEVMBridgeConfig)
+	_ = afero.WriteFile(mockFs, "imports/testaddr/DepA.cdc", []byte(`
+	import DepB from "DepB"
+	
+	access(all) contract DepA {
+		access(all) fun callDepB(forType: Type) {
+			DepB.pauseConfig(forType: forType)
+		}
+		init() {}
+	}
+	`), 0644)
+
+	rw := afero.Afero{Fs: mockFs}
+	state, err := flowkit.Init(rw)
+	require.NoError(t, err)
+
+	// Add network first
+	state.Networks().AddOrUpdate(config.Network{
+		Name: "testnet",
+		Host: "access.testnet.nodes.onflow.org:9000",
+	})
+
+	// Add as DEPENDENCIES (not contracts) with same aliases - this is the key difference from peak-money
+	state.Dependencies().AddOrUpdate(config.Dependency{
+		Name: "DepA",
+		Source: config.Source{
+			NetworkName:  "testnet",
+			Address:      flowsdk.HexToAddress("dfc20aee650fcbdf"),
+			ContractName: "DepA",
+		},
+		Aliases: config.Aliases{
+			{
+				Network: "testnet",
+				Address: flowsdk.HexToAddress("dfc20aee650fcbdf"),
+			},
+			{
+				Network: "emulator",
+				Address: flowsdk.HexToAddress("f8d6e0586b0a20c7"),
+			},
+		},
+	})
+
+	state.Dependencies().AddOrUpdate(config.Dependency{
+		Name: "DepB",
+		Source: config.Source{
+			NetworkName:  "testnet",
+			Address:      flowsdk.HexToAddress("dfc20aee650fcbdf"),
+			ContractName: "DepB",
+		},
+		Aliases: config.Aliases{
+			{
+				Network: "testnet",
+				Address: flowsdk.HexToAddress("dfc20aee650fcbdf"),
+			},
+			{
+				Network: "emulator",
+				Address: flowsdk.HexToAddress("f8d6e0586b0a20c7"),
+			},
+		},
+	})
+
+	// Dependencies should also be added as contracts for import resolution
+	// This is what happens when you run `flow dependencies install`
+	state.Contracts().AddDependencyAsContract(
+		*state.Dependencies().ByName("DepA"),
+		"testnet",
+	)
+	state.Contracts().AddDependencyAsContract(
+		*state.Dependencies().ByName("DepB"),
+		"testnet",
+	)
+
+	// Set the Location field so imports can resolve the files
+	depAContract, _ := state.Contracts().ByName("DepA")
+	if depAContract != nil {
+		depAContract.Location = "imports/testaddr/DepA.cdc"
+	}
+	depBContract, _ := state.Contracts().ByName("DepB")
+	if depBContract != nil {
+		depBContract.Location = "imports/testaddr/DepB.cdc"
+	}
 
 	return state
 }
