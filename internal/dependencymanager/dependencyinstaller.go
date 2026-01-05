@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/psiemens/sconfig"
 
@@ -147,6 +148,7 @@ type DependencyInstaller struct {
 	installCount      int                                   // Track number of dependencies installed
 	pendingPrompts    []pendingPrompt                       // Dependencies that need prompts after tree display
 	prompter          Prompter                              // Optional: for testing. If nil, uses real prompts
+	blockHeightCache  map[string]uint64                     // Cache of latest block heights per network for consistent pinning
 }
 
 type Prompter interface {
@@ -204,6 +206,7 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State, saveStat
 		accountAliases:    make(map[string]map[string]flowsdk.Address),
 		pendingPrompts:    make([]pendingPrompt, 0),
 		prompter:          prompter{},
+		blockHeightCache:  make(map[string]uint64),
 	}, nil
 }
 
@@ -459,16 +462,60 @@ func (di *DependencyInstaller) processDependency(dependency config.Dependency) e
 	return di.processDependencies(dependency)
 }
 
+// getLatestBlockHeight returns the current block height for a given network.
+// Results are cached per network to ensure all dependencies in a single install
+// operation get pinned to the same block height for consistency.
+func (di *DependencyInstaller) getLatestBlockHeight(network string) (uint64, error) {
+	// Check cache first
+	if height, ok := di.blockHeightCache[network]; ok {
+		return height, nil
+	}
+
+	gw, ok := di.Gateways[network]
+	if !ok {
+		return 0, fmt.Errorf("gateway for network %s not found", network)
+	}
+
+	ctx := context.Background()
+	latestBlock, err := gw.GetLatestBlock(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get latest block: %w", err)
+	}
+
+	// Cache the result
+	di.blockHeightCache[network] = latestBlock.Height
+	return latestBlock.Height, nil
+}
+
 func (di *DependencyInstaller) getContracts(network string, address flowsdk.Address) (map[string][]byte, error) {
+	return di.getContractsAtBlockHeight(network, address, 0)
+}
+
+// getContractsAtBlockHeight retrieves contracts at a specific block height.
+// If blockHeight is 0, it fetches the latest version.
+// Uses GetAccountAtBlockHeight from flowkit Gateway interface for historical queries.
+func (di *DependencyInstaller) getContractsAtBlockHeight(network string, address flowsdk.Address, blockHeight uint64) (map[string][]byte, error) {
 	gw, ok := di.Gateways[network]
 	if !ok {
 		return nil, fmt.Errorf("gateway for network %s not found", network)
 	}
 
 	ctx := context.Background()
-	acct, err := gw.GetAccount(ctx, address)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get account at %s on %s: %w", address, network, err)
+	var acct *flowsdk.Account
+	var err error
+
+	if blockHeight > 0 {
+		// Query at specific block height (historical)
+		acct, err = gw.GetAccountAtBlockHeight(ctx, address, blockHeight)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get account at block height %d on %s: %w", blockHeight, network, err)
+		}
+	} else {
+		// Query latest version
+		acct, err = gw.GetAccount(ctx, address)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get account at %s on %s: %w", address, network, err)
+		}
 	}
 
 	if acct == nil {
@@ -533,9 +580,77 @@ func (di *DependencyInstaller) fetchDependenciesWithDepth(dependency config.Depe
 		return fmt.Errorf("error adding dependency: %w", err)
 	}
 
-	accountContracts, err := di.getContracts(networkName, address)
+	// Check if this dependency already exists and we're discovering it via an alias
+	// If so, handle it early using the source network (not the incoming network)
+	existingDependency := di.State.Dependencies().ByName(dependency.Name)
+	if existingDependency != nil && (existingDependency.Source.NetworkName != networkName || existingDependency.Source.Address.String() != address.String()) {
+		if !di.existingAliasMatches(dependency.Name, networkName, address.String()) {
+			di.Logger.Info(fmt.Sprintf("%s A dependency named %s already exists with a different remote source. Please fix the conflict and retry.", util.PrintEmoji("🚫"), dependency.Name))
+			os.Exit(0)
+			return nil
+		}
+		// Alias matched - contract already in flow.json, discovered via different network.
+		// Only update block height if --update flag is set (to respect frozen dependencies)
+		if di.Update {
+			latestHeight, err := di.getLatestBlockHeight(existingDependency.Source.NetworkName)
+			if err != nil {
+				return fmt.Errorf("failed to get latest block height: %w", err)
+			}
+			// Update block height (--update flag triggers this)
+			blockHeight := di.shouldUpdateBlockHeight(existingDependency.Name, latestHeight, false, false)
+			dep := *existingDependency
+			dep.BlockHeight = blockHeight
+			if err := di.saveDependencyState(dep); err != nil {
+				return fmt.Errorf("error updating dependency: %w", err)
+			}
+		}
+		return nil
+	}
+
+	// Determine which block height to use for querying
+	// If --update flag is set, always use latest (even for pinned dependencies)
+	// Otherwise, use existing block height for frozen dependencies
+	var blockHeight uint64
+	hadSporkRecovery := false // Track if we had to do spork recovery
+
+	if di.Update || existingDependency == nil || existingDependency.BlockHeight == 0 {
+		// Use latest block height for:
+		// 1. --update flag (force update to latest)
+		// 2. New dependencies
+		// 3. Dependencies without pinned block height
+		latestHeight, err := di.getLatestBlockHeight(networkName)
+		if err != nil {
+			return fmt.Errorf("failed to get latest block height: %w", err)
+		}
+		blockHeight = latestHeight
+	} else {
+		// Use pinned block height for frozen dependencies
+		blockHeight = existingDependency.BlockHeight
+	}
+
+	accountContracts, err := di.getContractsAtBlockHeight(networkName, address, blockHeight)
 	if err != nil {
-		return fmt.Errorf("error fetching contracts: %w", err)
+		// If we get a spork-related error (block height too old), fall back to latest
+		// This happens when flow.json has old block heights from before the current spork
+		// We'll check the hash later - if it matches, we just update metadata; if not, normal update flow applies
+		if strings.Contains(err.Error(), "spork root block height") || strings.Contains(err.Error(), "key not found") {
+			di.Logger.Info(fmt.Sprintf("  %s Block height %d is from before current spork, fetching latest version", util.PrintEmoji("⚠️"), blockHeight))
+			hadSporkRecovery = true
+			// Get the current block height (will be cached from above for new deps)
+			latestHeight, err := di.getLatestBlockHeight(networkName)
+			if err != nil {
+				return fmt.Errorf("failed to get latest block height: %w", err)
+			}
+			// Fetch at that specific block height
+			accountContracts, err = di.getContractsAtBlockHeight(networkName, address, latestHeight)
+			if err != nil {
+				return fmt.Errorf("error fetching contracts: %w", err)
+			}
+			// Update blockHeight so it's used consistently for this dependency
+			blockHeight = latestHeight
+		} else {
+			return fmt.Errorf("error fetching contracts: %w", err)
+		}
 	}
 
 	contract, ok := accountContracts[contractName]
@@ -548,7 +663,7 @@ func (di *DependencyInstaller) fetchDependenciesWithDepth(dependency config.Depe
 		return fmt.Errorf("failed to parse program: %w", err)
 	}
 
-	if err := di.handleFoundContract(dependency, program); err != nil {
+	if err := di.handleFoundContract(dependency, program, blockHeight, hadSporkRecovery); err != nil {
 		return fmt.Errorf("failed to handle found contract: %w", err)
 	}
 
@@ -645,7 +760,7 @@ func (di *DependencyInstaller) verifyLocalFileIntegrity(contractAddr, contractNa
 	return nil
 }
 
-func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency, program *project.Program) error {
+func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency, program *project.Program, fetchedBlockHeight uint64, hadSporkRecovery bool) error {
 	networkName := dependency.Source.NetworkName
 	contractAddr := dependency.Source.Address.String()
 	contractName := dependency.Source.ContractName
@@ -662,18 +777,6 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 
 	existingDependency := di.State.Dependencies().ByName(dependency.Name)
 
-	// If a dependency by this name already exists and its remote source network or address does not match,
-	// allow it only if an existing alias matches the incoming network+address; otherwise terminate.
-	if existingDependency != nil && (existingDependency.Source.NetworkName != networkName || existingDependency.Source.Address.String() != contractAddr) {
-		if !di.existingAliasMatches(dependency.Name, networkName, contractAddr) {
-			di.Logger.Info(fmt.Sprintf("%s A dependency named %s already exists with a different remote source. Please fix the conflict and retry.", util.PrintEmoji("🚫"), dependency.Name))
-			os.Exit(0)
-			return nil
-		}
-		// Alias matched - contract already stored, encountered via different network. Skip state update.
-		return nil
-	}
-
 	// Check if remote source version is different from local version
 	// Decide what to do: defer prompt, skip (frozen), or auto-update
 	hashMismatch := existingDependency != nil && existingDependency.Hash != "" && existingDependency.Hash != contractDataHash
@@ -687,7 +790,27 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 				return fmt.Errorf("cannot install with --skip-update-prompts flag when local files have been modified. %w", err)
 			}
 
-			// File exists and matches stored hash - keep using it (frozen at old version)
+			// File exists and matches stored hash - but network version changed
+			// Check if we fetched at a different block height (e.g., pre-spork recovery)
+			// Only error if the dependency was actually pinned (BlockHeight > 0)
+			if existingDependency.BlockHeight > 0 && fetchedBlockHeight != existingDependency.BlockHeight {
+				// Pre-spork recovery scenario: we couldn't fetch the old block, had to use latest
+				// But the hash on the network differs from what we have frozen
+				// This means we can't truly keep it frozen - ERROR OUT
+				return fmt.Errorf(
+					"dependency %s: cannot keep frozen with --skip-update-prompts. "+
+						"The stored block height (%d) is no longer accessible (likely pre-spork), "+
+						"and the contract on-chain at the current block height (%d) has a different hash. "+
+						"Run 'flow dependencies install --update' to fetch the latest version, "+
+						"or remove --skip-update-prompts to be prompted for updates",
+					dependency.Name,
+					existingDependency.BlockHeight,
+					fetchedBlockHeight,
+				)
+			}
+
+			// File exists, matches stored hash, and we fetched at the stored block height
+			// This is truly frozen - keep it as is
 			return nil
 		}
 
@@ -718,12 +841,14 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 			}
 			return nil
 		}
+		// Fall through: --update or --skip-update-prompts without file → install from network
 	}
 
-	// Check if file exists and needs repair (out of sync with flow.json)
+	// Check if file exists and needs repair (out of sync with current network version)
 	fileExists := di.contractFileExists(contractAddr, contractName)
 	fileModified := false
 	if fileExists {
+		// Check if the file matches what we just fetched from the network
 		if err := di.verifyLocalFileIntegrity(contractAddr, contractName, contractDataHash); err != nil {
 			fileModified = true
 		}
@@ -732,10 +857,14 @@ func (di *DependencyInstaller) handleFoundContract(dependency config.Dependency,
 	// Install or update: new deps, out-of-sync files, or network updates with --update/--skip-update-prompts
 	isNewDep := di.State.Dependencies().ByName(dependency.Name) == nil
 
-	err := di.updateDependencyState(dependency, contractDataHash)
-	if err != nil {
-		di.Logger.Error(fmt.Sprintf("Error updating state: %v", err))
-		return err
+	// Determine final block height and save
+	blockHeight := di.shouldUpdateBlockHeight(dependency.Name, fetchedBlockHeight, hashMismatch, hadSporkRecovery)
+	dep := dependency
+	dep.Hash = contractDataHash
+	dep.BlockHeight = blockHeight
+
+	if err := di.saveDependencyState(dep); err != nil {
+		return fmt.Errorf("error updating state: %w", err)
 	}
 
 	// Log if this was an auto-update (with --update flag) or file repair
@@ -915,32 +1044,42 @@ func (di *DependencyInstaller) updateDependencyAlias(contractName, aliasNetwork 
 	return nil
 }
 
-func (di *DependencyInstaller) updateDependencyState(originalDependency config.Dependency, contractHash string) error {
-	// Create the dependency to save, preserving aliases and canonical from the original
-	dep := config.Dependency{
-		Name:      originalDependency.Name,
-		Source:    originalDependency.Source,
-		Hash:      contractHash,
-		Aliases:   originalDependency.Aliases,
-		Canonical: originalDependency.Canonical,
+// shouldUpdateBlockHeight determines if we should update to a new block height or keep the existing one
+func (di *DependencyInstaller) shouldUpdateBlockHeight(depName string, newHeight uint64, hashChanged bool, hadSporkRecovery bool) uint64 {
+	existing := di.State.Dependencies().ByName(depName)
+
+	// Always use new height if: new dep, hash changed, spork recovery, old format, or --update flag
+	if existing == nil || hashChanged || hadSporkRecovery || existing.BlockHeight == 0 || di.Update {
+		return newHeight
 	}
 
-	isNewDep := di.State.Dependencies().ByName(dep.Name) == nil
+	// Otherwise keep existing (frozen dependency)
+	return existing.BlockHeight
+}
 
+// saveDependencyState saves the dependency to state and logs changes
+func (di *DependencyInstaller) saveDependencyState(dep config.Dependency) error {
+	existing := di.State.Dependencies().ByName(dep.Name)
+	isNew := existing == nil
+
+	// Save to state
 	di.State.Dependencies().AddOrUpdate(dep)
-	di.State.Contracts().AddDependencyAsContract(dep, originalDependency.Source.NetworkName)
+	di.State.Contracts().AddDependencyAsContract(dep, dep.Source.NetworkName)
 
-	// If this is an aliased import (Name differs from ContractName), set the Canonical field on the contract
-	// This enables flowkit to generate the correct "import X as Y from address" syntax
+	// Handle aliased imports (enables "import X as Y from address" syntax)
 	if dep.Name != dep.Source.ContractName {
-		contract, err := di.State.Contracts().ByName(dep.Name)
-		if err == nil && contract != nil {
+		if contract, err := di.State.Contracts().ByName(dep.Name); err == nil && contract != nil {
 			contract.Canonical = dep.Source.ContractName
 		}
 	}
 
-	if isNewDep {
+	// Log changes
+	if isNew {
 		msg := util.MessageWithEmojiPrefix("✅", fmt.Sprintf("%s added to flow.json", dep.Name))
+		di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
+	} else if existing.BlockHeight > 0 && existing.BlockHeight != dep.BlockHeight {
+		msg := util.MessageWithEmojiPrefix("🔄", fmt.Sprintf("%s block height updated (%d → %d)",
+			dep.Name, existing.BlockHeight, dep.BlockHeight))
 		di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
 	}
 
@@ -1030,15 +1169,24 @@ func (di *DependencyInstaller) processPendingPrompts() error {
 			if shouldUpdate {
 				dependency := di.State.Dependencies().ByName(pending.contractName)
 				if dependency != nil {
-					err := di.updateDependencyState(*dependency, pending.updateHash)
+					// Get latest block height for the update
+					latestHeight, err := di.getLatestBlockHeight(dependency.Source.NetworkName)
 					if err != nil {
-						di.Logger.Error(fmt.Sprintf("Error updating dependency: %v", err))
-						return err
+						return fmt.Errorf("failed to get latest block height: %w", err)
+					}
+
+					// User accepted update - hash changed, so use new block height
+					blockHeight := di.shouldUpdateBlockHeight(dependency.Name, latestHeight, true, false)
+					dep := *dependency
+					dep.Hash = pending.updateHash
+					dep.BlockHeight = blockHeight
+
+					if err := di.saveDependencyState(dep); err != nil {
+						return fmt.Errorf("error updating dependency: %w", err)
 					}
 
 					// Write the updated contract file (force overwrite)
 					if err := di.createContractFile(pending.contractAddr, pending.contractName, pending.contractData); err != nil {
-						di.Logger.Error(fmt.Sprintf("Error updating contract file: %v", err))
 						return fmt.Errorf("failed to update contract file: %w", err)
 					}
 

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/onflow/flow-cli/flowkit/config/json/json-config",
+  "$id": "https://github.com/onflow/flowkit/v2/config/json/json-config",
   "$ref": "#/$defs/jsonConfig",
   "$defs": {
     "account": {
@@ -111,10 +111,7 @@
         }
       },
       "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "host"
-      ]
+      "type": "object"
     },
     "contractDeployment": {
       "properties": {
@@ -122,9 +119,7 @@
           "type": "string"
         },
         "args": {
-          "items": {
-            "type": "object"
-          },
+          "items": true,
           "type": "array"
         }
       },
@@ -199,6 +194,9 @@
             }
           },
           "type": "object"
+        },
+        "canonical": {
+          "type": "string"
         }
       },
       "additionalProperties": false,
@@ -242,6 +240,9 @@
         "hash": {
           "type": "string"
         },
+        "block_height": {
+          "type": "integer"
+        },
         "aliases": {
           "patternProperties": {
             ".*": {
@@ -249,6 +250,9 @@
             }
           },
           "type": "object"
+        },
+        "canonical": {
+          "type": "string"
         }
       },
       "additionalProperties": false,
