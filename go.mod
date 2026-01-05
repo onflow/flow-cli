@@ -19,7 +19,7 @@ require (
 	github.com/onflow/fcl-dev-wallet v0.9.1
 	github.com/onflow/flixkit-go/v2 v2.7.0
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.9.2
-	github.com/onflow/flow-emulator v1.15.0
+	github.com/onflow/flow-emulator v1.15.1
 	github.com/onflow/flow-evm-gateway v1.4.4
 	github.com/onflow/flow-go v0.45.0-experimental-cadence-v1.8.7.0.20251219170433-76749cca9738
 	github.com/onflow/flow-go-sdk v1.9.8
@@ -301,6 +301,6 @@ require (
 	modernc.org/libc v1.66.10 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
-	modernc.org/sqlite v1.40.1 // indirect
+	modernc.org/sqlite v1.41.0 // indirect
 	nhooyr.io/websocket v1.8.7 // indirect
 )
