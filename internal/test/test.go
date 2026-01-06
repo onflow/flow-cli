@@ -194,24 +194,35 @@ func testCode(
 
 	// Resolve network labels using flow.json state
 	resolveNetworkFromState := func(label string) (string, bool) {
-		network, err := state.Networks().ByName(strings.ToLower(strings.TrimSpace(label)))
+		normalizedLabel := strings.ToLower(strings.TrimSpace(label))
+		network, err := state.Networks().ByName(normalizedLabel)
 		if err != nil || network == nil {
 			return "", false
 		}
-		if strings.TrimSpace(network.Host) == "" {
+
+		// If network has a fork, resolve the fork network's host
+		host := strings.TrimSpace(network.Host)
+		if network.Fork != "" {
+			forkName := strings.ToLower(strings.TrimSpace(network.Fork))
+			forkNetwork, err := state.Networks().ByName(forkName)
+			if err == nil && forkNetwork != nil {
+				host = strings.TrimSpace(forkNetwork.Host)
+			}
+		}
+
+		if host == "" {
 			return "", false
 		}
 
 		// Track network resolution for current test file (indicates pragma-based fork usage)
 		// Only track if it's not the default "testing" network
-		normalizedLabel := strings.ToLower(strings.TrimSpace(label))
 		if currentTestFile != "" && normalizedLabel != "testing" {
 			if _, exists := fileNetworkResolutions[currentTestFile]; !exists {
 				fileNetworkResolutions[currentTestFile] = normalizedLabel
 			}
 		}
 
-		return network.Host, true
+		return host, true
 	}
 
 	// Configure fork mode if requested
