@@ -205,9 +205,10 @@ func testCode(
 		if network.Fork != "" {
 			forkName := strings.ToLower(strings.TrimSpace(network.Fork))
 			forkNetwork, err := state.Networks().ByName(forkName)
-			if err == nil && forkNetwork != nil {
-				host = strings.TrimSpace(forkNetwork.Host)
+			if err != nil {
+				return "", false
 			}
+			host = strings.TrimSpace(forkNetwork.Host)
 		}
 
 		if host == "" {
