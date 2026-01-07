@@ -1065,6 +1065,7 @@ func TestContractAddressForkResolution_UsesMainnetForkFirst(t *testing.T) {
 	// Add mainnet-fork network
 	state.Networks().AddOrUpdate(config.Network{
 		Name: "mainnet-fork",
+		Host: "127.0.0.1:3569",
 		Fork: "mainnet",
 	})
 
@@ -1128,6 +1129,7 @@ func TestContractAddressForkResolution_FallbackToMainnet(t *testing.T) {
 	// Add mainnet-fork network
 	state.Networks().AddOrUpdate(config.Network{
 		Name: "mainnet-fork",
+		Host: "127.0.0.1:3569",
 		Fork: "mainnet",
 	})
 
@@ -1191,6 +1193,7 @@ func TestContractAddressForkResolution_PrioritizesForkOverParent(t *testing.T) {
 	// Add mainnet-fork network
 	state.Networks().AddOrUpdate(config.Network{
 		Name: "mainnet-fork",
+		Host: "127.0.0.1:3569",
 		Fork: "mainnet",
 	})
 
