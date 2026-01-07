@@ -1049,3 +1049,193 @@ access(all) fun testSimple() {
 	require.Len(t, result.Results, 1)
 	assert.NoError(t, result.Results["test_fork_with_host.cdc"][0].Error)
 }
+
+func TestContractAddressForkResolution_UsesMainnetForkFirst(t *testing.T) {
+	t.Parallel()
+
+	_, state, _ := util.TestMocks(t)
+
+	// Add mainnet network
+	state.Networks().AddOrUpdate(config.Network{
+		Name: "mainnet",
+		Host: "access.mainnet.nodes.onflow.org:9000",
+	})
+
+	// Add mainnet-fork network
+	state.Networks().AddOrUpdate(config.Network{
+		Name: "mainnet-fork",
+		Fork: "mainnet",
+	})
+
+	// Contract with mainnet-fork specific alias (using proper mainnet-style address)
+	mainnetForkAddr := flowsdk.HexToAddress("0x1654653399040a61")
+	contractSource := []byte(`
+access(all) contract TestContract {
+	access(all) var value: Int
+	init() { self.value = 42 }
+}
+`)
+	_ = state.ReaderWriter().WriteFile("TestContract.cdc", contractSource, 0644)
+
+	c := config.Contract{
+		Name:     "TestContract",
+		Location: "TestContract.cdc",
+		Aliases: config.Aliases{
+			{
+				Network: "mainnet-fork",
+				Address: mainnetForkAddr,
+			},
+		},
+	}
+	state.Contracts().AddOrUpdate(c)
+
+	testScript := []byte(`
+#test_fork(network: "mainnet-fork", height: nil)
+
+import Test
+import "TestContract"
+
+access(all) fun testUsesMainnetForkAddress() {
+	Test.assert(true)
+}
+`)
+
+	testFiles := map[string][]byte{
+		"test_mainnet_fork_addr.cdc": testScript,
+	}
+
+	result, err := testCode(testFiles, state, flagsTests{})
+
+	require.NoError(t, err)
+	require.Len(t, result.Results, 1)
+	assert.NoError(t, result.Results["test_mainnet_fork_addr.cdc"][0].Error)
+}
+
+func TestContractAddressForkResolution_FallbackToMainnet(t *testing.T) {
+	t.Parallel()
+
+	_, state, _ := util.TestMocks(t)
+
+	// Add mainnet network
+	state.Networks().AddOrUpdate(config.Network{
+		Name: "mainnet",
+		Host: "access.mainnet.nodes.onflow.org:9000",
+	})
+
+	// Add mainnet-fork network
+	state.Networks().AddOrUpdate(config.Network{
+		Name: "mainnet-fork",
+		Fork: "mainnet",
+	})
+
+	// Contract with ONLY mainnet alias (no mainnet-fork alias)
+	mainnetAddr := flowsdk.HexToAddress("0xf233dcee88fe0abe")
+	contractSource := []byte(`
+access(all) contract TestContract {
+	access(all) var value: Int
+	init() { self.value = 99 }
+}
+`)
+	_ = state.ReaderWriter().WriteFile("TestContract.cdc", contractSource, 0644)
+
+	c := config.Contract{
+		Name:     "TestContract",
+		Location: "TestContract.cdc",
+		Aliases: config.Aliases{
+			{
+				Network: "mainnet",
+				Address: mainnetAddr,
+			},
+		},
+	}
+	state.Contracts().AddOrUpdate(c)
+
+	testScript := []byte(`
+#test_fork(network: "mainnet-fork", height: nil)
+
+import Test
+import "TestContract"
+
+access(all) fun testFallbackToMainnetAddress() {
+	Test.assert(true)
+}
+`)
+
+	testFiles := map[string][]byte{
+		"test_fallback_mainnet.cdc": testScript,
+	}
+
+	result, err := testCode(testFiles, state, flagsTests{})
+
+	require.NoError(t, err)
+	require.Len(t, result.Results, 1)
+	assert.NoError(t, result.Results["test_fallback_mainnet.cdc"][0].Error)
+}
+
+func TestContractAddressForkResolution_PrioritizesForkOverParent(t *testing.T) {
+	t.Parallel()
+
+	_, state, _ := util.TestMocks(t)
+
+	// Add mainnet network
+	state.Networks().AddOrUpdate(config.Network{
+		Name: "mainnet",
+		Host: "access.mainnet.nodes.onflow.org:9000",
+	})
+
+	// Add mainnet-fork network
+	state.Networks().AddOrUpdate(config.Network{
+		Name: "mainnet-fork",
+		Fork: "mainnet",
+	})
+
+	// Contract with BOTH mainnet and mainnet-fork aliases - should use mainnet-fork first
+	mainnetAddr := flowsdk.HexToAddress("0x1654653399040a61")
+	mainnetForkAddr := flowsdk.HexToAddress("0xf233dcee88fe0abe")
+
+	contractSource := []byte(`
+access(all) contract TestContract {
+	access(all) var value: Int
+	init() { self.value = 123 }
+}
+`)
+	_ = state.ReaderWriter().WriteFile("TestContract.cdc", contractSource, 0644)
+
+	c := config.Contract{
+		Name:     "TestContract",
+		Location: "TestContract.cdc",
+		Aliases: config.Aliases{
+			{
+				Network: "mainnet",
+				Address: mainnetAddr,
+			},
+			{
+				Network: "mainnet-fork",
+				Address: mainnetForkAddr,
+			},
+		},
+	}
+	state.Contracts().AddOrUpdate(c)
+
+	// Should use the mainnet-fork address (0xf233dcee88fe0abe), not mainnet (0x1654653399040a61)
+	testScript := []byte(`
+#test_fork(network: "mainnet-fork", height: nil)
+
+import Test
+import "TestContract"
+
+access(all) fun testPrioritizesFork() {
+	Test.assert(true)
+}
+`)
+
+	testFiles := map[string][]byte{
+		"test_priority.cdc": testScript,
+	}
+
+	result, err := testCode(testFiles, state, flagsTests{})
+
+	require.NoError(t, err)
+	require.Len(t, result.Results, 1)
+	assert.NoError(t, result.Results["test_priority.cdc"][0].Error)
+}
