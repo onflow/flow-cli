@@ -1583,6 +1583,78 @@ func TestTransitiveConflictAllowedWithMatchingAlias(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestTransitiveConflictErrorsWithoutAlias(t *testing.T) {
+	logger := output.NewStdoutLogger(output.NoneLog)
+	_, state, _ := util.TestMocks(t)
+
+	// Pre-install Foo as a mainnet dependency WITHOUT an alias for testnet
+	state.Dependencies().AddOrUpdate(config.Dependency{
+		Name: "Foo",
+		Source: config.Source{
+			NetworkName:  config.MainnetNetwork.Name,
+			Address:      flow.HexToAddress("0x0a"),
+			ContractName: "Foo",
+		},
+	})
+	state.Contracts().AddDependencyAsContract(config.Dependency{
+		Name: "Foo",
+		Source: config.Source{
+			NetworkName:  config.MainnetNetwork.Name,
+			Address:      flow.HexToAddress("0x0a"),
+			ContractName: "Foo",
+		},
+	}, config.MainnetNetwork.Name)
+	// NOTE: No alias added - this will cause a conflict
+
+	// Gateways
+	gwTestnet := mocks.DefaultMockGateway()
+	gwTestnet.GetLatestBlock.Return(&flow.Block{BlockHeader: flow.BlockHeader{Height: 100}}, nil)
+
+	// Addresses
+	barAddr := flow.HexToAddress("0x0c")     // testnet address hosting Bar
+	fooTestAddr := flow.HexToAddress("0x0b") // testnet Foo address (different from mainnet 0x0a)
+
+	gwTestnet.GetAccountAtBlockHeight.Run(func(args mock.Arguments) {
+		addr := args.Get(1).(flow.Address)
+		switch addr.String() {
+		case barAddr.String():
+			acc := tests.NewAccountWithAddress(addr.String())
+			acc.Contracts = map[string][]byte{
+				"Bar": []byte("import Foo from 0x0b\naccess(all) contract Bar {}"),
+			}
+			gwTestnet.GetAccountAtBlockHeight.Return(acc, nil)
+		case fooTestAddr.String():
+			acc := tests.NewAccountWithAddress(addr.String())
+			acc.Contracts = map[string][]byte{
+				"Foo": []byte("access(all) contract Foo {}"),
+			}
+			gwTestnet.GetAccountAtBlockHeight.Return(acc, nil)
+		default:
+			gwTestnet.GetAccountAtBlockHeight.Return(nil, fmt.Errorf("not found"))
+		}
+	})
+
+	di := &DependencyInstaller{
+		Gateways: map[string]gateway.Gateway{
+			config.TestnetNetwork.Name: gwTestnet.Mock,
+		},
+		Logger:           logger,
+		State:            state,
+		SkipDeployments:  true,
+		SkipAlias:        true,
+		dependencies:     make(map[string]config.Dependency),
+		prompter:         &mockPrompter{responses: []bool{}},
+		blockHeightCache: make(map[string]uint64),
+	}
+
+	// Attempt to install Bar from testnet, which imports Foo from testnet transitively
+	// Without a matching alias, this should ERROR (naming conflict)
+	err := di.AddBySourceString(fmt.Sprintf("%s://%s.%s", config.TestnetNetwork.Name, barAddr.String(), "Bar"))
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "already exists with a different source")
+	assert.Contains(t, err.Error(), "naming conflict")
+}
+
 func TestDependencyInstallerAliasTracking(t *testing.T) {
 	logger := output.NewStdoutLogger(output.NoneLog)
 	_, state, _ := util.TestMocks(t)
@@ -2750,15 +2822,13 @@ func TestBlockHeightPinning(t *testing.T) {
 		assert.Equal(t, computeHash(contractCode), savedDep.Hash, "Hash should match the new contract code")
 	})
 
-	t.Run("AliasedContractGetsCorrectNetworkBlockHeight", func(t *testing.T) {
+	t.Run("AliasedContractSkipsRediscovery", func(t *testing.T) {
 		_, state, _ := util.TestMocks(t)
 
-		// Simulate mainnet address
 		mainnetAddr := flow.HexToAddress("0xf233dcee88fe0abe")
-		// Simulate testnet address
 		testnetAddr := flow.HexToAddress("0x9a0766d93b6608b7")
 
-		// Add Burner as mainnet dependency with old (wrong) testnet block height
+		// Add Burner as mainnet dependency
 		existingBurner := config.Dependency{
 			Name: "Burner",
 			Source: config.Source{
@@ -2766,7 +2836,7 @@ func TestBlockHeightPinning(t *testing.T) {
 				Address:      mainnetAddr,
 				ContractName: "Burner",
 			},
-			BlockHeight: 138158854, // Wrong: this is a testnet block height
+			BlockHeight: 95000000,
 			Hash:        "existinghash",
 		}
 		state.Dependencies().AddOrUpdate(existingBurner)
@@ -2776,48 +2846,23 @@ func TestBlockHeightPinning(t *testing.T) {
 		c, _ := state.Contracts().ByName("Burner")
 		c.Aliases.Add(config.TestnetNetwork.Name, testnetAddr)
 
-		// Setup gateways for both networks
-		mainnetGw := mocks.DefaultMockGateway()
-		mainnetGw.GetLatestBlock.Return(&flow.Block{BlockHeader: flow.BlockHeader{Height: 95000000}}, nil) // Mainnet ~95M
-		mainnetGw.GetAccount.Run(func(args mock.Arguments) {
-			acc := tests.NewAccountWithAddress(mainnetAddr.String())
-			acc.Contracts = map[string][]byte{
-				"Burner": []byte("access(all) contract Burner {}"),
-			}
-			mainnetGw.GetAccount.Return(acc, nil)
-		})
-
-		testnetGw := mocks.DefaultMockGateway()
-		testnetGw.GetLatestBlock.Return(&flow.Block{BlockHeader: flow.BlockHeader{Height: 299000000}}, nil) // Testnet ~299M
-		testnetGw.GetAccount.Run(func(args mock.Arguments) {
-			acc := tests.NewAccountWithAddress(testnetAddr.String())
-			acc.Contracts = map[string][]byte{
-				"Burner": []byte("access(all) contract Burner {}"),
-			}
-			testnetGw.GetAccount.Return(acc, nil)
-		})
-
 		di := &DependencyInstaller{
-			Gateways: map[string]gateway.Gateway{
-				config.MainnetNetwork.Name: mainnetGw.Mock,
-				config.TestnetNetwork.Name: testnetGw.Mock,
-			},
+			Gateways:         map[string]gateway.Gateway{},
 			Logger:           logger,
 			State:            state,
 			SkipDeployments:  true,
 			SkipAlias:        true,
-			Update:           true, // Use --update flag to correct the wrong block height
 			dependencies:     make(map[string]config.Dependency),
 			logs:             categorizedLogs{},
 			prompter:         &mockPrompter{responses: []bool{}},
 			blockHeightCache: make(map[string]uint64),
 		}
 
-		// Simulate discovering Burner via testnet (as would happen with transitive imports)
+		// Discover Burner via testnet alias (transitive import scenario)
 		depViaTestnet := config.Dependency{
 			Name: "Burner",
 			Source: config.Source{
-				NetworkName:  config.TestnetNetwork.Name, // Discovered via testnet
+				NetworkName:  config.TestnetNetwork.Name,
 				Address:      testnetAddr,
 				ContractName: "Burner",
 			},
@@ -2826,12 +2871,13 @@ func TestBlockHeightPinning(t *testing.T) {
 		err := di.Add(depViaTestnet)
 		assert.NoError(t, err)
 
-		// Verify: Burner should have MAINNET block height (its source network), not testnet
+		// Verify: Burner should remain unchanged (alias rediscovery just skips)
 		savedDep := state.Dependencies().ByName("Burner")
 		assert.NotNil(t, savedDep)
 		assert.Equal(t, config.MainnetNetwork.Name, savedDep.Source.NetworkName, "Source should remain mainnet")
 		assert.Equal(t, mainnetAddr, savedDep.Source.Address, "Address should remain mainnet")
-		assert.Equal(t, uint64(95000000), savedDep.BlockHeight, "Should have mainnet block height, not testnet")
+		assert.Equal(t, uint64(95000000), savedDep.BlockHeight, "Block height should remain unchanged")
+		assert.Equal(t, "existinghash", savedDep.Hash, "Hash should remain unchanged")
 	})
 }
 

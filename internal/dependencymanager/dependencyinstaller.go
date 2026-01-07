@@ -23,7 +23,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -580,36 +579,20 @@ func (di *DependencyInstaller) fetchDependenciesWithDepth(dependency config.Depe
 		return fmt.Errorf("error adding dependency: %w", err)
 	}
 
-	// Check if this dependency already exists and we're discovering it via an alias
-	// If so, handle it early using the source network (not the incoming network)
-	existingDependency := di.State.Dependencies().ByName(dependency.Name)
-	if existingDependency != nil && (existingDependency.Source.NetworkName != networkName || existingDependency.Source.Address.String() != address.String()) {
-		if !di.existingAliasMatches(dependency.Name, networkName, address.String()) {
-			di.Logger.Info(fmt.Sprintf("%s A dependency named %s already exists with a different remote source. Please fix the conflict and retry.", util.PrintEmoji("🚫"), dependency.Name))
-			os.Exit(0)
-			return nil
-		}
-		// Alias matched - contract already in flow.json, discovered via different network.
-		// Only update block height if --update flag is set (to respect frozen dependencies)
-		if di.Update {
-			latestHeight, err := di.getLatestBlockHeight(existingDependency.Source.NetworkName)
-			if err != nil {
-				return fmt.Errorf("failed to get latest block height: %w", err)
-			}
-			// Update block height (--update flag triggers this)
-			blockHeight := di.shouldUpdateBlockHeight(existingDependency.Name, latestHeight, false, false)
-			dep := *existingDependency
-			dep.BlockHeight = blockHeight
-			if err := di.saveDependencyState(dep); err != nil {
-				return fmt.Errorf("error updating dependency: %w", err)
-			}
-		}
-		return nil
+	// Prevent duplicate dependencies: check if this contract is already managed via a different network
+	// Example: Foo stored as mainnet://0xabc, but discovered transitively as testnet://0xdef (aliased)
+	shouldContinue, err := di.checkForCrossNetworkDuplicate(dependency.Name, networkName, address.String())
+	if err != nil {
+		return err
+	}
+	if !shouldContinue {
+		return nil // Already managed via different network, skip
 	}
 
 	// Determine which block height to use for querying
 	// If --update flag is set, always use latest (even for pinned dependencies)
 	// Otherwise, use existing block height for frozen dependencies
+	existingDependency := di.State.Dependencies().ByName(dependency.Name)
 	var blockHeight uint64
 	hadSporkRecovery := false // Track if we had to do spork recovery
 
@@ -1042,6 +1025,46 @@ func (di *DependencyInstaller) updateDependencyAlias(contractName, aliasNetwork 
 	}
 
 	return nil
+}
+
+// checkForCrossNetworkDuplicate prevents adding duplicate dependencies when the same contract
+// is managed on one network but discovered transitively via another network (aliased).
+//
+// Example scenario:
+//   - Foo is stored as mainnet://0x0a in flow.json (source network)
+//   - Foo has an alias: testnet = 0x0b (same contract, different address)
+//   - User installs Bar from testnet
+//   - Bar imports "Foo from 0x0b" (transitive)
+//   - We discover testnet://0x0b.Foo during traversal
+//   - This check detects: "Foo already managed via mainnet, this is just an alias, skip"
+//
+// Returns (shouldContinue, error):
+//   - true = new dependency or same source, continue processing
+//   - false = duplicate (via alias) or conflict detected, skip/stop
+func (di *DependencyInstaller) checkForCrossNetworkDuplicate(depName string, incomingNetwork string, incomingAddress string) (bool, error) {
+	existing := di.State.Dependencies().ByName(depName)
+	if existing == nil {
+		return true, nil // New dependency, continue
+	}
+
+	isSameSource := existing.Source.NetworkName == incomingNetwork && existing.Source.Address.String() == incomingAddress
+	if isSameSource {
+		return true, nil // Same source, continue
+	}
+
+	// Different source - check if it's a valid cross-network alias or a naming conflict
+	if !di.existingAliasMatches(depName, incomingNetwork, incomingAddress) {
+		return false, fmt.Errorf(
+			"dependency '%s' already exists with a different source (%s://%s) but no alias mapping exists for %s://%s. "+
+				"This is a naming conflict. Please rename one of the contracts or add an alias mapping",
+			depName,
+			existing.Source.NetworkName, existing.Source.Address.String(),
+			incomingNetwork, incomingAddress,
+		)
+	}
+
+	// Valid alias - already managed via source network, skip this duplicate discovery
+	return false, nil
 }
 
 // shouldUpdateBlockHeight determines if we should update to a new block height or keep the existing one
