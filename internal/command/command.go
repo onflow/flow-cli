@@ -34,8 +34,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/onflow/flow-cli/internal/prompt"
-
 	"github.com/coreos/go-semver/semver"
 	"github.com/dukex/mixpanel"
 	"github.com/getsentry/sentry-go"
@@ -43,11 +41,13 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/accounts"
 	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/gateway"
 	"github.com/onflow/flowkit/v2/output"
 
 	"github.com/onflow/flow-cli/build"
+	"github.com/onflow/flow-cli/internal/prompt"
 	"github.com/onflow/flow-cli/internal/settings"
 	"github.com/onflow/flow-cli/internal/util"
 )
@@ -130,6 +130,9 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		if !Flags.SkipVersionCheck {
 			checkVersion(logger)
 		}
+
+		// warn about inline keys in config
+		checkForInlineKeys(state, logger)
 
 		// record command usage
 		wg := sync.WaitGroup{}
@@ -326,6 +329,30 @@ func checkVersion(logger output.Logger) {
 
 func isDevelopment() bool {
 	return build.Semver() == "undefined"
+}
+
+// checkForInlineKeys warns users if they have accounts with inline private keys in flow.json
+func checkForInlineKeys(state *flowkit.State, logger output.Logger) {
+	if state == nil {
+		return
+	}
+
+	var inlineKeyAccounts []string
+	for _, account := range *state.Accounts() {
+		if _, isHexKey := account.Key.(*accounts.HexKey); isHexKey {
+			inlineKeyAccounts = append(inlineKeyAccounts, account.Name)
+		}
+	}
+
+	if len(inlineKeyAccounts) > 0 {
+		logger.Info(fmt.Sprintf(
+			"\n%s Security warning: %d account(s) have private keys stored directly in flow.json: %s\n"+
+				"   Extract them to separate key files by running: flow config extract-key --all\n",
+			output.WarningEmoji(),
+			len(inlineKeyAccounts),
+			strings.Join(inlineKeyAccounts, ", "),
+		))
+	}
 }
 
 // initCrashReporting set-ups sentry as crash reporting tool, it also sets listener for panics
