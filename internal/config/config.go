@@ -31,6 +31,7 @@ var Cmd = &cobra.Command{
 func init() {
 	Cmd.AddCommand(addCmd)
 	Cmd.AddCommand(removeCmd)
+	extractKeyCommand.AddToParent(Cmd)
 }
 
 type result struct {
