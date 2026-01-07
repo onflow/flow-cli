@@ -47,6 +47,7 @@ import (
 	"github.com/onflow/flowkit/v2/output"
 
 	"github.com/onflow/flow-cli/build"
+	"github.com/onflow/flow-cli/common/branding"
 	"github.com/onflow/flow-cli/internal/prompt"
 	"github.com/onflow/flow-cli/internal/settings"
 	"github.com/onflow/flow-cli/internal/util"
@@ -345,12 +346,15 @@ func checkForInlineKeys(state *flowkit.State, logger output.Logger) {
 	}
 
 	if len(inlineKeyAccounts) > 0 {
+		cmd := branding.GreenStyle.Render("flow config extract-key --all")
 		logger.Info(fmt.Sprintf(
 			"\n%s Security warning: %d account(s) have private keys stored directly in flow.json: %s\n"+
-				"   Extract them to separate key files by running: flow config extract-key --all\n",
+				"   Extract them to separate key files by running: %s\n"+
+				"   Learn more: https://developers.flow.com/build/tools/flow-cli/flow.json/security\n",
 			output.WarningEmoji(),
 			len(inlineKeyAccounts),
 			strings.Join(inlineKeyAccounts, ", "),
+			cmd,
 		))
 	}
 }
