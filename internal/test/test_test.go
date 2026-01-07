@@ -1005,8 +1005,9 @@ access(all) fun testSimple() {
 
 	_, err := testCode(testFiles, state, flagsTests{})
 
+	// Should fail with network resolution error
 	require.Error(t, err)
-	assert.ErrorContains(t, err, "could not resolve network")
+	assert.ErrorContains(t, err, "network resolver could not resolve network")
 }
 
 func TestNetworkForkResolution_WithOwnHost(t *testing.T) {
@@ -1096,7 +1097,9 @@ import Test
 import "TestContract"
 
 access(all) fun testUsesMainnetForkAddress() {
-	Test.assert(true)
+	// Verify TestContract resolves to the mainnet-fork address
+	let addr = Type<TestContract>().address!
+	Test.assertEqual(0x1654653399040a61 as Address, addr)
 }
 `)
 
@@ -1157,7 +1160,9 @@ import Test
 import "TestContract"
 
 access(all) fun testFallbackToMainnetAddress() {
-	Test.assert(true)
+	// Verify TestContract falls back to mainnet address since mainnet-fork has no alias
+	let addr = Type<TestContract>().address!
+	Test.assertEqual(0xf233dcee88fe0abe as Address, addr)
 }
 `)
 
@@ -1225,7 +1230,9 @@ import Test
 import "TestContract"
 
 access(all) fun testPrioritizesFork() {
-	Test.assert(true)
+	// Verify TestContract uses mainnet-fork address (0xf233dcee88fe0abe), NOT mainnet (0x1654653399040a61)
+	let addr = Type<TestContract>().address!
+	Test.assertEqual(0xf233dcee88fe0abe as Address, addr)
 }
 `)
 
