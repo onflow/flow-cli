@@ -900,3 +900,152 @@ func TestForkMode_AutodetectFailureRequiresExplicitNetwork(t *testing.T) {
 	require.Error(t, err)
 	assert.ErrorContains(t, err, "failed to get chain ID from fork host")
 }
+
+func TestNetworkForkResolution_Success(t *testing.T) {
+	t.Parallel()
+
+	_, state, _ := util.TestMocks(t)
+
+	// Add mainnet network with a host
+	state.Networks().AddOrUpdate(config.Network{
+		Name: "mainnet",
+		Host: "access.mainnet.nodes.onflow.org:9000",
+	})
+
+	// Add mainnet-fork that references mainnet via Fork field (no host)
+	state.Networks().AddOrUpdate(config.Network{
+		Name: "mainnet-fork",
+		Fork: "mainnet",
+	})
+
+	// Create a simple test that uses the test_fork pragma
+	testScript := []byte(`
+#test_fork(network: "mainnet-fork", height: nil)
+
+import Test
+
+access(all) fun testSimple() {
+	Test.assert(true)
+}
+`)
+
+	testFiles := map[string][]byte{
+		"test_fork_resolution.cdc": testScript,
+	}
+
+	result, err := testCode(testFiles, state, flagsTests{})
+
+	require.NoError(t, err)
+	require.Len(t, result.Results, 1)
+	assert.NoError(t, result.Results["test_fork_resolution.cdc"][0].Error)
+}
+
+func TestNetworkForkResolution_ForkNetworkNotFound(t *testing.T) {
+	t.Parallel()
+
+	_, state, _ := util.TestMocks(t)
+
+	// Add mainnet-fork that references non-existent network
+	state.Networks().AddOrUpdate(config.Network{
+		Name: "mainnet-fork",
+		Fork: "nonexistent",
+	})
+
+	// Create a simple test that uses the fork network
+	testScript := []byte(`
+#test_fork(network: "mainnet-fork", height: nil)
+
+import Test
+
+access(all) fun testSimple() {
+	Test.assert(true)
+}
+`)
+
+	testFiles := map[string][]byte{
+		"test_fork_missing.cdc": testScript,
+	}
+
+	_, err := testCode(testFiles, state, flagsTests{})
+
+	require.Error(t, err)
+	assert.ErrorContains(t, err, "could not resolve network")
+}
+
+func TestNetworkForkResolution_ForkNetworkHasNoHost(t *testing.T) {
+	t.Parallel()
+
+	_, state, _ := util.TestMocks(t)
+
+	// Add mainnet network with no host
+	state.Networks().AddOrUpdate(config.Network{
+		Name: "mainnet",
+	})
+
+	// Add mainnet-fork that references mainnet with no host
+	state.Networks().AddOrUpdate(config.Network{
+		Name: "mainnet-fork",
+		Fork: "mainnet",
+	})
+
+	// Create a simple test that uses the fork network
+	testScript := []byte(`
+#test_fork(network: "mainnet-fork", height: nil)
+
+import Test
+
+access(all) fun testSimple() {
+	Test.assert(true)
+}
+`)
+
+	testFiles := map[string][]byte{
+		"test_fork_no_host.cdc": testScript,
+	}
+
+	_, err := testCode(testFiles, state, flagsTests{})
+
+	require.Error(t, err)
+	assert.ErrorContains(t, err, "could not resolve network")
+}
+
+func TestNetworkForkResolution_WithOwnHost(t *testing.T) {
+	t.Parallel()
+
+	_, state, _ := util.TestMocks(t)
+
+	// Add mainnet network
+	state.Networks().AddOrUpdate(config.Network{
+		Name: "mainnet",
+		Host: "access.mainnet.nodes.onflow.org:9000",
+	})
+
+	// Add mainnet-fork with its own host AND fork field
+	// Should use mainnet's host (from Fork) not its own
+	state.Networks().AddOrUpdate(config.Network{
+		Name: "mainnet-fork",
+		Host: "127.0.0.1:3569",
+		Fork: "mainnet",
+	})
+
+	// Create a simple test that uses the fork network
+	testScript := []byte(`
+#test_fork(network: "mainnet-fork", height: nil)
+
+import Test
+
+access(all) fun testSimple() {
+	Test.assert(true)
+}
+`)
+
+	testFiles := map[string][]byte{
+		"test_fork_with_host.cdc": testScript,
+	}
+
+	result, err := testCode(testFiles, state, flagsTests{})
+
+	require.NoError(t, err)
+	require.Len(t, result.Results, 1)
+	assert.NoError(t, result.Results["test_fork_with_host.cdc"][0].Error)
+}
