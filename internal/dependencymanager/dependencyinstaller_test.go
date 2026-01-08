@@ -1347,7 +1347,6 @@ func TestDependencyInstallerAdd(t *testing.T) {
 				tests.ContractHelloString.Name: tests.ContractHelloString.Source,
 			}
 			gw.GetAccountAtBlockHeight.Return(acc, nil)
-			gw.GetAccountAtBlockHeight.Return(acc, nil)
 		}
 
 		gw.GetAccount.Run(setupAccountMocks)
