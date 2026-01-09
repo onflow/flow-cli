@@ -13,7 +13,7 @@ require (
 	github.com/gosuri/uilive v0.0.4
 	github.com/logrusorgru/aurora/v4 v4.0.0
 	github.com/onflow/cadence v1.9.4
-	github.com/onflow/cadence-tools/languageserver v1.8.1-0.20260109111613-14995cfb521d
+	github.com/onflow/cadence-tools/languageserver v1.9.0
 	github.com/onflow/cadence-tools/lint v1.7.1
 	github.com/onflow/cadence-tools/test v1.10.1
 	github.com/onflow/fcl-dev-wallet v0.9.1
