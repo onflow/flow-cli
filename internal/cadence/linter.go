@@ -156,6 +156,28 @@ func (l *linter) lintFile(
 	}
 	analysisProgram.Run(analyzers, report)
 
+	// Generate synthetic replacements for replacement category diagnostics
+	// that don't have suggested fixes
+	for i := range diagnostics {
+		diagnostic := &diagnostics[i]
+		if diagnostic.Category == cdclint.ReplacementCategory &&
+			len(diagnostic.SuggestedFixes) == 0 &&
+			diagnostic.SecondaryMessage != "" {
+			// Create a synthetic suggested fix from the secondary message
+			diagnostic.SuggestedFixes = []cdcerrors.SuggestedFix[ast.TextEdit]{
+				{
+					Message: fmt.Sprintf("%s `%s`", diagnostic.Message, diagnostic.SecondaryMessage),
+					TextEdits: []ast.TextEdit{
+						{
+							Range:       diagnostic.Range,
+							Replacement: diagnostic.SecondaryMessage,
+						},
+					},
+				},
+			}
+		}
+	}
+
 	return diagnostics, nil
 }
 

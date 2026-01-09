@@ -189,6 +189,33 @@ func Test_Lint(t *testing.T) {
 		)
 	})
 
+	t.Run("generates synthetic replacement for replacement category diagnostics", func(t *testing.T) {
+		t.Parallel()
+
+		state := setupMockState(t)
+
+		results, err := lintFiles(state, "ReplacementHint.cdc")
+		require.NoError(t, err)
+
+		require.Len(t, results.Results, 1)
+		require.Len(t, results.Results[0].Diagnostics, 1)
+
+		diagnostic := results.Results[0].Diagnostics[0]
+
+		// Should have the replacement category
+		require.Equal(t, "replacement-hint", diagnostic.Category)
+
+		// Should have a secondary message with the replacement suggestion
+		require.Equal(t, "consider replacing with:", diagnostic.Message)
+		require.Equal(t, "1.0", diagnostic.SecondaryMessage)
+
+		// Should have synthetic suggested fixes generated from secondary message
+		require.Len(t, diagnostic.SuggestedFixes, 1)
+		require.Equal(t, "consider replacing with: `1.0`", diagnostic.SuggestedFixes[0].Message)
+		require.Len(t, diagnostic.SuggestedFixes[0].TextEdits, 1)
+		require.Equal(t, "1.0", diagnostic.SuggestedFixes[0].TextEdits[0].Replacement)
+	})
+
 	t.Run("linter resolves imports from flowkit state", func(t *testing.T) {
 		t.Parallel()
 
@@ -474,6 +501,12 @@ func setupMockState(t *testing.T) *flowkit.State {
 		init() {
 			let x = 1!
 			qqq
+		}
+	}`), 0644)
+	_ = afero.WriteFile(mockFs, "ReplacementHint.cdc", []byte(`
+	access(all) contract ReplacementHint {
+		access(all) fun test() {
+			let x = UFix64(1)
 		}
 	}`), 0644)
 	_ = afero.WriteFile(mockFs, "CadenceV1Error.cdc", []byte(`
