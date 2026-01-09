@@ -788,8 +788,8 @@ github.com/onflow/fcl-dev-wallet v0.9.1 h1:FmDH8dkRdIXluedaFy+sCk23FuwCgycWuJAbc
 github.com/onflow/fcl-dev-wallet v0.9.1/go.mod h1:kc42jkiuoPJmxMRFjfbRO9XvnR/3XLheaOerxVMDTiw=
 github.com/onflow/fixed-point v0.1.1 h1:j0jYZVO8VGyk1476alGudEg7XqCkeTVxb5ElRJRKS90=
 github.com/onflow/fixed-point v0.1.1/go.mod h1:gJdoHqKtToKdOZbvryJvDZfcpzC7d2fyWuo3ZmLtcGY=
-github.com/onflow/flixkit-go/v2 v2.7.0 h1:g91G5Tf+wYhYxckgg1hHE6TihXS0dKDK8NBk5eVOHmY=
-github.com/onflow/flixkit-go/v2 v2.7.0/go.mod h1:REh3sUvTvqX+730AxFFGR/gc+THjTrvb2PSeyzWOHnM=
+github.com/onflow/flixkit-go/v2 v2.7.1 h1:99gawQR37G0lxpd4NqYDHwqugWdBgxHqYLEdxWNsYQg=
+github.com/onflow/flixkit-go/v2 v2.7.1/go.mod h1:wdb5BbO9AA7loHtLbaZTcFv9bLHZx0LVZMqnjkiS2RI=
 github.com/onflow/flow-core-contracts/lib/go/contracts v1.9.2 h1:mkd1NSv74+OnCHwrFqI2c5VETS1j06xf0ZuOto7gMio=
 github.com/onflow/flow-core-contracts/lib/go/contracts v1.9.2/go.mod h1:jBDqVep0ICzhXky56YlyO4aiV2Jl/5r7wnqUPpvi7zE=
 github.com/onflow/flow-core-contracts/lib/go/templates v1.9.2 h1:semxeVLwC6xFG1G/7egUmaf7F1C8eBnc7NxNTVfBHTs=
@@ -798,8 +798,8 @@ github.com/onflow/flow-emulator v1.15.3 h1:temoo0GH4FF/EJHbDd+/JUX/9UWgBubdZv62C
 github.com/onflow/flow-emulator v1.15.3/go.mod h1:6pQ7hawYNwh+ojyUSr7QgNEwvknYBn+xgVNyfAYMG5Y=
 github.com/onflow/flow-evm-bridge v0.1.0 h1:7X2osvo4NnQgHj8aERUmbYtv9FateX8liotoLnPL9nM=
 github.com/onflow/flow-evm-bridge v0.1.0/go.mod h1:5UYwsnu6WcBNrwitGFxphCl5yq7fbWYGYuiCSTVF6pk=
-github.com/onflow/flow-evm-gateway v1.4.4 h1:02wCG225hJcUl3JcDaenrB93x/vHRIVjj27KjvbeOmQ=
-github.com/onflow/flow-evm-gateway v1.4.4/go.mod h1:LmafwSIoRVOc0E8t9aEwNd8LmaehEth0DlcZCqaB4x8=
+github.com/onflow/flow-evm-gateway v1.4.5-0.20260109131900-576c361f7c70 h1:TlUw1qmodv+5BFrVShJQKHk3FBTGtGZQ1EffgdDktJE=
+github.com/onflow/flow-evm-gateway v1.4.5-0.20260109131900-576c361f7c70/go.mod h1:m+SeUNswybNV4Ogf00A2r93RaKuBf/SGrnyZAD/T2PU=
 github.com/onflow/flow-ft/lib/go/contracts v1.0.1 h1:Ts5ob+CoCY2EjEd0W6vdLJ7hLL3SsEftzXG2JlmSe24=
 github.com/onflow/flow-ft/lib/go/contracts v1.0.1/go.mod h1:PwsL8fC81cjnUnTfmyL/HOIyHnyaw/JA474Wfj2tl6A=
 github.com/onflow/flow-ft/lib/go/templates v1.0.1 h1:FDYKAiGowABtoMNusLuRCILIZDtVqJ/5tYI4VkF5zfM=
