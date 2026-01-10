@@ -53,6 +53,7 @@ func init() {
 	sendSignedCommand.AddToParent(Cmd)
 	getSystemCommand.AddToParent(Cmd)
 	decodeCommand.AddToParent(Cmd)
+	profileCommand.AddToParent(Cmd)
 }
 
 type transactionResult struct {
