@@ -279,7 +279,6 @@ func profileTransactionWithFVM(
 
 	vm := fvm.NewVirtualMachine()
 
-	// Create block header for FVM context (enables getCurrentBlock() for scheduled transactions)
 	blockHeader := &flowgo.Header{
 		HeaderBody: flowgo.HeaderBody{
 			ChainID:   chainID,
