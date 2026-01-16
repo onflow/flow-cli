@@ -19,9 +19,9 @@
 package transactions
 
 import (
+	"bytes"
 	"context"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/onflow/cadence/runtime"
@@ -169,7 +169,7 @@ func profile(
 		outputPath = fmt.Sprintf("%s%s%s", profileFilePrefix, txID.String()[:txIDDisplayLength], profileFileSuffix)
 	}
 
-	if err := writePprofBinary(profile, outputPath); err != nil {
+	if err := writePprofBinary(profile, outputPath, state.ReaderWriter()); err != nil {
 		return nil, fmt.Errorf("failed to write profile: %w", err)
 	}
 
@@ -415,7 +415,7 @@ func executeTransactions(
 }
 
 // writePprofBinary writes a computation profile to a pprof binary file
-func writePprofBinary(profile *runtime.ComputationProfile, outputPath string) error {
+func writePprofBinary(profile *runtime.ComputationProfile, outputPath string, rw flowkit.ReaderWriter) error {
 	if profile == nil {
 		return fmt.Errorf("no profiling data available: profile is nil")
 	}
@@ -430,14 +430,13 @@ func writePprofBinary(profile *runtime.ComputationProfile, outputPath string) er
 		return fmt.Errorf("pprof data is nil after export")
 	}
 
-	f, err := os.Create(outputPath)
-	if err != nil {
-		return fmt.Errorf("failed to create output file %s: %w", outputPath, err)
-	}
-	defer f.Close()
-
-	if err := pprofData.Write(f); err != nil {
+	var buf bytes.Buffer
+	if err := pprofData.Write(&buf); err != nil {
 		return fmt.Errorf("failed to write pprof data: %w", err)
+	}
+
+	if err := rw.WriteFile(outputPath, buf.Bytes(), 0644); err != nil {
+		return fmt.Errorf("failed to create output file %s: %w", outputPath, err)
 	}
 
 	return nil
