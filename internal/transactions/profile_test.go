@@ -211,15 +211,12 @@ func Test_Profile_Integration_LocalEmulator(t *testing.T) {
 
 func getFreePort(t *testing.T) int {
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		if t != nil {
-			require.NoError(t, err)
-		} else {
-			panic(fmt.Sprintf("failed to get free port: %v", err))
-		}
-	}
+	require.NoError(t, err)
 	defer listener.Close()
-	return listener.Addr().(*net.TCPAddr).Port
+
+	tcpAddr, ok := listener.Addr().(*net.TCPAddr)
+	require.True(t, ok, "expected TCP address")
+	return tcpAddr.Port
 }
 
 func runProfileTest(t *testing.T, emulatorHost string, testTxID flow.Identifier, testBlockHeight uint64) {
@@ -270,12 +267,12 @@ func runProfileTest(t *testing.T, emulatorHost string, testTxID flow.Identifier,
 	assert.Equal(t, testBlockHeight, jsonMap["block_height"])
 }
 
-func createEmulatorServer(port int) *server.EmulatorServer {
+func createEmulatorServer(t *testing.T, port int) *server.EmulatorServer {
 	zlog := zerolog.New(zerolog.ConsoleWriter{Out: io.Discard})
 
-	restPort := getFreePort(nil)
-	adminPort := getFreePort(nil)
-	debuggerPort := getFreePort(nil)
+	restPort := getFreePort(t)
+	adminPort := getFreePort(t)
+	debuggerPort := getFreePort(t)
 
 	serverConf := &server.Config{
 		GRPCPort:                     port,
@@ -346,7 +343,7 @@ func submitAndCommitTransaction(t *testing.T, tx *flow.Transaction, blockchain e
 }
 
 func startEmulatorWithTestTransaction(t *testing.T, host string, port int) (*server.EmulatorServer, flow.Identifier, uint64) {
-	emulatorServer := createEmulatorServer(port)
+	emulatorServer := createEmulatorServer(t, port)
 	blockchain := emulatorServer.Emulator()
 
 	createInitialBlocks(t, blockchain)
@@ -374,7 +371,7 @@ func startEmulatorWithTestTransaction(t *testing.T, host string, port int) (*ser
 }
 
 func startEmulatorWithFailedTransaction(t *testing.T, host string, port int) (*server.EmulatorServer, flow.Identifier, uint64) {
-	emulatorServer := createEmulatorServer(port)
+	emulatorServer := createEmulatorServer(t, port)
 	blockchain := emulatorServer.Emulator()
 
 	createInitialBlocks(t, blockchain)
@@ -399,7 +396,7 @@ func startEmulatorWithFailedTransaction(t *testing.T, host string, port int) (*s
 }
 
 func startEmulatorWithMultipleTransactions(t *testing.T, host string, port int, count int) (*server.EmulatorServer, flow.Identifier, uint64) {
-	emulatorServer := createEmulatorServer(port)
+	emulatorServer := createEmulatorServer(t, port)
 	blockchain := emulatorServer.Emulator()
 
 	createInitialBlocks(t, blockchain)
@@ -437,7 +434,7 @@ func startEmulatorWithMultipleTransactions(t *testing.T, host string, port int, 
 }
 
 func startEmulatorWithScheduledTransaction(t *testing.T, host string, port int) (*server.EmulatorServer, flow.Identifier, uint64) {
-	emulatorServer := createEmulatorServer(port)
+	emulatorServer := createEmulatorServer(t, port)
 
 	blockchain := emulatorServer.Emulator()
 	serviceAddress := blockchain.ServiceKey().Address

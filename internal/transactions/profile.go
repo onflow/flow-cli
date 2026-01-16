@@ -312,14 +312,16 @@ func profileTransactionWithFVM(
 	)...)
 
 	// Execute prior transactions to recreate state
+	txIndex := 0
 	if len(priorUserTxs) > 0 {
-		if err := executeTransactions(vm, userCtx, execState, priorUserTxs, logger); err != nil {
+		if err := executeTransactions(vm, userCtx, execState, priorUserTxs, txIndex, logger); err != nil {
 			return nil, 0, fmt.Errorf("failed to execute prior user transactions: %w", err)
 		}
+		txIndex += len(priorUserTxs)
 	}
 
 	if len(priorSystemTxs) > 0 {
-		if err := executeTransactions(vm, systemCtx, execState, priorSystemTxs, logger); err != nil {
+		if err := executeTransactions(vm, systemCtx, execState, priorSystemTxs, txIndex, logger); err != nil {
 			return nil, 0, fmt.Errorf("failed to execute prior system transactions: %w", err)
 		}
 	}
@@ -339,8 +341,8 @@ func profileTransactionWithFVM(
 		return nil, 0, fmt.Errorf("failed to create transaction context: %w", err)
 	}
 
-	txIndex := uint32(len(priorUserTxs) + len(priorSystemTxs))
-	txProc := fvm.Transaction(targetFlowTx, txIndex)
+	targetTxIndex := uint32(len(priorUserTxs) + len(priorSystemTxs))
+	txProc := fvm.Transaction(targetFlowTx, targetTxIndex)
 	_, output, err := vm.Run(targetCtx, txProc, txn)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to execute target transaction: %w", err)
@@ -371,7 +373,7 @@ func isSystemTransaction(tx *flowsdk.Transaction) bool {
 // separateTransactionsByType separates transactions into user and system transactions
 func separateTransactionsByType(txs []*flowsdk.Transaction) (user, system []*flowsdk.Transaction) {
 	user = make([]*flowsdk.Transaction, 0, len(txs))
-	system = make([]*flowsdk.Transaction, 0)
+	system = make([]*flowsdk.Transaction, 0, len(txs))
 
 	for _, tx := range txs {
 		if isSystemTransaction(tx) {
@@ -389,6 +391,7 @@ func executeTransactions(
 	ctx fvm.Context,
 	execState *fvmState.ExecutionState,
 	txs []*flowsdk.Transaction,
+	startIndex int,
 	logger output.Logger,
 ) error {
 	for i, tx := range txs {
@@ -397,17 +400,17 @@ func executeTransactions(
 		blockDB := fvmStorage.NewBlockDatabase(execState, 0, nil)
 		txn, err := blockDB.NewTransaction(0, fvmState.DefaultParameters())
 		if err != nil {
-			return fmt.Errorf("failed to create transaction context for tx %d: %w", i, err)
+			return fmt.Errorf("failed to create transaction context for tx %d: %w", startIndex+i, err)
 		}
 
-		txProc := fvm.Transaction(flowTx, uint32(i))
+		txProc := fvm.Transaction(flowTx, uint32(startIndex+i))
 		executionSnapshot, _, err := vm.Run(ctx, txProc, txn)
 		if err != nil {
-			return fmt.Errorf("failed to execute transaction %d (%s): %w", i, tx.ID().String()[:txIDDisplayLength], err)
+			return fmt.Errorf("failed to execute transaction %d (%s): %w", startIndex+i, tx.ID().String()[:txIDDisplayLength], err)
 		}
 
 		if err := execState.Merge(executionSnapshot); err != nil {
-			return fmt.Errorf("failed to merge execution snapshot for tx %d: %w", i, err)
+			return fmt.Errorf("failed to merge execution snapshot for tx %d: %w", startIndex+i, err)
 		}
 	}
 
