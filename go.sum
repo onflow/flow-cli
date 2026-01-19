@@ -794,8 +794,8 @@ github.com/onflow/flow-core-contracts/lib/go/contracts v1.9.2 h1:mkd1NSv74+OnCHw
 github.com/onflow/flow-core-contracts/lib/go/contracts v1.9.2/go.mod h1:jBDqVep0ICzhXky56YlyO4aiV2Jl/5r7wnqUPpvi7zE=
 github.com/onflow/flow-core-contracts/lib/go/templates v1.9.2 h1:semxeVLwC6xFG1G/7egUmaf7F1C8eBnc7NxNTVfBHTs=
 github.com/onflow/flow-core-contracts/lib/go/templates v1.9.2/go.mod h1:twSVyUt3rNrgzAmxtBX+1Gw64QlPemy17cyvnXYy1Ug=
-github.com/onflow/flow-emulator v1.15.3 h1:temoo0GH4FF/EJHbDd+/JUX/9UWgBubdZv62CGe+/RA=
-github.com/onflow/flow-emulator v1.15.3/go.mod h1:6pQ7hawYNwh+ojyUSr7QgNEwvknYBn+xgVNyfAYMG5Y=
+github.com/onflow/flow-emulator v1.15.4-0.20260116230951-b48086958497 h1:tX2jhYgfAuiWoxi5dWkD/QZiGfGtVhby3erR+bPDI2M=
+github.com/onflow/flow-emulator v1.15.4-0.20260116230951-b48086958497/go.mod h1:6pQ7hawYNwh+ojyUSr7QgNEwvknYBn+xgVNyfAYMG5Y=
 github.com/onflow/flow-evm-bridge v0.1.0 h1:7X2osvo4NnQgHj8aERUmbYtv9FateX8liotoLnPL9nM=
 github.com/onflow/flow-evm-bridge v0.1.0/go.mod h1:5UYwsnu6WcBNrwitGFxphCl5yq7fbWYGYuiCSTVF6pk=
 github.com/onflow/flow-evm-gateway v1.4.5-0.20260109131900-576c361f7c70 h1:TlUw1qmodv+5BFrVShJQKHk3FBTGtGZQ1EffgdDktJE=
@@ -804,8 +804,8 @@ github.com/onflow/flow-ft/lib/go/contracts v1.0.1 h1:Ts5ob+CoCY2EjEd0W6vdLJ7hLL3
 github.com/onflow/flow-ft/lib/go/contracts v1.0.1/go.mod h1:PwsL8fC81cjnUnTfmyL/HOIyHnyaw/JA474Wfj2tl6A=
 github.com/onflow/flow-ft/lib/go/templates v1.0.1 h1:FDYKAiGowABtoMNusLuRCILIZDtVqJ/5tYI4VkF5zfM=
 github.com/onflow/flow-ft/lib/go/templates v1.0.1/go.mod h1:uQ8XFqmMK2jxyBSVrmyuwdWjTEb+6zGjRYotfDJ5pAE=
-github.com/onflow/flow-go v0.45.0-experimental-cadence-v1.8.7.0.20260109014156-2abea7b5732a h1:mJbVpoYrr53pEOima8ageY3PKKjfMASAM8abrT7cJok=
-github.com/onflow/flow-go v0.45.0-experimental-cadence-v1.8.7.0.20260109014156-2abea7b5732a/go.mod h1:X2ySZctFIcMt1f5zn8A0uY5kr7C5WIMuSK+OajzZohk=
+github.com/onflow/flow-go v0.45.0-experimental-cadence-v1.8.7.0.20260113150225-6d5c1e97a834 h1:NnOXzrHQYio/eVfs2vWsXh8IE2Qphb/Efg0x2yGCEr8=
+github.com/onflow/flow-go v0.45.0-experimental-cadence-v1.8.7.0.20260113150225-6d5c1e97a834/go.mod h1:X2ySZctFIcMt1f5zn8A0uY5kr7C5WIMuSK+OajzZohk=
 github.com/onflow/flow-go-sdk v1.9.10 h1:rsl8LsSGnD7OGYCuNND2kN01yPqE7FRiSEZfwGGDpRo=
 github.com/onflow/flow-go-sdk v1.9.10/go.mod h1:pAkdLvbVP5HDpNygReIQDCSk7yTsoCUZQOjmtXDh4yM=
 github.com/onflow/flow-nft/lib/go/contracts v1.3.0 h1:DmNop+O0EMyicZvhgdWboFG57xz5t9Qp81FKlfKyqJc=

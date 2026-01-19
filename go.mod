@@ -20,9 +20,9 @@ require (
 	github.com/onflow/flixkit-go/v2 v2.7.1
 	github.com/onflow/flow-core-contracts/lib/go/contracts v1.9.2
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.9.2
-	github.com/onflow/flow-emulator v1.15.3
+	github.com/onflow/flow-emulator v1.15.4-0.20260116230951-b48086958497
 	github.com/onflow/flow-evm-gateway v1.4.5-0.20260109131900-576c361f7c70
-	github.com/onflow/flow-go v0.45.0-experimental-cadence-v1.8.7.0.20260109014156-2abea7b5732a
+	github.com/onflow/flow-go v0.45.0-experimental-cadence-v1.8.7.0.20260113150225-6d5c1e97a834
 	github.com/onflow/flow-go-sdk v1.9.10
 	github.com/onflow/flow/protobuf/go/flow v0.4.19
 	github.com/onflow/flowkit/v2 v2.10.1
@@ -304,3 +304,5 @@ require (
 	modernc.org/sqlite v1.41.0 // indirect
 	nhooyr.io/websocket v1.8.7 // indirect
 )
+
+replace github.com/onflow/flow-emulator => ../flow-emulator

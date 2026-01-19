@@ -271,6 +271,7 @@ func profileTransactionWithFVM(
 	}
 	customRuntimePool := reusableRuntime.NewCustomReusableCadenceRuntimePool(
 		1,
+		chainID.Chain(),
 		runtimeConfig,
 		func(cfg runtime.Config) runtime.Runtime {
 			return runtime.NewRuntime(cfg)
@@ -291,24 +292,29 @@ func profileTransactionWithFVM(
 
 	baseFvmOptions := []fvm.Option{
 		fvm.WithLogger(nopLogger),
-		fvm.WithChain(chainID.Chain()),
 		fvm.WithBlockHeader(blockHeader),
 		fvm.WithContractDeploymentRestricted(false),
 		fvm.WithComputationLimit(flowgo.DefaultMaxTransactionGasLimit),
 		fvm.WithReusableCadenceRuntimePool(customRuntimePool),
 	}
 
-	userCtx := fvm.NewContext(append(baseFvmOptions,
-		fvm.WithTransactionFeesEnabled(true),
-		fvm.WithAuthorizationChecksEnabled(true),
-		fvm.WithSequenceNumberCheckAndIncrementEnabled(true),
-	)...)
+	userCtx := fvm.NewContext(
+		chainID.Chain(),
+		append(baseFvmOptions,
+			fvm.WithTransactionFeesEnabled(true),
+			fvm.WithAuthorizationChecksEnabled(true),
+			fvm.WithSequenceNumberCheckAndIncrementEnabled(true),
+		)...,
+	)
 
-	systemCtx := fvm.NewContext(append(baseFvmOptions,
-		fvm.WithTransactionFeesEnabled(false),
-		fvm.WithAuthorizationChecksEnabled(false),
-		fvm.WithSequenceNumberCheckAndIncrementEnabled(false),
-	)...)
+	systemCtx := fvm.NewContext(
+		chainID.Chain(),
+		append(baseFvmOptions,
+			fvm.WithTransactionFeesEnabled(false),
+			fvm.WithAuthorizationChecksEnabled(false),
+			fvm.WithSequenceNumberCheckAndIncrementEnabled(false),
+		)...,
+	)
 
 	// Execute prior transactions to recreate state
 	txIndex := 0
