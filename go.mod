@@ -12,7 +12,7 @@ require (
 	github.com/getsentry/sentry-go v0.40.0
 	github.com/gosuri/uilive v0.0.4
 	github.com/logrusorgru/aurora/v4 v4.0.0
-	github.com/onflow/cadence v1.9.4
+	github.com/onflow/cadence v1.9.5
 	github.com/onflow/cadence-tools/languageserver v1.9.0
 	github.com/onflow/cadence-tools/lint v1.7.1
 	github.com/onflow/cadence-tools/test v1.10.1
@@ -23,7 +23,7 @@ require (
 	github.com/onflow/flow-emulator v1.15.3
 	github.com/onflow/flow-evm-gateway v1.4.5-0.20260109131900-576c361f7c70
 	github.com/onflow/flow-go v0.45.0-experimental-cadence-v1.8.7.0.20260109014156-2abea7b5732a
-	github.com/onflow/flow-go-sdk v1.9.10
+	github.com/onflow/flow-go-sdk v1.9.11
 	github.com/onflow/flow/protobuf/go/flow v0.4.19
 	github.com/onflow/flowkit/v2 v2.10.1
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
