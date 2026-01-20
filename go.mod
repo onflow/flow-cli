@@ -15,7 +15,7 @@ require (
 	github.com/onflow/cadence v1.9.5
 	github.com/onflow/cadence-tools/languageserver v1.9.1-0.20260116223002-65e051a511cf
 	github.com/onflow/cadence-tools/lint v1.7.2-0.20260116223002-65e051a511cf
-	github.com/onflow/cadence-tools/test v1.10.2-0.20260120023923-4358f3603504
+	github.com/onflow/cadence-tools/test v1.10.2-0.20260120064827-9986e0d83e4b
 	github.com/onflow/fcl-dev-wallet v0.9.1
 	github.com/onflow/flixkit-go/v2 v2.7.1
 	github.com/onflow/flow-core-contracts/lib/go/contracts v1.9.2
