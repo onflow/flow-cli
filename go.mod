@@ -12,7 +12,7 @@ require (
 	github.com/getsentry/sentry-go v0.40.0
 	github.com/gosuri/uilive v0.0.4
 	github.com/logrusorgru/aurora/v4 v4.0.0
-	github.com/onflow/cadence v1.9.4
+	github.com/onflow/cadence v1.9.5
 	github.com/onflow/cadence-tools/languageserver v1.9.0
 	github.com/onflow/cadence-tools/lint v1.7.1
 	github.com/onflow/cadence-tools/test v1.10.1
@@ -20,10 +20,10 @@ require (
 	github.com/onflow/flixkit-go/v2 v2.7.1
 	github.com/onflow/flow-core-contracts/lib/go/contracts v1.9.2
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.9.2
-	github.com/onflow/flow-emulator v1.15.3
+	github.com/onflow/flow-emulator v1.16.1
 	github.com/onflow/flow-evm-gateway v1.4.5-0.20260109131900-576c361f7c70
-	github.com/onflow/flow-go v0.45.0-experimental-cadence-v1.8.7.0.20260109014156-2abea7b5732a
-	github.com/onflow/flow-go-sdk v1.9.10
+	github.com/onflow/flow-go v0.45.0-experimental-cadence-v1.8.7.0.20260115230052-18a46246a4d6
+	github.com/onflow/flow-go-sdk v1.9.11
 	github.com/onflow/flow/protobuf/go/flow v0.4.19
 	github.com/onflow/flowkit/v2 v2.10.1
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
@@ -37,7 +37,7 @@ require (
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b
+	golang.org/x/exp v0.0.0-20251023183803-a4bb9ffd2546
 	golang.org/x/term v0.39.0
 	google.golang.org/grpc v1.78.0
 )
@@ -198,7 +198,7 @@ require (
 	github.com/multiformats/go-multistream v0.6.0 // indirect
 	github.com/multiformats/go-varint v0.0.7 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
-	github.com/ncruces/go-strftime v0.1.9 // indirect
+	github.com/ncruces/go-strftime v1.0.0 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/onflow/atree v0.12.0 // indirect
 	github.com/onflow/crypto v0.25.3 // indirect
@@ -298,9 +298,9 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	lukechampine.com/blake3 v1.4.1 // indirect
-	modernc.org/libc v1.66.10 // indirect
+	modernc.org/libc v1.67.6 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
-	modernc.org/sqlite v1.41.0 // indirect
+	modernc.org/sqlite v1.44.2 // indirect
 	nhooyr.io/websocket v1.8.7 // indirect
 )
