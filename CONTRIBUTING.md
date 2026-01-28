@@ -146,6 +146,14 @@ We try to follow the coding guidelines from the Go community.
 - Code should be commented
 - Code should pass all tests: `make test`
 
+#### Skipping Network-Dependent Tests
+
+Some tests require network access to connect to Flow mainnet/testnet nodes. To skip these tests (e.g., in sandboxed build environments like Nix), set the `SKIP_NETWORK_TESTS` environment variable:
+
+```
+SKIP_NETWORK_TESTS=1 make test
+```
+
 ## Releasing
 
 Releasing is automated by Github actions. Release action is triggered by creating a release on Github and publishing it.

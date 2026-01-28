@@ -757,6 +757,9 @@ Seed: 1521
 }
 
 func TestForkMode_UsesMainnetAliases(t *testing.T) {
+	if os.Getenv("SKIP_NETWORK_TESTS") != "" {
+		t.Skip("skipping network-dependent test")
+	}
 	t.Parallel()
 
 	_, state, _ := util.TestMocks(t)
@@ -822,6 +825,9 @@ func TestForkMode_UsesMainnetAliases(t *testing.T) {
 }
 
 func TestForkMode_UsesTestnetAliasesExplicit(t *testing.T) {
+	if os.Getenv("SKIP_NETWORK_TESTS") != "" {
+		t.Skip("skipping network-dependent test")
+	}
 	t.Parallel()
 
 	_, state, _ := util.TestMocks(t)
@@ -902,6 +908,9 @@ func TestForkMode_AutodetectFailureRequiresExplicitNetwork(t *testing.T) {
 }
 
 func TestNetworkForkResolution_Success(t *testing.T) {
+	if os.Getenv("SKIP_NETWORK_TESTS") != "" {
+		t.Skip("skipping network-dependent test")
+	}
 	t.Parallel()
 
 	_, state, _ := util.TestMocks(t)
@@ -1011,6 +1020,9 @@ access(all) fun testSimple() {
 }
 
 func TestNetworkForkResolution_WithOwnHost(t *testing.T) {
+	if os.Getenv("SKIP_NETWORK_TESTS") != "" {
+		t.Skip("skipping network-dependent test")
+	}
 	t.Parallel()
 
 	_, state, _ := util.TestMocks(t)
@@ -1052,6 +1064,9 @@ access(all) fun testSimple() {
 }
 
 func TestContractAddressForkResolution_UsesMainnetForkFirst(t *testing.T) {
+	if os.Getenv("SKIP_NETWORK_TESTS") != "" {
+		t.Skip("skipping network-dependent test")
+	}
 	t.Parallel()
 
 	_, state, _ := util.TestMocks(t)
@@ -1116,6 +1131,9 @@ access(all) fun testUsesMainnetForkAddress() {
 }
 
 func TestContractAddressForkResolution_FallbackToMainnet(t *testing.T) {
+	if os.Getenv("SKIP_NETWORK_TESTS") != "" {
+		t.Skip("skipping network-dependent test")
+	}
 	t.Parallel()
 
 	_, state, _ := util.TestMocks(t)
@@ -1180,6 +1198,9 @@ access(all) fun testFallbackToMainnetAddress() {
 }
 
 func TestContractAddressForkResolution_PrioritizesForkOverParent(t *testing.T) {
+	if os.Getenv("SKIP_NETWORK_TESTS") != "" {
+		t.Skip("skipping network-dependent test")
+	}
 	t.Parallel()
 
 	_, state, _ := util.TestMocks(t)
