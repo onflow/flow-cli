@@ -147,10 +147,6 @@ func Test_ProfilingResult(t *testing.T) {
 }
 
 func Test_Profile_Integration_LocalEmulator(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration test in short mode")
-	}
-
 	t.Run("Profile user transaction", func(t *testing.T) {
 		t.Parallel()
 
@@ -347,7 +343,14 @@ func buildTransaction(t *testing.T, script string, blockchain emulator.Emulator)
 }
 
 func submitAndCommitTransaction(t *testing.T, tx *flow.Transaction, blockchain emulator.Emulator) {
-	err := blockchain.AddTransaction(*convert.SDKTransactionToFlow(*tx))
+	serviceKey := blockchain.ServiceKey()
+	signer, err := serviceKey.Signer()
+	require.NoError(t, err)
+	
+	err = tx.SignEnvelope(serviceKey.Address, serviceKey.Index, signer)
+	require.NoError(t, err)
+	
+	err = blockchain.AddTransaction(*convert.SDKTransactionToFlow(*tx))
 	require.NoError(t, err)
 
 	_, _, err = blockchain.ExecuteAndCommitBlock()
@@ -416,7 +419,6 @@ func startEmulatorWithMultipleTransactions(t *testing.T, host string, port int, 
 	createInitialBlocks(t, blockchain)
 
 	var lastTxID flow.Identifier
-	serviceKey := blockchain.ServiceKey()
 
 	for i := 0; i < count; i++ {
 		tx := buildTransaction(t, fmt.Sprintf(`
@@ -438,7 +440,6 @@ func startEmulatorWithMultipleTransactions(t *testing.T, host string, port int, 
 		submitAndCommitTransaction(t, tx, blockchain)
 
 		lastTxID = tx.ID()
-		serviceKey.SequenceNumber++
 	}
 
 	block, err := blockchain.GetLatestBlock()
