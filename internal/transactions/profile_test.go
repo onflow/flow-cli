@@ -346,10 +346,10 @@ func submitAndCommitTransaction(t *testing.T, tx *flow.Transaction, blockchain e
 	serviceKey := blockchain.ServiceKey()
 	signer, err := serviceKey.Signer()
 	require.NoError(t, err)
-	
+
 	err = tx.SignEnvelope(serviceKey.Address, serviceKey.Index, signer)
 	require.NoError(t, err)
-	
+
 	err = blockchain.AddTransaction(*convert.SDKTransactionToFlow(*tx))
 	require.NoError(t, err)
 
