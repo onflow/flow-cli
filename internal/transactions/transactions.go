@@ -133,7 +133,7 @@ func (r *transactionResult) JSON() any {
 func (r *transactionResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
-	const feeEventsCountAppended = 5
+	const feeEventsCountAppended = 4
 	const feeDeductedEvent = "FeesDeducted"
 
 	if r.result != nil {
@@ -208,8 +208,12 @@ func (r *transactionResult) String() string {
 		if r.result != nil && e.Events != nil && !command.ContainsFlag(r.include, "fee-events") {
 			for _, event := range e.Events {
 				if strings.Contains(event.Type, feeDeductedEvent) {
-					// if fee event are present remove them
-					e.Events = e.Events[:len(e.Events)-feeEventsCountAppended]
+					// if fee events are present, remove as many as possible (up to 4)
+					numToRemove := feeEventsCountAppended
+					if len(e.Events) < feeEventsCountAppended {
+						numToRemove = len(e.Events)
+					}
+					e.Events = e.Events[:len(e.Events)-numToRemove]
 					break
 				}
 			}
