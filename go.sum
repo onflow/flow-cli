@@ -798,8 +798,8 @@ github.com/onflow/flow-emulator v1.16.3 h1:i1gZ1wtL67bxpkLQNWw/Q6R63SWRXH0IU0h7J
 github.com/onflow/flow-emulator v1.16.3/go.mod h1:VpHjJwLzFOD8U81KvYaArY//xzTyrc703CGlCu86TTI=
 github.com/onflow/flow-evm-bridge v0.1.0 h1:7X2osvo4NnQgHj8aERUmbYtv9FateX8liotoLnPL9nM=
 github.com/onflow/flow-evm-bridge v0.1.0/go.mod h1:5UYwsnu6WcBNrwitGFxphCl5yq7fbWYGYuiCSTVF6pk=
-github.com/onflow/flow-evm-gateway v1.4.6-0.20260130180524-5ba8398c993f h1:4ty4IFKaCPmtnC0BA4oqaHBbCS0Z8sJgO0bip35FV1I=
-github.com/onflow/flow-evm-gateway v1.4.6-0.20260130180524-5ba8398c993f/go.mod h1:G3K4erPk0kTG9Wf+j+ixrjxN7sBk+e1DHgtq2VKq3K8=
+github.com/onflow/flow-evm-gateway v1.4.6-experimental-sf.1 h1:5i1pdS4GvGRYLrT0HA+JGnXk4yYW8OiRVibDbPp7OYM=
+github.com/onflow/flow-evm-gateway v1.4.6-experimental-sf.1/go.mod h1:m+SeUNswybNV4Ogf00A2r93RaKuBf/SGrnyZAD/T2PU=
 github.com/onflow/flow-ft/lib/go/contracts v1.0.1 h1:Ts5ob+CoCY2EjEd0W6vdLJ7hLL3SsEftzXG2JlmSe24=
 github.com/onflow/flow-ft/lib/go/contracts v1.0.1/go.mod h1:PwsL8fC81cjnUnTfmyL/HOIyHnyaw/JA474Wfj2tl6A=
 github.com/onflow/flow-ft/lib/go/templates v1.0.1 h1:FDYKAiGowABtoMNusLuRCILIZDtVqJ/5tYI4VkF5zfM=
