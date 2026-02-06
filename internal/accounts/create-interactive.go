@@ -259,7 +259,7 @@ func (l *lilicoAccount) create(network string) (flowsdk.Identifier, error) {
 
 	request, err := http.NewRequest(
 		http.MethodPost,
-		fmt.Sprintf("https://openapi.lilico.org/v1/address%s", apiNetwork),
+		fmt.Sprintf("https://openapi.lilico.app/v1/address%s", apiNetwork),
 		bytes.NewReader(data),
 	)
 	if err != nil {
