@@ -36,6 +36,22 @@ To run the repo:
 go run cmd/flow/main.go
 ```
 
+### Getting Started with Nix
+
+If you use Nix with flakes enabled, you can just use:
+
+```bash
+# Enter development shell
+nix develop
+
+# Run the CLI
+go run cmd/flow/main.go
+
+# Or build and run
+nix build
+./result/bin/flow
+```
+
 ## How Can I Contribute?
 
 ### Reporting Bugs
