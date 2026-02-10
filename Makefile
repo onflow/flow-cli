@@ -2,32 +2,20 @@
 PACKAGE_NAME := github.com/onflow/flow-cli
 GOLANG_CROSS_VERSION ?= v1.25.0
 
-# The tag of the current commit, otherwise empty
+# Version tag from git (empty if not on a tagged commit)
 VERSION := $(shell git describe --tags --abbrev=0 --exact-match 2>/dev/null)
-# Name of the cover profile
+# Coverage report output file
 COVER_PROFILE := coverage.txt
-# Disable go sum database lookup for private repos
-GOPRIVATE := github.com/dapperlabs/*
-# Ensure go bin path is in path (Especially for CI)
-GOPATH ?= $(HOME)/go
-PATH := $(PATH):$(GOPATH)/bin
-# OS
-UNAME := $(shell uname)
 
+# Analytics and account tokens (embedded in binary)
 MIXPANEL_PROJECT_TOKEN := 3fae49de272be1ceb8cf34119f747073
 ACCOUNT_TOKEN := lilico:sF60s3wughJBmNh2
 
+# Output binary path (can be overridden)
 BINARY ?= ./cmd/flow/flow
 
 .PHONY: binary
 binary: $(BINARY)
-
-.PHONY: install-tools
-install-tools:
-	cd '${GOPATH}'; \
-	mkdir -p '${GOPATH}'; \
-	GO111MODULE=on go install github.com/sanderhahn/gozip/cmd/gozip@latest; \
-	GO111MODULE=on go install github.com/vektra/mockery/v2@v2.53.5;
 
 .PHONY: test
 test:
@@ -44,12 +32,10 @@ ifeq ($(COVER), true)
 	go tool cover -html=$(COVER_PROFILE) -o index.html
 	# Generate textual summary.
 	go tool cover -func=$(COVER_PROFILE) | tee cover-summary.txt
-	# Optionally zip the HTML (if gozip installed) for CI systems expecting an artifact.
-	if [ -x "$(shell command -v gozip 2>/dev/null)" ]; then gozip -c coverage.zip index.html || true; fi
 endif
 
 .PHONY: ci
-ci: install-tools generate test coverage
+ci: generate test coverage
 
 $(BINARY):
 	CGO_ENABLED=1 \
@@ -97,7 +83,7 @@ check-tidy:
 	go mod tidy
 
 .PHONY: generate
-generate: install-tools
+generate:
 	go generate ./...
 
 .PHONY: release
