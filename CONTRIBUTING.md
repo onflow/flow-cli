@@ -30,11 +30,6 @@ Install the necessary dependencies:
 go get ./...
 ```
 
-Generate mocks:
-```
-go generate
-```
-
 To run the repo:
 
 ```
