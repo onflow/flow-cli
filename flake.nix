@@ -13,14 +13,21 @@
 
         # Version detection:
         # - When building from a git tag (e.g., nix build github:onflow/flow-cli/v2.14.2),
-        #   the version is automatically extracted from the tag: "2.14.2"
-        # - For local development builds, version is "dev"
-        # This eliminates the need for a separate VERSION file and keeps version
-        # management in sync with git tags used for releases.
+        #   the version is extracted from the tag.
+        # - For local development builds, version is "dev" (for nix metadata) and semver
+        #   is empty so build.go sets it to "undefined", matching Makefile behavior and
+        #   enabling isDevelopment() checks (skips version warnings and crash reporting).
+        isRelease = (self ? ref) && (builtins.match "v[0-9]+\..+" self.ref != null);
         version =
-          if (self ? ref) && (builtins.match "v[0-9]+\..+" self.ref != null)
-          then builtins.substring 1 (-1) self.ref  # Remove 'v' prefix from version tags
+          if isRelease
+          then builtins.substring 1 (-1) self.ref  # Remove 'v' prefix for nix version
           else "dev";
+        # semver is what gets injected into the Go binary via ldflags.
+        # Empty string → build.go init() sets it to "undefined" → isDevelopment() == true
+        semver =
+          if isRelease
+          then self.ref  # Full tag with 'v' prefix (e.g., "v2.14.2")
+          else "";
 
         shortRev = self.shortRev or "dev";
       in
@@ -43,7 +50,7 @@
 
             ldflags = [
               "-s" "-w"
-              "-X github.com/onflow/flow-cli/build.semver=v${version}"
+              "-X github.com/onflow/flow-cli/build.semver=${semver}"
               "-X github.com/onflow/flow-cli/build.commit=${shortRev}"
               "-X github.com/onflow/flow-cli/internal/accounts.accountToken=lilico:sF60s3wughJBmNh2"
               "-X github.com/onflow/flow-cli/internal/command.MixpanelToken=3fae49de272be1ceb8cf34119f747073"
