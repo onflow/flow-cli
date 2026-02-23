@@ -209,10 +209,7 @@ func (r *transactionResult) String() string {
 			for _, event := range e.Events {
 				if strings.Contains(event.Type, feeDeductedEvent) {
 					// if fee events are present, remove as many as possible (up to 4)
-					numToRemove := feeEventsCountAppended
-					if len(e.Events) < feeEventsCountAppended {
-						numToRemove = len(e.Events)
-					}
+					numToRemove := min(len(e.Events), feeEventsCountAppended)
 					e.Events = e.Events[:len(e.Events)-numToRemove]
 					break
 				}
