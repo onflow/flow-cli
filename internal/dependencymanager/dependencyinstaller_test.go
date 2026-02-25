@@ -76,6 +76,7 @@ func TestDependencyInstallerInstall(t *testing.T) {
 
 	t.Run("Success", func(t *testing.T) {
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 		gw.GetLatestBlock.Return(&flow.Block{BlockHeader: flow.BlockHeader{Height: 100}}, nil)
 
 		gw.GetAccountAtBlockHeight.Run(func(args mock.Arguments) {
@@ -168,6 +169,7 @@ func TestDependencyInstallerInstallFromFreshClone(t *testing.T) {
 		state.Dependencies().AddOrUpdate(dep)
 
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 		gw.GetLatestBlock.Return(&flow.Block{BlockHeader: flow.BlockHeader{Height: 100}}, nil)
 
 		gw.GetAccountAtBlockHeight.Run(func(args mock.Arguments) {
@@ -242,6 +244,7 @@ func TestDependencyInstallerInstallFromFreshClone(t *testing.T) {
 		state.Dependencies().AddOrUpdate(dep)
 
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 		gw.GetLatestBlock.Return(&flow.Block{BlockHeader: flow.BlockHeader{Height: 100}}, nil)
 
 		gw.GetAccountAtBlockHeight.Run(func(args mock.Arguments) {
@@ -319,6 +322,7 @@ func TestDependencyInstallerInstallFromFreshClone(t *testing.T) {
 		state.Dependencies().AddOrUpdate(dep)
 
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 		gw.GetLatestBlock.Return(&flow.Block{BlockHeader: flow.BlockHeader{Height: 100}}, nil)
 
 		gw.GetAccountAtBlockHeight.Run(func(args mock.Arguments) {
@@ -390,6 +394,7 @@ func TestDependencyInstallerInstallFromFreshClone(t *testing.T) {
 		state.Dependencies().AddOrUpdate(dep)
 
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 		gw.GetLatestBlock.Return(&flow.Block{BlockHeader: flow.BlockHeader{Height: 100}}, nil)
 
 		gw.GetAccountAtBlockHeight.Run(func(args mock.Arguments) {
@@ -472,6 +477,7 @@ func TestDependencyInstallerInstallFromFreshClone(t *testing.T) {
 		assert.NoError(t, err)
 
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 		gw.GetLatestBlock.Return(&flow.Block{BlockHeader: flow.BlockHeader{Height: 100}}, nil)
 
 		gw.GetAccountAtBlockHeight.Run(func(args mock.Arguments) {
@@ -555,6 +561,7 @@ func TestDependencyInstallerInstallFromFreshClone(t *testing.T) {
 		assert.NoError(t, err)
 
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 		gw.GetLatestBlock.Return(&flow.Block{BlockHeader: flow.BlockHeader{Height: 100}}, nil)
 
 		gw.GetAccountAtBlockHeight.Run(func(args mock.Arguments) {
@@ -622,6 +629,7 @@ func TestDependencyInstallerInstallFromFreshClone(t *testing.T) {
 		state.Dependencies().AddOrUpdate(dep)
 
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 		gw.GetLatestBlock.Return(&flow.Block{BlockHeader: flow.BlockHeader{Height: 100}}, nil)
 
 		gw.GetAccountAtBlockHeight.Run(func(args mock.Arguments) {
@@ -710,6 +718,7 @@ func TestDependencyInstallerInstallFromFreshClone(t *testing.T) {
 		assert.NoError(t, err)
 
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 		gw.GetLatestBlock.Return(&flow.Block{BlockHeader: flow.BlockHeader{Height: 100}}, nil)
 
 		gw.GetAccountAtBlockHeight.Run(func(args mock.Arguments) {
@@ -802,6 +811,7 @@ func TestDependencyInstallerInstallFromFreshClone(t *testing.T) {
 		assert.NoError(t, err)
 
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 		gw.GetLatestBlock.Return(&flow.Block{BlockHeader: flow.BlockHeader{Height: 100}}, nil)
 
 		gw.GetAccountAtBlockHeight.Run(func(args mock.Arguments) {
@@ -886,6 +896,7 @@ func TestDependencyInstallerInstallFromFreshClone(t *testing.T) {
 		assert.NoError(t, err)
 
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 		gw.GetLatestBlock.Return(&flow.Block{BlockHeader: flow.BlockHeader{Height: 100}}, nil)
 
 		gw.GetAccountAtBlockHeight.Run(func(args mock.Arguments) {
@@ -974,6 +985,7 @@ func TestDependencyInstallerInstallFromFreshClone(t *testing.T) {
 		assert.NoError(t, err)
 
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 		gw.GetLatestBlock.Return(&flow.Block{BlockHeader: flow.BlockHeader{Height: 100}}, nil)
 
 		gw.GetAccountAtBlockHeight.Run(func(args mock.Arguments) {
@@ -1062,6 +1074,7 @@ func TestDependencyInstallerInstallFromFreshClone(t *testing.T) {
 		assert.NoError(t, err)
 
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 		gw.GetLatestBlock.Return(&flow.Block{BlockHeader: flow.BlockHeader{Height: 100}}, nil)
 
 		gw.GetAccountAtBlockHeight.Run(func(args mock.Arguments) {
@@ -1151,6 +1164,7 @@ func TestDependencyInstallerInstallFromFreshClone(t *testing.T) {
 		assert.NoError(t, err)
 
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 		gw.GetLatestBlock.Return(&flow.Block{BlockHeader: flow.BlockHeader{Height: 100}}, nil)
 
 		gw.GetAccountAtBlockHeight.Run(func(args mock.Arguments) {
@@ -1231,6 +1245,7 @@ func TestDependencyInstallerInstallFromFreshClone(t *testing.T) {
 		assert.NoError(t, err)
 
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 		gw.GetLatestBlock.Return(&flow.Block{BlockHeader: flow.BlockHeader{Height: 100}}, nil)
 
 		gw.GetAccountAtBlockHeight.Run(func(args mock.Arguments) {
@@ -1297,6 +1312,7 @@ func TestDependencyInstallerAdd(t *testing.T) {
 
 	t.Run("Success", func(t *testing.T) {
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 		gw.GetLatestBlock.Return(&flow.Block{BlockHeader: flow.BlockHeader{Height: 100}}, nil)
 
 		gw.GetAccountAtBlockHeight.Run(func(args mock.Arguments) {
@@ -1338,6 +1354,7 @@ func TestDependencyInstallerAdd(t *testing.T) {
 
 	t.Run("Success", func(t *testing.T) {
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 
 		setupAccountMocks := func(args mock.Arguments) {
 			addr := args.Get(1).(flow.Address)
@@ -1387,6 +1404,7 @@ func TestDependencyInstallerAdd(t *testing.T) {
 
 	t.Run("Add by core contract name", func(t *testing.T) {
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 		gw.GetLatestBlock.Return(&flow.Block{BlockHeader: flow.BlockHeader{Height: 100}}, nil)
 
 		gw.GetAccountAtBlockHeight.Run(func(args mock.Arguments) {
@@ -1455,6 +1473,7 @@ func TestDependencyInstallerAddMany(t *testing.T) {
 
 	t.Run("AddMultipleDependencies", func(t *testing.T) {
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 		gw.GetAccountAtBlockHeight.Run(func(args mock.Arguments) {
 			addr := args.Get(1).(flow.Address)
 			assert.Equal(t, addr.String(), serviceAddress)
@@ -1520,10 +1539,13 @@ func TestTransitiveConflictAllowedWithMatchingAlias(t *testing.T) {
 
 	// Gateways per network
 	gwTestnet := mocks.DefaultMockGateway()
+	gwTestnet.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 	gwTestnet.GetLatestBlock.Return(&flow.Block{BlockHeader: flow.BlockHeader{Height: 100}}, nil)
 	gwMainnet := mocks.DefaultMockGateway()
+	gwMainnet.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 	gwMainnet.GetLatestBlock.Return(&flow.Block{BlockHeader: flow.BlockHeader{Height: 100}}, nil)
 	gwEmulator := mocks.DefaultMockGateway()
+	gwEmulator.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 	gwEmulator.GetLatestBlock.Return(&flow.Block{BlockHeader: flow.BlockHeader{Height: 100}}, nil)
 
 	// Addresses
@@ -1607,6 +1629,7 @@ func TestTransitiveConflictErrorsWithoutAlias(t *testing.T) {
 
 	// Gateways
 	gwTestnet := mocks.DefaultMockGateway()
+	gwTestnet.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 	gwTestnet.GetLatestBlock.Return(&flow.Block{BlockHeader: flow.BlockHeader{Height: 100}}, nil)
 
 	// Addresses
@@ -1663,6 +1686,7 @@ func TestDependencyInstallerAliasTracking(t *testing.T) {
 
 	t.Run("AutoApplyAliasForSameAccount", func(t *testing.T) {
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 
 		// Mock the same account for both contracts
 		gw.GetAccountAtBlockHeight.Run(func(args mock.Arguments) {
@@ -1738,6 +1762,7 @@ func TestDependencyFlagsDeploymentAccount(t *testing.T) {
 
 	t.Run("Valid deployment account - skips prompt", func(t *testing.T) {
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 		gw.GetLatestBlock.Return(&flow.Block{BlockHeader: flow.BlockHeader{Height: 100}}, nil)
 
 		gw.GetAccountAtBlockHeight.Run(func(args mock.Arguments) {
@@ -1786,6 +1811,7 @@ func TestDependencyFlagsDeploymentAccount(t *testing.T) {
 
 	t.Run("Valid deployment account with forced network", func(t *testing.T) {
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 
 		di := &DependencyInstaller{
 			Gateways: map[string]gateway.Gateway{
@@ -1824,6 +1850,7 @@ func TestDependencyFlagsDeploymentAccount(t *testing.T) {
 
 	t.Run("Invalid deployment account - returns error", func(t *testing.T) {
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 
 		di := &DependencyInstaller{
 			Gateways: map[string]gateway.Gateway{
@@ -1849,6 +1876,7 @@ func TestDependencyFlagsDeploymentAccount(t *testing.T) {
 
 	t.Run("Empty deployment account - uses prompt behavior", func(t *testing.T) {
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 
 		di := &DependencyInstaller{
 			Gateways: map[string]gateway.Gateway{
@@ -1912,6 +1940,7 @@ func TestDependencyFlagsIntegration(t *testing.T) {
 
 	t.Run("DeFi Actions contracts deploy only on emulator", func(t *testing.T) {
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 
 		di := &DependencyInstaller{
 			Gateways: map[string]gateway.Gateway{
@@ -1960,6 +1989,7 @@ func TestAliasedImportHandling(t *testing.T) {
 	_, state, _ := util.TestMocks(t)
 
 	gw := mocks.DefaultMockGateway()
+	gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 
 	barAddr := flow.HexToAddress("0x0c")     // testnet address hosting Bar
 	fooTestAddr := flow.HexToAddress("0x0b") // testnet Foo address
@@ -2033,6 +2063,7 @@ func TestDependencyInstallerWithAlias(t *testing.T) {
 
 	t.Run("AddBySourceStringWithName", func(t *testing.T) {
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 		gw.GetLatestBlock.Return(&flow.Block{BlockHeader: flow.BlockHeader{Height: 100}}, nil)
 
 		gw.GetAccountAtBlockHeight.Run(func(args mock.Arguments) {
@@ -2084,6 +2115,7 @@ func TestDependencyInstallerWithAlias(t *testing.T) {
 	t.Run("AddByCoreContractNameWithName", func(t *testing.T) {
 		// Mock the gateway to return FlowToken contract
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 		gw.GetAccountAtBlockHeight.Run(func(args mock.Arguments) {
 			addr := args.Get(1).(flow.Address)
 			acc := tests.NewAccountWithAddress(addr.String())
@@ -2142,6 +2174,7 @@ func TestBlockHeightPinning(t *testing.T) {
 		_, state, _ := util.TestMocks(t)
 
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 		gw.GetLatestBlock.Return(&flow.Block{
 			BlockHeader: flow.BlockHeader{Height: 12345},
 		}, nil)
@@ -2199,6 +2232,7 @@ func TestBlockHeightPinning(t *testing.T) {
 		state.Dependencies().AddOrUpdate(oldDep)
 
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 		gw.GetLatestBlock.Return(&flow.Block{
 			BlockHeader: flow.BlockHeader{Height: 55555},
 		}, nil)
@@ -2248,6 +2282,7 @@ func TestBlockHeightPinning(t *testing.T) {
 		state.Dependencies().AddOrUpdate(frozenDep)
 
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 		gw.GetLatestBlock.Return(&flow.Block{
 			BlockHeader: flow.BlockHeader{Height: 99999},
 		}, nil)
@@ -2296,6 +2331,7 @@ func TestBlockHeightPinning(t *testing.T) {
 		state.Dependencies().AddOrUpdate(existingDep)
 
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 		gw.GetLatestBlock.Return(&flow.Block{
 			BlockHeader: flow.BlockHeader{Height: 50000},
 		}, nil)
@@ -2349,6 +2385,7 @@ func TestBlockHeightPinning(t *testing.T) {
 		state.Dependencies().AddOrUpdate(pinnedDep)
 
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 		gw.GetLatestBlock.Return(&flow.Block{
 			BlockHeader: flow.BlockHeader{Height: 99999},
 		}, nil)
@@ -2400,6 +2437,7 @@ func TestBlockHeightPinning(t *testing.T) {
 		state.Dependencies().AddOrUpdate(outdatedDep)
 
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 		gw.GetLatestBlock.Return(&flow.Block{
 			BlockHeader: flow.BlockHeader{Height: 99999},
 		}, nil)
@@ -2457,6 +2495,7 @@ func TestBlockHeightPinning(t *testing.T) {
 		state.Dependencies().AddOrUpdate(pinnedDep)
 
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 		gw.GetLatestBlock.Return(&flow.Block{
 			BlockHeader: flow.BlockHeader{Height: 50000},
 		}, nil)
@@ -2491,6 +2530,7 @@ func TestBlockHeightPinning(t *testing.T) {
 		_, state, _ := util.TestMocks(t)
 
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 		gw.GetLatestBlock.Return(nil, fmt.Errorf("network error"))
 
 		gw.GetAccountAtBlockHeight.Run(func(args mock.Arguments) {
@@ -2532,6 +2572,7 @@ func TestBlockHeightPinning(t *testing.T) {
 
 		callCount := 0
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 		gw.GetLatestBlock.Run(func(args mock.Arguments) {
 			callCount++
 			// Simulate blockchain progressing: each call returns a higher block
@@ -2600,12 +2641,12 @@ func TestBlockHeightPinning(t *testing.T) {
 		assert.Equal(t, savedDepA.BlockHeight, savedDepB.BlockHeight, "All deps in same install should have same block height")
 	})
 
-	t.Run("PreSporkBlockHeightWithMatchingHashUpdatesMetadata", func(t *testing.T) {
+	t.Run("BlockHeightBeforeCompatibleRangeWithMatchingHashUpdatesMetadata", func(t *testing.T) {
 		_, state, _ := util.TestMocks(t)
 
 		contractCode := []byte("access(all) contract TestContract { access(all) let name: String; init() { self.name = \"Test\" } }")
 
-		// Add an existing dependency with a pre-spork block height but correct hash
+		// Add an existing dependency with a block height before the compatible range but correct hash
 		existingDep := config.Dependency{
 			Name: "TestContract",
 			Source: config.Source{
@@ -2613,41 +2654,44 @@ func TestBlockHeightPinning(t *testing.T) {
 				Address:      serviceAddress,
 				ContractName: "TestContract",
 			},
-			BlockHeight: 138158854,                 // Pre-spork block height
+			BlockHeight: 138158854,                 // Block height before compatible range
 			Hash:        computeHash(contractCode), // Hash matches current on-chain code
 		}
 		state.Dependencies().AddOrUpdate(existingDep)
 
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 		gw.GetLatestBlock.Return(&flow.Block{BlockHeader: flow.BlockHeader{Height: 280224020}}, nil)
 
-		// Simulate spork error for old block height, success for current block height
+		// Mock GetNodeVersionInfo to return compatible range
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{
+			CompatibleRange: &flow.CompatibleRange{
+				StartHeight: 280224020, // Min queryable height
+				EndHeight:   300000000,
+			},
+		}, nil)
+
+		// With proactive checking, we'll only fetch at the current block height
 		gw.GetAccountAtBlockHeight.Run(func(args mock.Arguments) {
-			requestedHeight := args.Get(2).(uint64) // arg 0 = ctx, arg 1 = address, arg 2 = blockHeight
-			if requestedHeight == 138158854 {
-				// Old pre-spork block → error
-				gw.GetAccountAtBlockHeight.Return(nil, fmt.Errorf("not found: block height 138158854 is less than the spork root block height 280224020"))
-			} else if requestedHeight == 280224020 {
-				// Current block → success
-				acc := tests.NewAccountWithAddress(serviceAddress.String())
-				acc.Contracts = map[string][]byte{
-					"TestContract": contractCode,
-				}
-				gw.GetAccountAtBlockHeight.Return(acc, nil)
+			acc := tests.NewAccountWithAddress(serviceAddress.String())
+			acc.Contracts = map[string][]byte{
+				"TestContract": contractCode,
 			}
+			gw.GetAccountAtBlockHeight.Return(acc, nil)
 		})
 
 		di := &DependencyInstaller{
-			Gateways:         map[string]gateway.Gateway{config.EmulatorNetwork.Name: gw.Mock},
-			Logger:           logger,
-			State:            state,
-			SkipDeployments:  true,
-			SkipAlias:        true,
-			Update:           false, // NO update flag - but should succeed because hash matches
-			dependencies:     make(map[string]config.Dependency),
-			logs:             categorizedLogs{},
-			prompter:         &mockPrompter{responses: []bool{}},
-			blockHeightCache: make(map[string]uint64),
+			Gateways:                map[string]gateway.Gateway{config.EmulatorNetwork.Name: gw.Mock},
+			Logger:                  logger,
+			State:                   state,
+			SkipDeployments:         true,
+			SkipAlias:               true,
+			Update:                  false, // NO update flag - but should succeed because hash matches
+			dependencies:            make(map[string]config.Dependency),
+			logs:                    categorizedLogs{},
+			prompter:                &mockPrompter{responses: []bool{}},
+			blockHeightCache:        make(map[string]uint64),
+			minQueryableHeightCache: make(map[string]uint64),
 		}
 
 		dep := config.Dependency{
@@ -2669,13 +2713,13 @@ func TestBlockHeightPinning(t *testing.T) {
 		assert.Equal(t, computeHash(contractCode), savedDep.Hash, "Hash should remain the same")
 	})
 
-	t.Run("PreSporkBlockHeightWithMismatchedHashAndSkipUpdatePromptsErrors", func(t *testing.T) {
+	t.Run("BlockHeightBeforeCompatibleRangeWithMismatchedHashAndSkipUpdatePromptsErrors", func(t *testing.T) {
 		_, state, _ := util.TestMocks(t)
 
 		oldCode := []byte("access(all) contract TestContract { access(all) let name: String; init() { self.name = \"OldVersion\" } }")
 		newCode := []byte("access(all) contract TestContract { access(all) let name: String; init() { self.name = \"NewVersion\" } }")
 
-		// Add an existing dependency with a pre-spork block height and old hash
+		// Add an existing dependency with a block height before compatible range and old hash
 		existingDep := config.Dependency{
 			Name: "TestContract",
 			Source: config.Source{
@@ -2683,7 +2727,7 @@ func TestBlockHeightPinning(t *testing.T) {
 				Address:      serviceAddress,
 				ContractName: "TestContract",
 			},
-			BlockHeight: 138158854, // Pre-spork block height
+			BlockHeight: 138158854, // Block height before compatible range
 			Hash:        computeHash(oldCode),
 		}
 		state.Dependencies().AddOrUpdate(existingDep)
@@ -2696,35 +2740,38 @@ func TestBlockHeightPinning(t *testing.T) {
 		assert.NoError(t, err)
 
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 		gw.GetLatestBlock.Return(&flow.Block{BlockHeader: flow.BlockHeader{Height: 280224020}}, nil)
 
-		// Simulate pre-spork error then success at current block with NEW hash
+		// Mock GetNodeVersionInfo to return compatible range
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{
+			CompatibleRange: &flow.CompatibleRange{
+				StartHeight: 280224020,
+				EndHeight:   300000000,
+			},
+		}, nil)
+
+		// With proactive checking, we'll only fetch at the current block height with NEW code
 		gw.GetAccountAtBlockHeight.Run(func(args mock.Arguments) {
-			requestedHeight := args.Get(2).(uint64)
-			if requestedHeight == 138158854 {
-				// Old pre-spork block → error
-				gw.GetAccountAtBlockHeight.Return(nil, fmt.Errorf("not found: block height 138158854 is less than the spork root block height 280224020"))
-			} else if requestedHeight == 280224020 {
-				// Current block → success with NEW code
-				acc := tests.NewAccountWithAddress(serviceAddress.String())
-				acc.Contracts = map[string][]byte{
-					"TestContract": newCode,
-				}
-				gw.GetAccountAtBlockHeight.Return(acc, nil)
+			acc := tests.NewAccountWithAddress(serviceAddress.String())
+			acc.Contracts = map[string][]byte{
+				"TestContract": newCode,
 			}
+			gw.GetAccountAtBlockHeight.Return(acc, nil)
 		})
 
 		di := &DependencyInstaller{
-			Gateways:          map[string]gateway.Gateway{config.EmulatorNetwork.Name: gw.Mock},
-			Logger:            logger,
-			State:             state,
-			SkipDeployments:   true,
-			SkipAlias:         true,
-			SkipUpdatePrompts: true, // Want to keep frozen, but can't!
-			dependencies:      make(map[string]config.Dependency),
-			logs:              categorizedLogs{},
-			prompter:          &mockPrompter{responses: []bool{}},
-			blockHeightCache:  make(map[string]uint64),
+			Gateways:                map[string]gateway.Gateway{config.EmulatorNetwork.Name: gw.Mock},
+			Logger:                  logger,
+			State:                   state,
+			SkipDeployments:         true,
+			SkipAlias:               true,
+			SkipUpdatePrompts:       true, // Want to keep frozen, but can't!
+			dependencies:            make(map[string]config.Dependency),
+			logs:                    categorizedLogs{},
+			prompter:                &mockPrompter{responses: []bool{}},
+			blockHeightCache:        make(map[string]uint64),
+			minQueryableHeightCache: make(map[string]uint64),
 		}
 
 		dep := config.Dependency{
@@ -2737,18 +2784,18 @@ func TestBlockHeightPinning(t *testing.T) {
 		}
 
 		err = di.Add(dep)
-		// Should ERROR: pre-spork block not accessible, network has different hash, can't keep frozen
-		assert.Error(t, err, "Should error when trying to keep frozen with pre-spork block and hash mismatch")
+		// Should ERROR: block not accessible (outside compatible range), network has different hash, can't keep frozen
+		assert.Error(t, err, "Should error when trying to keep frozen with inaccessible block and hash mismatch")
 		assert.Contains(t, err.Error(), "cannot keep frozen", "Error should mention inability to freeze")
 		assert.Contains(t, err.Error(), "138158854", "Error should mention the old block height")
 		assert.Contains(t, err.Error(), "280224020", "Error should mention the new block height")
 		assert.Contains(t, err.Error(), "no longer accessible", "Error should explain block is not accessible")
 	})
 
-	t.Run("PreSporkBlockHeightWithMismatchedHashRequiresUpdateFlag", func(t *testing.T) {
+	t.Run("BlockHeightBeforeCompatibleRangeWithMismatchedHashRequiresUpdateFlag", func(t *testing.T) {
 		_, state, _ := util.TestMocks(t)
 
-		// Add an existing dependency with a pre-spork block height
+		// Add an existing dependency with a block height before compatible range
 		existingDep := config.Dependency{
 			Name: "TestContract",
 			Source: config.Source{
@@ -2756,7 +2803,7 @@ func TestBlockHeightPinning(t *testing.T) {
 				Address:      serviceAddress,
 				ContractName: "TestContract",
 			},
-			BlockHeight: 138158854, // Pre-spork block height
+			BlockHeight: 138158854, // Block height before compatible range
 			Hash:        "oldhash",
 		}
 		state.Dependencies().AddOrUpdate(existingDep)
@@ -2764,24 +2811,24 @@ func TestBlockHeightPinning(t *testing.T) {
 		contractCode := []byte("access(all) contract TestContract { access(all) let name: String; init() { self.name = \"Test\" } }")
 
 		gw := mocks.DefaultMockGateway()
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{CompatibleRange: nil}, nil)
 		gw.GetLatestBlock.Return(&flow.Block{BlockHeader: flow.BlockHeader{Height: 280224020}}, nil)
 
-		// Track calls to GetAccountAtBlockHeight
-		callCount := 0
+		// Mock GetNodeVersionInfo to return compatible range
+		gw.GetNodeVersionInfo.Return(&flow.NodeVersionInfo{
+			CompatibleRange: &flow.CompatibleRange{
+				StartHeight: 280224020,
+				EndHeight:   300000000,
+			},
+		}, nil)
+
+		// With --update flag, we go straight to latest block height
 		gw.GetAccountAtBlockHeight.Run(func(args mock.Arguments) {
-			callCount++
-			requestedHeight := args.Get(2).(uint64) // arg 0 = ctx, arg 1 = address, arg 2 = blockHeight
-			if requestedHeight == 138158854 {
-				// Old pre-spork block → error
-				gw.GetAccountAtBlockHeight.Return(nil, fmt.Errorf("not found: block height 138158854 is less than the spork root block height 280224020"))
-			} else if requestedHeight == 280224020 {
-				// Current block → success
-				acc := tests.NewAccountWithAddress(serviceAddress.String())
-				acc.Contracts = map[string][]byte{
-					"TestContract": contractCode,
-				}
-				gw.GetAccountAtBlockHeight.Return(acc, nil)
+			acc := tests.NewAccountWithAddress(serviceAddress.String())
+			acc.Contracts = map[string][]byte{
+				"TestContract": contractCode,
 			}
+			gw.GetAccountAtBlockHeight.Return(acc, nil)
 		})
 
 		di := &DependencyInstaller{
@@ -2808,10 +2855,6 @@ func TestBlockHeightPinning(t *testing.T) {
 
 		err := di.Add(dep)
 		assert.NoError(t, err)
-
-		// Verify that GetAccountAtBlockHeight was called only once
-		// With --update flag, we skip trying the old block and go straight to latest
-		assert.Equal(t, 1, callCount, "GetAccountAtBlockHeight should be called once (--update skips old block, goes directly to latest)")
 
 		// Verify the dependency was updated with latest version
 		savedDep := state.Dependencies().ByName("TestContract")

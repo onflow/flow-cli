@@ -24,7 +24,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"path/filepath"
-	"strings"
 
 	"github.com/psiemens/sconfig"
 
@@ -130,24 +129,25 @@ func (f *DependencyFlags) AddToCommand(cmd *cobra.Command) {
 }
 
 type DependencyInstaller struct {
-	Gateways          map[string]gateway.Gateway
-	Logger            output.Logger
-	State             *flowkit.State
-	SaveState         bool
-	TargetDir         string
-	SkipDeployments   bool
-	SkipAlias         bool
-	SkipUpdatePrompts bool
-	Update            bool
-	DeploymentAccount string
-	Name              string
-	logs              categorizedLogs
-	dependencies      map[string]config.Dependency
-	accountAliases    map[string]map[string]flowsdk.Address // network -> account -> alias
-	installCount      int                                   // Track number of dependencies installed
-	pendingPrompts    []pendingPrompt                       // Dependencies that need prompts after tree display
-	prompter          Prompter                              // Optional: for testing. If nil, uses real prompts
-	blockHeightCache  map[string]uint64                     // Cache of latest block heights per network for consistent pinning
+	Gateways                map[string]gateway.Gateway
+	Logger                  output.Logger
+	State                   *flowkit.State
+	SaveState               bool
+	TargetDir               string
+	SkipDeployments         bool
+	SkipAlias               bool
+	SkipUpdatePrompts       bool
+	Update                  bool
+	DeploymentAccount       string
+	Name                    string
+	logs                    categorizedLogs
+	dependencies            map[string]config.Dependency
+	accountAliases          map[string]map[string]flowsdk.Address // network -> account -> alias
+	installCount            int                                   // Track number of dependencies installed
+	pendingPrompts          []pendingPrompt                       // Dependencies that need prompts after tree display
+	prompter                Prompter                              // Optional: for testing. If nil, uses real prompts
+	blockHeightCache        map[string]uint64                     // Cache of latest block heights per network for consistent pinning
+	minQueryableHeightCache map[string]uint64                     // Cache of minimum queryable block heights per network (from CompatibleRange)
 }
 
 type Prompter interface {
@@ -189,23 +189,24 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State, saveStat
 	}
 
 	return &DependencyInstaller{
-		Gateways:          gateways,
-		Logger:            logger,
-		State:             state,
-		SaveState:         saveState,
-		TargetDir:         targetDir,
-		SkipDeployments:   flags.skipDeployments,
-		SkipAlias:         flags.skipAlias,
-		SkipUpdatePrompts: flags.skipUpdatePrompts,
-		Update:            flags.update,
-		DeploymentAccount: flags.deploymentAccount,
-		Name:              flags.name,
-		dependencies:      make(map[string]config.Dependency),
-		logs:              categorizedLogs{},
-		accountAliases:    make(map[string]map[string]flowsdk.Address),
-		pendingPrompts:    make([]pendingPrompt, 0),
-		prompter:          prompter{},
-		blockHeightCache:  make(map[string]uint64),
+		Gateways:                gateways,
+		Logger:                  logger,
+		State:                   state,
+		SaveState:               saveState,
+		TargetDir:               targetDir,
+		SkipDeployments:         flags.skipDeployments,
+		SkipAlias:               flags.skipAlias,
+		SkipUpdatePrompts:       flags.skipUpdatePrompts,
+		Update:                  flags.update,
+		DeploymentAccount:       flags.deploymentAccount,
+		Name:                    flags.name,
+		dependencies:            make(map[string]config.Dependency),
+		logs:                    categorizedLogs{},
+		accountAliases:          make(map[string]map[string]flowsdk.Address),
+		pendingPrompts:          make([]pendingPrompt, 0),
+		prompter:                prompter{},
+		blockHeightCache:        make(map[string]uint64),
+		minQueryableHeightCache: make(map[string]uint64),
 	}, nil
 }
 
@@ -461,6 +462,40 @@ func (di *DependencyInstaller) processDependency(dependency config.Dependency) e
 	return di.processDependencies(dependency)
 }
 
+func (di *DependencyInstaller) getMinQueryableBlockHeight(network string) (uint64, error) {
+	// Check cache first
+	if height, ok := di.minQueryableHeightCache[network]; ok {
+		return height, nil
+	}
+
+	gw, ok := di.Gateways[network]
+	if !ok {
+		return 0, fmt.Errorf("gateway for network %s not found", network)
+	}
+
+	ctx := context.Background()
+	nodeVersionInfo, err := gw.GetNodeVersionInfo(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get node version info for %s: %w", network, err)
+	}
+
+	if nodeVersionInfo == nil {
+		return 0, fmt.Errorf("node version info is nil for %s", network)
+	}
+
+	// Get the minimum queryable block height from the compatible range
+	var minHeight uint64
+	if nodeVersionInfo.CompatibleRange != nil {
+		minHeight = nodeVersionInfo.CompatibleRange.StartHeight
+	}
+
+	// Cache the result (only if cache map is initialized)
+	if di.minQueryableHeightCache != nil {
+		di.minQueryableHeightCache[network] = minHeight
+	}
+	return minHeight, nil
+}
+
 // getLatestBlockHeight returns the current block height for a given network.
 // Results are cached per network to ensure all dependencies in a single install
 // operation get pinned to the same block height for consistency.
@@ -609,31 +644,27 @@ func (di *DependencyInstaller) fetchDependenciesWithDepth(dependency config.Depe
 	} else {
 		// Use pinned block height for frozen dependencies
 		blockHeight = existingDependency.BlockHeight
-	}
 
-	accountContracts, err := di.getContractsAtBlockHeight(networkName, address, blockHeight)
-	if err != nil {
-		// If we get a spork-related error (block height too old), fall back to latest
-		// This happens when flow.json has old block heights from before the current spork
-		// We'll check the hash later - if it matches, we just update metadata; if not, normal update flow applies
-		if strings.Contains(err.Error(), "spork root block height") || strings.Contains(err.Error(), "key not found") {
-			di.Logger.Info(fmt.Sprintf("  %s Block height %d is from before current spork, fetching latest version", util.PrintEmoji("⚠️"), blockHeight))
+		// Proactively check if this block height is within the node's compatible range
+		minQueryableHeight, err := di.getMinQueryableBlockHeight(networkName)
+		if err != nil {
+			return fmt.Errorf("failed to check compatible block height range: %w", err)
+		}
+
+		if blockHeight < minQueryableHeight {
+			// Block height is before the minimum queryable height, need to use latest
 			hadSporkRecovery = true
-			// Get the current block height (will be cached from above for new deps)
 			latestHeight, err := di.getLatestBlockHeight(networkName)
 			if err != nil {
 				return fmt.Errorf("failed to get latest block height: %w", err)
 			}
-			// Fetch at that specific block height
-			accountContracts, err = di.getContractsAtBlockHeight(networkName, address, latestHeight)
-			if err != nil {
-				return fmt.Errorf("error fetching contracts: %w", err)
-			}
-			// Update blockHeight so it's used consistently for this dependency
 			blockHeight = latestHeight
-		} else {
-			return fmt.Errorf("error fetching contracts: %w", err)
 		}
+	}
+
+	accountContracts, err := di.getContractsAtBlockHeight(networkName, address, blockHeight)
+	if err != nil {
+		return fmt.Errorf("error fetching contracts: %w", err)
 	}
 
 	contract, ok := accountContracts[contractName]
