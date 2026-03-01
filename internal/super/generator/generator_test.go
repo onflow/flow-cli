@@ -296,3 +296,49 @@ func TestGenerateReadmeWithDeps(t *testing.T) {
 	readmeWithDepsFixture, _ := fixturesFS.ReadFile("fixtures/README_with_deps.md")
 	assert.Equal(t, string(readmeWithDepsFixture), string(content))
 }
+
+
+func TestGenerateTransactionCommand(t *testing.T) {
+	txName := "MyTestTransaction"
+	expectedTemplateContent := `transaction() {
+    prepare(account: &Account) {}
+
+    execute {}
+}`
+
+	// assertGenerated is a helper to verify the output of the generate command
+	assertGenerated := func(t *testing.T, s *util.CmdTestSuite, stdout, stderr string, err error) {
+		assert.NoError(t, err, "Command execution failed unexpectedly. Stderr: %s", stderr)
+		assert.Empty(t, stderr, "Stderr should be empty, but contained: %s", stderr)
+
+		expectedStdoutMsg := fmt.Sprintf("✨ Cadence transaction %s generated in cadence/transactions/%s.cdc", txName, txName)
+		assert.Contains(t, stdout, expectedStdoutMsg, "Stdout should contain the transaction generation success message.")
+
+		expectedFilePath := filepath.Join("cadence", "transactions", fmt.Sprintf("%s.cdc", txName))
+		fileContent, err := s.State().ReaderWriter().ReadFile(expectedFilePath)
+		assert.NoError(t, err, "Failed to read the generated transaction file at %s", expectedFilePath)
+		assert.NotNil(t, fileContent, "Generated transaction file content should not be nil.")
+
+		assert.Equal(t, expectedTemplateContent, util.NormalizeLineEndings(string(fileContent)), "Generated transaction file content mismatch.")
+	}
+
+	t.Run("by full command", func(t *testing.T) {
+		s := util.NewCmdTestSuite(t, true)
+		defer s.Cleanup()
+
+		args := []string{"generate", "transaction", txName}
+		stdout, stderr, err := s.Execute(args)
+
+		assertGenerated(t, s, stdout, stderr, err)
+	})
+
+	t.Run("by 'tx' alias", func(t *testing.T) {
+		s := util.NewCmdTestSuite(t, true)
+		defer s.Cleanup()
+
+		args := []string{"generate", "tx", txName}
+		stdout, stderr, err := s.Execute(args)
+
+		assertGenerated(t, s, stdout, stderr, err)
+	})
+}
