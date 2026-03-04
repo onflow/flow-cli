@@ -178,20 +178,20 @@ func Test_AddAlias(t *testing.T) {
 		require.NoError(t, err)
 
 		// Unmarshal and verify the JSON structure
-		var flowConfig map[string]interface{}
+		var flowConfig map[string]any
 		err = json.Unmarshal(flowJSON, &flowConfig)
 		require.NoError(t, err)
 
 		// Verify contracts section exists
-		contracts, ok := flowConfig["contracts"].(map[string]interface{})
+		contracts, ok := flowConfig["contracts"].(map[string]any)
 		require.True(t, ok, "contracts section should exist in flow.json")
 
 		// Verify TestContract exists
-		testContract, ok := contracts["TestContract"].(map[string]interface{})
+		testContract, ok := contracts["TestContract"].(map[string]any)
 		require.True(t, ok, "TestContract should exist in flow.json")
 
 		// Verify aliases section exists in the contract
-		aliases, ok := testContract["aliases"].(map[string]interface{})
+		aliases, ok := testContract["aliases"].(map[string]any)
 		require.True(t, ok, "aliases section should exist in TestContract")
 
 		// Verify mainnet alias exists with correct address (stored without 0x prefix)
