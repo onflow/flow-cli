@@ -21,7 +21,7 @@ require (
 	github.com/onflow/flow-core-contracts/lib/go/contracts v1.9.3
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.9.3
 	github.com/onflow/flow-emulator v1.17.0
-	github.com/onflow/flow-evm-gateway v1.4.8-0.20260311001209-e7daf99dac25
+	github.com/onflow/flow-evm-gateway v1.4.8-0.20260311083540-75525b282115
 	github.com/onflow/flow-go v0.47.0-ledger-service.1.0.20260306194353-7770192048a9
 	github.com/onflow/flow-go-sdk v1.9.16
 	github.com/onflow/flow/protobuf/go/flow v0.4.20
