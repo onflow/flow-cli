@@ -176,8 +176,8 @@ func Test_Lint(t *testing.T) {
 								SecondaryMessage: "not found in this scope; check for typos or declare it",
 								Location:         common.StringLocation("LintError.cdc"),
 								Range: ast.Range{
-									StartPos: ast.Position{Line: 5, Column: 3, Offset: 63},
-									EndPos:   ast.Position{Line: 5, Column: 5, Offset: 65},
+									StartPos: ast.Position{Line: 6, Column: 3, Offset: 73},
+									EndPos:   ast.Position{Line: 6, Column: 5, Offset: 75},
 								},
 							},
 						},
@@ -487,6 +487,7 @@ func setupMockState(t *testing.T) *flowkit.State {
 	access(all) contract WithFlowkitImport {
 		init() {
 			let foo = NoError.getType()
+			log(foo)
 		}
 	}
 	`), 0644)
@@ -494,12 +495,14 @@ func setupMockState(t *testing.T) *flowkit.State {
 	access(all) contract LintWarning {
 		init() {
 			let x = 1!
+			log(x)
 		}
 	}`), 0644)
 	_ = afero.WriteFile(mockFs, "LintError.cdc", []byte(`
 	access(all) contract LintError {
 		init() {
 			let x = 1!
+			log(x)
 			qqq
 		}
 	}`), 0644)
@@ -507,6 +510,7 @@ func setupMockState(t *testing.T) *flowkit.State {
 	access(all) contract ReplacementHint {
 		access(all) fun test() {
 			let x = UFix64(1)
+			log(x)
 		}
 	}`), 0644)
 	_ = afero.WriteFile(mockFs, "CadenceV1Error.cdc", []byte(`
@@ -521,6 +525,7 @@ func setupMockState(t *testing.T) *flowkit.State {
 	access(all) contract WithImports{
 		init() {
 			let foo = getAuthAccount<&Account>(0x01)
+			log(foo)
 			log(RLP.getType())
 		}
 	}
@@ -531,6 +536,7 @@ func setupMockState(t *testing.T) *flowkit.State {
 	transaction {
 		prepare(signer: &Account) {
 			let foo = getAuthAccount<&Account>(0x01)
+			log(foo)
 			log(RLP.getType())
 		}
 	}
@@ -540,6 +546,7 @@ func setupMockState(t *testing.T) *flowkit.State {
 	import BlockchainHelpers
 	access(all) fun main(): Void {
 		let foo = getAuthAccount<&Account>(0x01)
+		log(foo)
 		log(RLP.getType())
 	}`), 0644)
 	_ = afero.WriteFile(mockFs, "StdlibImportsCrypto.cdc", []byte(`
