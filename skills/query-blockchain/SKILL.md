@@ -218,12 +218,14 @@ flow scripts execute /tmp/query.cdc 0xe467b9dd11fa00df --block-height 12884163 -
 | LockedTokens | `0x8d0e87b65159ae63` | `0x95e019a17d0e23d7` | `0xf8d6e0586b0a20c7` |
 | StakingProxy | `0x62430cf28c26d095` | `0x7aad92e5a0715d21` | `0xf8d6e0586b0a20c7` |
 | EVM | `0xe467b9dd11fa00df` | `0x8c5303eaa26202d6` | `0xf8d6e0586b0a20c7` |
-| FlowEVMBridge | `0x1e4aa0b87d10b141` | `0xdfc20aee650fcbdf` | `0xf8d6e0586b0a20c7` |
+| FlowEVMBridge ¹ | `0x1e4aa0b87d10b141` | `0xdfc20aee650fcbdf` | `0xf8d6e0586b0a20c7` |
 | NFTStorefrontV2 | `0x1d7e57aa55817448` | `0x2d55b98eb200daef` | `0xf8d6e0586b0a20c7` |
 | HybridCustody | `0xd8a7e05a7ac670c0` | `0x294e44e1ec6993c6` | `0xf8d6e0586b0a20c7` |
 | CapabilityFactory | `0xd8a7e05a7ac670c0` | `0x294e44e1ec6993c6` | `0xf8d6e0586b0a20c7` |
 | CapabilityFilter | `0xd8a7e05a7ac670c0` | `0x294e44e1ec6993c6` | `0xf8d6e0586b0a20c7` |
 | CapabilityDelegator | `0xd8a7e05a7ac670c0` | `0x294e44e1ec6993c6` | `0xf8d6e0586b0a20c7` |
+
+¹ The EVM bridge account hosts many contracts beyond FlowEVMBridge itself (FlowEVMBridgeConfig, FlowEVMBridgeUtils, FlowEVMBridgeNFTEscrow, FlowEVMBridgeTokenEscrow, CrossVMNFT, CrossVMToken, and more). Run `flow accounts get 0x1e4aa0b87d10b141 --network mainnet` for the current deployed contract list, or check the [flow-evm-bridge](https://github.com/onflow/flow-evm-bridge) repo for available scripts.
 
 ---
 
