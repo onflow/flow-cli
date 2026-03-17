@@ -218,6 +218,12 @@ flow scripts execute /tmp/query.cdc 0xe467b9dd11fa00df --block-height 12884163 -
 | LockedTokens | `0x8d0e87b65159ae63` | `0x95e019a17d0e23d7` | `0xf8d6e0586b0a20c7` |
 | StakingProxy | `0x62430cf28c26d095` | `0x7aad92e5a0715d21` | `0xf8d6e0586b0a20c7` |
 | EVM | `0xe467b9dd11fa00df` | `0x8c5303eaa26202d6` | `0xf8d6e0586b0a20c7` |
+| FlowEVMBridge | `0x1e4aa0b87d10b141` | `0xdfc20aee650fcbdf` | `0xf8d6e0586b0a20c7` |
+| NFTStorefrontV2 | `0x1d7e57aa55817448` | `0x2d55b98eb200daef` | `0xf8d6e0586b0a20c7` |
+| HybridCustody | `0xd8a7e05a7ac670c0` | `0x294e44e1ec6993c6` | `0xf8d6e0586b0a20c7` |
+| CapabilityFactory | `0xd8a7e05a7ac670c0` | `0x294e44e1ec6993c6` | `0xf8d6e0586b0a20c7` |
+| CapabilityFilter | `0xd8a7e05a7ac670c0` | `0x294e44e1ec6993c6` | `0xf8d6e0586b0a20c7` |
+| CapabilityDelegator | `0xd8a7e05a7ac670c0` | `0x294e44e1ec6993c6` | `0xf8d6e0586b0a20c7` |
 
 ---
 
@@ -264,6 +270,9 @@ For more complex queries, clone these repos to `/tmp` and use their scripts dire
 | [flow-core-contracts](https://github.com/onflow/flow-core-contracts) | `transactions/*/scripts/` | Staking, epoch, fees, locked tokens, version beacon, random beacon |
 | [flow-ft](https://github.com/onflow/flow-ft) | `transactions/scripts/`, `transactions/metadata/scripts/` | FT balances, supply, metadata, switchboard |
 | [flow-nft](https://github.com/onflow/flow-nft) | `transactions/scripts/` | NFT collections, metadata views, cross-VM views |
+| [flow-evm-bridge](https://github.com/onflow/flow-evm-bridge) | `cadence/scripts/` | Bridge state, onboarding checks, escrow, EVM balances, cross-VM associations |
+| [nft-storefront](https://github.com/onflow/nft-storefront) | `scripts/` | Marketplace listings, ghost listings, commission receivers, storefront IDs |
+| [hybrid-custody](https://github.com/onflow/hybrid-custody) | `scripts/hybrid-custody/`, `scripts/delegator/`, `scripts/factory/` | Child/parent account relationships, cross-account NFT/FT access, capability delegation |
 
 ```bash
 # Example: use an existing script from flow-core-contracts
