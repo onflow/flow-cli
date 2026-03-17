@@ -238,10 +238,11 @@ See [cadence-scripts.md](cadence-scripts.md) for 20+ ready-to-use Cadence script
 
 | Event | Description |
 |---|---|
-| `A.1654653399040a61.FlowToken.TokensDeposited` | FLOW tokens received |
-| `A.1654653399040a61.FlowToken.TokensWithdrawn` | FLOW tokens sent |
-| `A.f919ee77447b7497.FlowFees.FeesDeducted` | Transaction fees paid |
-| `A.f919ee77447b7497.FlowFees.TokensDeposited` | Fees deposited to fee vault |
+| `A.f233dcee88fe0abe.FungibleToken.Deposited` | Any fungible token deposited |
+| `A.f233dcee88fe0abe.FungibleToken.Withdrawn` | Any fungible token withdrawn |
+| `A.f233dcee88fe0abe.FungibleToken.Burned` | Any fungible token burned |
+| `A.1d7e57aa55817448.NonFungibleToken.Deposited` | Any NFT deposited to a collection |
+| `A.1d7e57aa55817448.NonFungibleToken.Withdrawn` | Any NFT withdrawn from a collection |
 | `A.8624b52f9ddcd04a.FlowEpoch.NewEpoch` | New epoch started |
 | `A.8624b52f9ddcd04a.FlowEpoch.EpochSetup` | Epoch setup phase began |
 | `A.8624b52f9ddcd04a.FlowEpoch.EpochCommit` | Epoch commit phase began |
@@ -249,11 +250,8 @@ See [cadence-scripts.md](cadence-scripts.md) for 20+ ready-to-use Cadence script
 | `A.8624b52f9ddcd04a.FlowIDTableStaking.TokensCommitted` | Tokens committed to stake |
 | `A.8624b52f9ddcd04a.FlowIDTableStaking.RewardsPaid` | Staking rewards distributed |
 | `A.8624b52f9ddcd04a.FlowIDTableStaking.NewDelegatorCreated` | New delegator registered |
-| `A.f233dcee88fe0abe.FungibleToken.Deposited` | Any fungible token deposited |
-| `A.f233dcee88fe0abe.FungibleToken.Withdrawn` | Any fungible token withdrawn |
-| `A.f233dcee88fe0abe.FungibleToken.Burned` | Any fungible token burned |
-| `A.1d7e57aa55817448.NonFungibleToken.Deposited` | Any NFT deposited to a collection |
-| `A.1d7e57aa55817448.NonFungibleToken.Withdrawn` | Any NFT withdrawn from a collection |
+| `A.f919ee77447b7497.FlowFees.FeesDeducted` | Transaction fees paid |
+| `A.f919ee77447b7497.FlowFees.TokensDeposited` | Fees deposited to fee vault |
 
 ---
 
