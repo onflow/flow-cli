@@ -21,7 +21,7 @@ access(all) fun main(address: Address): UFix64 {
     let account = getAccount(address)
     let vaultRef = account.capabilities
         .borrow<&{FungibleToken.Balance}>(/public/flowTokenBalance)
-        ?? panic("Could not borrow balance capability")
+        ?? panic("Could not borrow FungibleToken Balance capability for account ".concat(address.toString()).concat(" at path /public/flowTokenBalance. Make sure the account has a FlowToken Vault set up properly."))
     return vaultRef.balance
 }
 ```
@@ -44,7 +44,7 @@ import FungibleToken from 0xf233dcee88fe0abe
 access(all) fun main(address: Address, path: PublicPath): UFix64 {
     return getAccount(address).capabilities
         .borrow<&{FungibleToken.Balance}>(path)?.balance
-        ?? panic("No vault at path")
+        ?? panic("Could not borrow FungibleToken Balance capability for account ".concat(address.toString()).concat(" at path ").concat(path.toString()).concat(". Make sure the account has a Fungible Token Vault set up at this path."))
 }
 ```
 
@@ -58,7 +58,7 @@ access(all) fun main(address: Address, vaultPath: PublicPath): FungibleTokenMeta
     let account = getAccount(address)
     let vaultRef = account.capabilities
         .borrow<&{FungibleToken.Vault}>(vaultPath)
-        ?? panic("No vault at path")
+        ?? panic("Could not borrow FungibleToken Vault capability for account ".concat(address.toString()).concat(" at path ").concat(vaultPath.toString()).concat(". Make sure the account has a Fungible Token Vault set up at this path."))
     return FungibleTokenMetadataViews.getFTDisplay(vaultRef)
 }
 ```
@@ -294,7 +294,7 @@ access(all) fun main(address: Address, collectionPublicPath: PublicPath): [UInt6
     let account = getAccount(address)
     let collectionRef = account.capabilities
         .borrow<&{NonFungibleToken.Collection}>(collectionPublicPath)
-        ?? panic("No collection at path")
+        ?? panic("Could not borrow NonFungibleToken Collection capability for account ".concat(address.toString()).concat(" at path ").concat(collectionPublicPath.toString()).concat(". Make sure the account has an NFT Collection set up at this path."))
     return collectionRef.getIDs()
 }
 ```
@@ -309,7 +309,7 @@ access(all) fun main(address: Address, collectionPublicPath: PublicPath, id: UIn
     let account = getAccount(address)
     let collectionRef = account.capabilities
         .borrow<&{NonFungibleToken.Collection}>(collectionPublicPath)
-        ?? panic("No collection at path")
+        ?? panic("Could not borrow NonFungibleToken Collection capability for account ".concat(address.toString()).concat(" at path ").concat(collectionPublicPath.toString()).concat(". Make sure the account has an NFT Collection set up at this path."))
     let nft = collectionRef.borrowNFT(id)!
     return MetadataViews.getDisplay(nft)
 }

@@ -166,7 +166,7 @@ access(all) fun main(address: Address): UFix64 {
     let account = getAccount(address)
     let vaultRef = account.capabilities
         .borrow<&{FungibleToken.Balance}>(/public/flowTokenBalance)
-        ?? panic("Could not borrow balance capability")
+        ?? panic("Could not borrow FungibleToken Balance capability for account ".concat(address.toString()).concat(" at path /public/flowTokenBalance. Make sure the account has a FlowToken Vault set up properly."))
     return vaultRef.balance
 }
 EOF
