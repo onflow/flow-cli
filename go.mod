@@ -13,9 +13,9 @@ require (
 	github.com/gosuri/uilive v0.0.4
 	github.com/logrusorgru/aurora/v4 v4.0.0
 	github.com/onflow/cadence v1.9.10
-	github.com/onflow/cadence-tools/languageserver v1.9.5
+	github.com/onflow/cadence-tools/languageserver v1.9.6
 	github.com/onflow/cadence-tools/lint v1.7.6
-	github.com/onflow/cadence-tools/test v1.11.3
+	github.com/onflow/cadence-tools/test v1.11.4
 	github.com/onflow/fcl-dev-wallet v0.9.1
 	github.com/onflow/flixkit-go/v2 v2.7.4
 	github.com/onflow/flow-core-contracts/lib/go/contracts v1.9.3
