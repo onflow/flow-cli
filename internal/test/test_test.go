@@ -1241,3 +1241,77 @@ access(all) fun testPrioritizesFork() {
 	require.Len(t, result.Results, 1)
 	assert.NoError(t, result.Results["test_priority.cdc"][0].Error)
 }
+
+func TestMultipleFiles_ForkNetwork(t *testing.T) {
+	if os.Getenv("SKIP_NETWORK_TESTS") != "" {
+		t.Skip("skipping network-dependent test")
+	}
+
+	_, state, _ := util.TestMocks(t)
+
+	state.Networks().AddOrUpdate(config.Network{
+		Name: "mainnet",
+		Host: "access.mainnet.nodes.onflow.org:9000",
+	})
+	state.Networks().AddOrUpdate(config.Network{
+		Name: "mainnet-fork",
+		Host: "127.0.0.1:3569",
+		Fork: "mainnet",
+	})
+
+	addrA := flowsdk.HexToAddress("0x1654653399040a61")
+	addrB := flowsdk.HexToAddress("0xf233dcee88fe0abe")
+
+	_ = state.ReaderWriter().WriteFile("ContractA.cdc", []byte(`
+access(all) contract ContractA {
+	access(all) var value: Int
+	init() { self.value = 1 }
+}
+`), 0644)
+	_ = state.ReaderWriter().WriteFile("ContractB.cdc", []byte(`
+access(all) contract ContractB {
+	access(all) var value: Int
+	init() { self.value = 2 }
+}
+`), 0644)
+
+	state.Contracts().AddOrUpdate(config.Contract{
+		Name:     "ContractA",
+		Location: "ContractA.cdc",
+		Aliases:  config.Aliases{{Network: "mainnet-fork", Address: addrA}},
+	})
+	state.Contracts().AddOrUpdate(config.Contract{
+		Name:     "ContractB",
+		Location: "ContractB.cdc",
+		Aliases:  config.Aliases{{Network: "mainnet-fork", Address: addrB}},
+	})
+	t.Parallel()
+
+	testFiles := map[string][]byte{
+		"test_file_a.cdc": []byte(`
+#test_fork(network: "mainnet-fork", height: nil)
+import Test
+import "ContractA"
+access(all) fun testContractA() {
+	let addr = Type<ContractA>().address!
+	Test.assertEqual(0x1654653399040a61 as Address, addr)
+}
+`),
+		"test_file_b.cdc": []byte(`
+#test_fork(network: "mainnet-fork", height: nil)
+import Test
+import "ContractB"
+access(all) fun testContractB() {
+	let addr = Type<ContractB>().address!
+	Test.assertEqual(0xf233dcee88fe0abe as Address, addr)
+}
+`),
+	}
+
+	result, err := testCode(testFiles, state, flagsTests{})
+
+	require.NoError(t, err)
+	require.Len(t, result.Results, 2)
+	assert.NoError(t, result.Results["test_file_a.cdc"][0].Error)
+	assert.NoError(t, result.Results["test_file_b.cdc"][0].Error)
+}
