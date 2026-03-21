@@ -45,9 +45,8 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("lints file with no issues", func(t *testing.T) {
-		t.Parallel()
-
 		state := setupMockState(t)
+		t.Parallel()
 
 		results, err := lintFiles(state, false, "NoError.cdc")
 		require.NoError(t, err)
@@ -67,9 +66,8 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("lints file with import", func(t *testing.T) {
-		t.Parallel()
-
 		state := setupMockState(t)
+		t.Parallel()
 
 		results, err := lintFiles(state, false, "foo/WithImports.cdc")
 		require.NoError(t, err)
@@ -90,9 +88,8 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("lints multiple files", func(t *testing.T) {
-		t.Parallel()
-
 		state := setupMockState(t)
+		t.Parallel()
 
 		results, err := lintFiles(state, false, "NoError.cdc", "foo/WithImports.cdc")
 		require.NoError(t, err)
@@ -116,9 +113,8 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("lints file with warning", func(t *testing.T) {
-		t.Parallel()
-
 		state := setupMockState(t)
+		t.Parallel()
 
 		results, err := lintFiles(state, false, "LintWarning.cdc")
 		require.NoError(t, err)
@@ -162,9 +158,8 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("lints file with error", func(t *testing.T) {
-		t.Parallel()
-
 		state := setupMockState(t)
+		t.Parallel()
 
 		results, err := lintFiles(state, false, "LintError.cdc")
 		require.NoError(t, err)
@@ -204,9 +199,8 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("generates synthetic replacement for replacement category diagnostics", func(t *testing.T) {
-		t.Parallel()
-
 		state := setupMockState(t)
+		t.Parallel()
 
 		results, err := lintFiles(state, false, "ReplacementHint.cdc")
 		require.NoError(t, err)
@@ -231,9 +225,8 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("linter resolves imports from flowkit state", func(t *testing.T) {
-		t.Parallel()
-
 		state := setupMockState(t)
+		t.Parallel()
 
 		results, err := lintFiles(state, false, "WithFlowkitImport.cdc")
 		require.NoError(t, err)
@@ -253,9 +246,8 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("resolves stdlib imports contracts", func(t *testing.T) {
-		t.Parallel()
-
 		state := setupMockState(t)
+		t.Parallel()
 
 		results, err := lintFiles(state, false, "StdlibImportsContract.cdc")
 		require.NoError(t, err)
@@ -287,9 +279,8 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("resolves stdlib imports transactions", func(t *testing.T) {
-		t.Parallel()
-
 		state := setupMockState(t)
+		t.Parallel()
 
 		results, err := lintFiles(state, false, "StdlibImportsTransaction.cdc")
 		require.NoError(t, err)
@@ -321,9 +312,8 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("resolves stdlib imports scripts", func(t *testing.T) {
-		t.Parallel()
-
 		state := setupMockState(t)
+		t.Parallel()
 
 		results, err := lintFiles(state, false, "StdlibImportsScript.cdc")
 		require.NoError(t, err)
@@ -343,9 +333,8 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("resolves stdlib imports Crypto", func(t *testing.T) {
-		t.Parallel()
-
 		state := setupMockState(t)
+		t.Parallel()
 
 		results, err := lintFiles(state, false, "StdlibImportsCrypto.cdc")
 		require.NoError(t, err)
@@ -365,9 +354,8 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("resolves nested imports when contract imported by name", func(t *testing.T) {
-		t.Parallel()
-
 		state := setupMockState(t)
+		t.Parallel()
 
 		results, err := lintFiles(state, false, "TransactionImportingContractWithNestedImports.cdc")
 		require.NoError(t, err)
@@ -387,9 +375,8 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("allows access(account) when contracts on same account", func(t *testing.T) {
-		t.Parallel()
-
 		state := setupMockStateWithAccountAccess(t)
+		t.Parallel()
 
 		results, err := lintFiles(state, false, "ContractA.cdc")
 		require.NoError(t, err)
@@ -410,9 +397,8 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("denies access(account) when contracts on different accounts", func(t *testing.T) {
-		t.Parallel()
-
 		state := setupMockStateWithAccountAccess(t)
+		t.Parallel()
 
 		results, err := lintFiles(state, false, "ContractC.cdc")
 		require.NoError(t, err)
@@ -426,9 +412,8 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("allows access(account) when dependencies on same account (peak-money repro)", func(t *testing.T) {
-		t.Parallel()
-
 		state := setupMockStateWithDependencies(t)
+		t.Parallel()
 
 		results, err := lintFiles(state, false, "imports/testaddr/DepA.cdc")
 		require.NoError(t, err)
@@ -449,9 +434,8 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("allows access(account) when dependencies have Source but no Aliases", func(t *testing.T) {
-		t.Parallel()
-
 		state := setupMockStateWithSourceOnly(t)
+		t.Parallel()
 
 		// Verify that AddDependencyAsContract automatically adds Source to Aliases
 		sourceAContract, _ := state.Contracts().ByName("SourceA")

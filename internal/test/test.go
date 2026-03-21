@@ -20,6 +20,7 @@ package test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -35,6 +36,7 @@ import (
 	flowGo "github.com/onflow/flow-go/model/flow"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"
@@ -77,6 +79,7 @@ type flagsTests struct {
 	Random       bool   `default:"false" flag:"random" info:"Use the random flag to execute test cases randomly"`
 	Seed         int64  `default:"0" flag:"seed" info:"Use the seed flag to manipulate random execution of test cases"`
 	Name         string `default:"" flag:"name" info:"Use the name flag to run only tests that match the given name"`
+	Jobs         int    `default:"0" flag:"jobs" info:"Maximum number of test files to run concurrently (default: number of CPU cores)"`
 
 	// Fork mode flags
 	Fork       string // Use definition in init()
@@ -180,6 +183,26 @@ func run(
 	return result, nil
 }
 
+// testRunConfig holds the resolved runtime configuration for a test run.
+type testRunConfig struct {
+	forkCfg        *cdcTests.ForkConfig
+	coverageReport *runtime.CoverageReport
+	networkLabel   string
+	seed           int64
+	jobs           int
+	name           string
+	// raw flag values retained for telemetry
+	forkFlag     string
+	forkHostFlag string
+}
+
+// concurrencyResult holds the aggregated output of runTestsConcurrently.
+type concurrencyResult struct {
+	testResults            map[string]cdcTests.Results
+	fileNetworkResolutions map[string]string
+	exitCode               int
+}
+
 func testCode(
 	testFiles map[string][]byte,
 	state *flowkit.State,
@@ -187,20 +210,125 @@ func testCode(
 ) (*result, error) {
 	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).With().Timestamp().Logger()
 
-	// Track network resolutions per file for pragma-based fork detection
-	// Map: filename -> resolved network name
-	fileNetworkResolutions := make(map[string]string)
-	var currentTestFile string
+	forkCfg, networkLabel, err := resolveForkConfig(flags, state)
+	if err != nil {
+		return nil, err
+	}
 
-	// Resolve network labels using flow.json state
-	resolveNetworkFromState := func(label string) (string, bool) {
+	cfg := testRunConfig{
+		forkCfg:        forkCfg,
+		coverageReport: buildCoverageReport(flags, state),
+		networkLabel:   networkLabel,
+		seed:           resolveSeed(flags),
+		jobs:           flags.Jobs,
+		name:           flags.Name,
+		forkFlag:       flags.Fork,
+		forkHostFlag:   flags.ForkHost,
+	}
+
+	cr, err := runTestsConcurrently(testFiles, state, cfg, logger)
+	if err != nil {
+		return nil, err
+	}
+
+	trackForkMetrics(cr, cfg, len(testFiles))
+
+	return &result{
+		Results:        cr.testResults,
+		CoverageReport: cfg.coverageReport,
+		RandomSeed:     cfg.seed,
+		exitCode:       cr.exitCode,
+	}, nil
+}
+
+// resolveForkConfig determines the fork configuration and network label from flags.
+func resolveForkConfig(flags flagsTests, state *flowkit.State) (*cdcTests.ForkConfig, string, error) {
+	networkLabel := "testing"
+	var effectiveForkHost string
+
+	if flags.ForkHost != "" {
+		effectiveForkHost = strings.TrimSpace(flags.ForkHost)
+	} else if flags.Fork != "" {
+		network, err := state.Networks().ByName(strings.ToLower(flags.Fork))
+		if err != nil {
+			return nil, "", fmt.Errorf("network %q not found in flow.json", flags.Fork)
+		}
+		effectiveForkHost = network.Host
+		if effectiveForkHost == "" {
+			return nil, "", fmt.Errorf("network %q has no host configured", flags.Fork)
+		}
+	}
+
+	if strings.TrimSpace(flags.Fork) != "" {
+		networkLabel = strings.ToLower(flags.Fork)
+	}
+
+	if effectiveForkHost == "" {
+		return nil, networkLabel, nil
+	}
+
+	forkChainID, err := util.GetChainIDFromHost(effectiveForkHost)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to get chain ID from fork host %q: %w", effectiveForkHost, err)
+	}
+
+	// Map chain ID to a sensible network label if not provided explicitly
+	if strings.TrimSpace(flags.Fork) == "" {
+		switch forkChainID {
+		case flowGo.Mainnet:
+			networkLabel = "mainnet"
+		case flowGo.Testnet:
+			networkLabel = "testnet"
+		}
+	}
+
+	cfg := cdcTests.ForkConfig{
+		ForkHost:   effectiveForkHost,
+		ChainID:    forkChainID,
+		ForkHeight: flags.ForkHeight,
+	}
+	return &cfg, networkLabel, nil
+}
+
+// buildCoverageReport creates a coverage report if coverage is enabled.
+func buildCoverageReport(flags flagsTests, state *flowkit.State) *runtime.CoverageReport {
+	if !flags.Cover {
+		return nil
+	}
+	coverageReport := state.CreateCoverageReport("testing")
+	if flags.CoverCode == contractsCoverCode {
+		coverageReport.WithLocationFilter(func(location common.Location) bool {
+			// We only allow inspection of AddressLocation,
+			// since scripts and transactions cannot be
+			// attributed to their source files anyway.
+			_, addressLoc := location.(common.AddressLocation)
+			return addressLoc
+		})
+	}
+	return coverageReport
+}
+
+// resolveSeed returns the random seed to use for test execution.
+func resolveSeed(flags flagsTests) int64 {
+	if flags.Seed > 0 {
+		return flags.Seed
+	}
+	if flags.Random {
+		return int64(rand.Intn(150000))
+	}
+	return 0
+}
+
+// networkResolver returns a function that resolves a network label to its host,
+// tracking which non-testing network was resolved via resolvedNetwork.
+func networkResolver(state *flowkit.State, resolvedNetwork *string) func(string) (string, bool) {
+	return func(label string) (string, bool) {
 		normalizedLabel := strings.ToLower(strings.TrimSpace(label))
 		network, err := state.Networks().ByName(normalizedLabel)
 		if err != nil || network == nil {
 			return "", false
 		}
 
-		// If network has a fork, resolve the fork network's host
 		host := strings.TrimSpace(network.Host)
 		if network.Fork != "" {
 			forkName := strings.ToLower(strings.TrimSpace(network.Fork))
@@ -215,237 +343,216 @@ func testCode(
 			return "", false
 		}
 
-		// Track network resolution for current test file (indicates pragma-based fork usage)
-		// Only track if it's not the default "testing" network
-		if currentTestFile != "" && normalizedLabel != "testing" {
-			if _, exists := fileNetworkResolutions[currentTestFile]; !exists {
-				fileNetworkResolutions[currentTestFile] = normalizedLabel
-			}
+		// Track network resolution for the current test file (indicates pragma-based fork usage).
+		// Only track if it's not the default "testing" network.
+		if *resolvedNetwork == "" && normalizedLabel != "testing" {
+			*resolvedNetwork = normalizedLabel
 		}
 
 		return host, true
 	}
+}
 
-	// Configure fork mode if requested
-	var effectiveForkHost string
-
-	// Determine the fork host
-	if flags.ForkHost != "" {
-		effectiveForkHost = strings.TrimSpace(flags.ForkHost)
-	} else if flags.Fork != "" {
-		// Look up network in flow.json
-		forkNetwork := strings.ToLower(flags.Fork)
-		network, err := state.Networks().ByName(forkNetwork)
-		if err != nil {
-			return nil, fmt.Errorf("network %q not found in flow.json", flags.Fork)
-		}
-		effectiveForkHost = network.Host
-		if effectiveForkHost == "" {
-			return nil, fmt.Errorf("network %q has no host configured", flags.Fork)
-		}
+// contractAddressResolver returns a function that resolves a contract name to its address on a network.
+func contractAddressResolver(state *flowkit.State) func(string, string) (common.Address, error) {
+	contractsByName := make(map[string]config.Contract)
+	for _, c := range *state.Contracts() {
+		contractsByName[c.Name] = c
 	}
 
-	// Determine network label (used by resolver/addresses); default to testing
-	networkLabel := "testing"
-	if strings.TrimSpace(flags.Fork) != "" {
-		networkLabel = strings.ToLower(flags.Fork)
-	}
-
-	// If fork mode is enabled, query the host to get chain ID
-	var forkCfg *cdcTests.ForkConfig
-	if effectiveForkHost != "" {
-		forkChainID, err := util.GetChainIDFromHost(effectiveForkHost)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get chain ID from fork host %q: %w", effectiveForkHost, err)
+	return func(network string, contractName string) (common.Address, error) {
+		contract, exists := contractsByName[contractName]
+		if !exists {
+			return common.Address{}, fmt.Errorf("contract not found: %s", contractName)
 		}
 
-		cfg := cdcTests.ForkConfig{
-			ForkHost:   effectiveForkHost,
-			ChainID:    forkChainID,
-			ForkHeight: flags.ForkHeight,
+		if alias := contract.Aliases.ByNetwork(network); alias != nil {
+			return common.Address(alias.Address), nil
 		}
-		forkCfg = &cfg
 
-		// Map chain ID to a sensible network label if not provided explicitly
-		if strings.TrimSpace(flags.Fork) == "" {
-			switch forkChainID {
-			case flowGo.Mainnet:
-				networkLabel = "mainnet"
-			case flowGo.Testnet:
-				networkLabel = "testnet"
+		// Fallback to fork network if configured.
+		networkConfig, err := state.Networks().ByName(network)
+		if err == nil && networkConfig != nil && networkConfig.Fork != "" {
+			if forkAlias := contract.Aliases.ByNetwork(networkConfig.Fork); forkAlias != nil {
+				return common.Address(forkAlias.Address), nil
 			}
 		}
+
+		return common.Address{}, fmt.Errorf("no address for contract %s on network %s", contractName, network)
+	}
+}
+
+// buildTestRunner creates an isolated test runner for a single file.
+// It also returns a pointer to a string that will be populated with the resolved
+// non-testing network name (if any) after the runner executes.
+func buildTestRunner(scriptPath string, state *flowkit.State, cfg testRunConfig, logger zerolog.Logger) (*cdcTests.TestRunner, *string) {
+	var resolvedNetwork string
+
+	runner := cdcTests.NewTestRunner().
+		WithLogger(logger).
+		WithNetworkResolver(networkResolver(state, &resolvedNetwork)).
+		WithNetworkLabel(cfg.networkLabel).
+		WithImportResolver(importResolver(scriptPath, state)).
+		WithFileResolver(fileResolver(scriptPath, state)).
+		WithContractAddressResolver(contractAddressResolver(state))
+
+	if cfg.forkCfg != nil {
+		runner = runner.WithFork(*cfg.forkCfg)
+	}
+	if cfg.coverageReport != nil {
+		runner = runner.WithCoverageReport(cfg.coverageReport)
+	}
+	if cfg.seed > 0 {
+		runner = runner.WithRandomSeed(cfg.seed)
 	}
 
-	var coverageReport *runtime.CoverageReport
-	if flags.Cover {
-		coverageReport = state.CreateCoverageReport("testing")
-		if flags.CoverCode == contractsCoverCode {
-			coverageReport.WithLocationFilter(
-				func(location common.Location) bool {
-					_, addressLoc := location.(common.AddressLocation)
-					// We only allow inspection of AddressLocation,
-					// since scripts and transactions cannot be
-					// attributed to their source files anyway.
-					return addressLoc
-				},
-			)
+	return runner, &resolvedNetwork
+}
+
+// runFileTests runs the tests in code using runner, optionally filtering by name.
+func runFileTests(runner *cdcTests.TestRunner, code []byte, name string) (cdcTests.Results, error) {
+	if name == "" {
+		return runner.RunTests(string(code))
+	}
+
+	testFunctions, err := runner.GetTests(string(code))
+	if err != nil {
+		return nil, err
+	}
+
+	for _, fn := range testFunctions {
+		if fn != name {
+			continue
 		}
+		r, err := runner.RunTest(string(code), name)
+		if err != nil {
+			return nil, err
+		}
+		return cdcTests.Results{*r}, nil
 	}
 
-	var seed int64
-	if flags.Seed > 0 {
-		seed = flags.Seed
-	} else if flags.Random {
-		seed = int64(rand.Intn(150000))
+	return nil, nil
+}
+
+func runTestsConcurrently(
+	testFiles map[string][]byte,
+	state *flowkit.State,
+	cfg testRunConfig,
+	logger zerolog.Logger,
+) (*concurrencyResult, error) {
+	jobs := cfg.jobs
+	if jobs <= 0 {
+		jobs = goRuntime.NumCPU()
 	}
 
-	testResults := make(map[string]cdcTests.Results, 0)
-	exitCode := 0
+	type fileResult struct {
+		scriptPath        string
+		results           cdcTests.Results
+		networkResolution string
+		err               error
+	}
+
+	resultCh := make(chan fileResult, len(testFiles))
+
+	g, ctx := errgroup.WithContext(context.Background())
+	g.SetLimit(jobs)
+
 	for scriptPath, code := range testFiles {
-		// Set current test file for network resolution tracking
-		currentTestFile = scriptPath
-
-		// Create a new test runner per file to ensure complete isolation.
-		// Each file gets its own runner with its own backend state.
-		fileRunner := cdcTests.NewTestRunner().
-			WithLogger(logger).
-			WithNetworkResolver(resolveNetworkFromState).
-			WithNetworkLabel(networkLabel).
-			WithImportResolver(importResolver(scriptPath, state)).
-			WithFileResolver(fileResolver(scriptPath, state)).
-			WithContractAddressResolver(func(network string, contractName string) (common.Address, error) {
-				contractsByName := make(map[string]config.Contract)
-				for _, c := range *state.Contracts() {
-					contractsByName[c.Name] = c
-				}
-
-				contract, exists := contractsByName[contractName]
-				if !exists {
-					return common.Address{}, fmt.Errorf("contract not found: %s", contractName)
-				}
-
-				alias := contract.Aliases.ByNetwork(network)
-				if alias != nil {
-					return common.Address(alias.Address), nil
-				}
-
-				// Fallback to fork network if configured
-				networkConfig, err := state.Networks().ByName(network)
-				if err == nil && networkConfig != nil && networkConfig.Fork != "" {
-					forkAlias := contract.Aliases.ByNetwork(networkConfig.Fork)
-					if forkAlias != nil {
-						return common.Address(forkAlias.Address), nil
-					}
-				}
-
-				return common.Address{}, fmt.Errorf("no address for contract %s on network %s", contractName, network)
-			})
-
-		if forkCfg != nil {
-			fileRunner = fileRunner.WithFork(*forkCfg)
-		}
-		if coverageReport != nil {
-			fileRunner = fileRunner.WithCoverageReport(coverageReport)
-		}
-		if seed > 0 {
-			fileRunner = fileRunner.WithRandomSeed(seed)
-		}
-
-		if flags.Name != "" {
-			testFunctions, err := fileRunner.GetTests(string(code))
-			if err != nil {
-				return nil, err
+		g.Go(func() error {
+			if ctx.Err() != nil {
+				return ctx.Err()
 			}
 
-			for _, testFunction := range testFunctions {
-				if testFunction != flags.Name {
-					continue
-				}
+			runner, resolvedNetwork := buildTestRunner(scriptPath, state, cfg, logger)
+			results, err := runFileTests(runner, code, cfg.name)
 
-				result, err := fileRunner.RunTest(string(code), flags.Name)
-				if err != nil {
-					return nil, err
-				}
-				testResults[scriptPath] = []cdcTests.Result{*result}
+			resultCh <- fileResult{
+				scriptPath:        scriptPath,
+				results:           results,
+				networkResolution: *resolvedNetwork,
+				err:               err,
 			}
-		} else {
-			results, err := fileRunner.RunTests(string(code))
-			if err != nil {
-				return nil, err
-			}
-			testResults[scriptPath] = results
-		}
-
-		for _, result := range testResults[scriptPath] {
-			if result.Error != nil {
-				exitCode = 1
-				break
-			}
-		}
-
-		// Clear current test file after processing
-		currentTestFile = ""
-	}
-
-	// Track fork test usage metrics - aggregate into single event
-	hasPragmaFiles := len(fileNetworkResolutions) > 0
-	hasStaticFork := forkCfg != nil
-
-	if hasPragmaFiles || hasStaticFork {
-		// Determine primary fork source
-		forkSource := "none"
-		var primaryNetwork string
-		var chainID string
-		hasHeight := false
-
-		if hasPragmaFiles {
-			// Pragma takes priority - collect unique networks
-			forkSource = "pragma"
-			networkSet := make(map[string]bool)
-			for _, network := range fileNetworkResolutions {
-				networkSet[network] = true
-			}
-			// Use first resolved network as primary (for single-value tracking)
-			for _, network := range fileNetworkResolutions {
-				primaryNetwork = network
-				break
-			}
-			// If multiple networks, note that in source
-			if len(networkSet) > 1 {
-				forkSource = "pragma-mixed"
-			}
-		} else if hasStaticFork {
-			// Static flags
-			if flags.ForkHost != "" {
-				forkSource = "fork-host-flag"
-			} else if flags.Fork != "" {
-				forkSource = "fork-flag"
-			}
-			primaryNetwork = networkLabel
-			chainID = forkCfg.ChainID.String()
-			hasHeight = forkCfg.ForkHeight > 0
-		}
-
-		command.TrackEvent("test-fork", map[string]any{
-			"fork_source":  forkSource,
-			"network":      primaryNetwork,
-			"chain_id":     chainID,
-			"has_height":   hasHeight,
-			"pragma_files": len(fileNetworkResolutions),
-			"total_files":  len(testFiles),
-			"version":      build.Semver(),
-			"os":           goRuntime.GOOS,
-			"ci":           os.Getenv("CI") != "",
+			return nil
 		})
 	}
 
-	return &result{
-		Results:        testResults,
-		CoverageReport: coverageReport,
-		RandomSeed:     seed,
-		exitCode:       exitCode,
-	}, nil
+	waitErr := g.Wait()
+	close(resultCh)
+
+	cr := &concurrencyResult{
+		testResults:            make(map[string]cdcTests.Results),
+		fileNetworkResolutions: make(map[string]string),
+	}
+
+	for r := range resultCh {
+		if r.err != nil && waitErr == nil {
+			waitErr = r.err
+		}
+		if r.results != nil {
+			cr.testResults[r.scriptPath] = r.results
+			// Check for individual test failures to set exit code
+			for _, res := range r.results {
+				if res.Error != nil {
+					cr.exitCode = 1
+				}
+			}
+		}
+		if r.networkResolution != "" {
+			cr.fileNetworkResolutions[r.scriptPath] = r.networkResolution
+		}
+	}
+
+	return cr, waitErr
+}
+
+// trackForkMetrics emits a telemetry event when fork mode is used.
+func trackForkMetrics(cr *concurrencyResult, cfg testRunConfig, totalFiles int) {
+	hasPragmaFiles := len(cr.fileNetworkResolutions) > 0
+	hasStaticFork := cfg.forkCfg != nil
+
+	if !hasPragmaFiles && !hasStaticFork {
+		return
+	}
+
+	forkSource := "none"
+	var primaryNetwork, chainID string
+	hasHeight := false
+
+	if hasPragmaFiles {
+		forkSource = "pragma"
+		networkSet := make(map[string]bool)
+		for _, network := range cr.fileNetworkResolutions {
+			networkSet[network] = true
+		}
+		for _, network := range cr.fileNetworkResolutions {
+			primaryNetwork = network
+			break
+		}
+		if len(networkSet) > 1 {
+			forkSource = "pragma-mixed"
+		}
+	} else {
+		if cfg.forkHostFlag != "" {
+			forkSource = "fork-host-flag"
+		} else if cfg.forkFlag != "" {
+			forkSource = "fork-flag"
+		}
+		primaryNetwork = cfg.networkLabel
+		chainID = cfg.forkCfg.ChainID.String()
+		hasHeight = cfg.forkCfg.ForkHeight > 0
+	}
+
+	command.TrackEvent("test-fork", map[string]any{
+		"fork_source":  forkSource,
+		"network":      primaryNetwork,
+		"chain_id":     chainID,
+		"has_height":   hasHeight,
+		"pragma_files": len(cr.fileNetworkResolutions),
+		"total_files":  totalFiles,
+		"version":      build.Semver(),
+		"os":           goRuntime.GOOS,
+		"ci":           os.Getenv("CI") != "",
+	})
 }
 
 func importResolver(scriptPath string, state *flowkit.State) cdcTests.ImportResolver {
