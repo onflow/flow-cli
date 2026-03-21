@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/spf13/viper"
 )
@@ -33,8 +34,28 @@ const settingsDir = "flow-cli"
 
 const settingsType = "yaml"
 
-// viperLoaded only load settings file once
-var viperLoaded = false
+var initViper = sync.OnceValue(func() error {
+	if err := createSettingsDir(); err != nil {
+		return err
+	}
+
+	if err := viper.MergeConfigMap(defaults); err != nil {
+		return err
+	}
+
+	// Load settings file
+	if err := viper.MergeInConfig(); err != nil {
+		switch err.(type) {
+		case viper.ConfigFileNotFoundError:
+			// Create settings file for the first time
+			return viper.SafeWriteConfig()
+		default:
+			return err
+		}
+	}
+
+	return nil
+})
 
 func init() {
 	viper.SetConfigName(settingsFile)
@@ -68,36 +89,9 @@ func Set(key string, val any) error {
 	return nil
 }
 
-// loadViper loads the global settings file
+// loadViper loads the global settings file once and returns the same error on every call.
 func loadViper() error {
-	if viperLoaded {
-		return nil
-	}
-	viperLoaded = true
-
-	if err := createSettingsDir(); err != nil {
-		return err
-	}
-
-	err := viper.MergeConfigMap(defaults)
-	if err != nil {
-		return err
-	}
-
-	// Load settings file
-	if err := viper.MergeInConfig(); err != nil {
-		switch err.(type) {
-		case viper.ConfigFileNotFoundError:
-			// Create settings file for the first time
-			if err = viper.SafeWriteConfig(); err != nil {
-				return err
-			}
-		default:
-			return err
-		}
-	}
-
-	return nil
+	return initViper()
 }
 
 // createSettingsDir creates settings dir if it doesn't exist
