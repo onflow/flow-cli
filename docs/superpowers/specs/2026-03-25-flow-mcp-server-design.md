@@ -4,8 +4,8 @@
 
 Add a `flow mcp` command to flow-cli that starts a Model Context Protocol (MCP)
 server over stdio for Cadence smart contract development. The server exposes 9
-tools across two categories: LSP tools (in-process language server) and audit
-tools (on-chain queries + static analysis).
+tools across two categories: LSP tools (in-process language server) and
+on-chain query / code review tools.
 
 This replaces the need for a separate TypeScript MCP server (see
 [cadence-lang.org PR #285](https://github.com/onflow/cadence-lang.org/pull/285))
@@ -30,13 +30,13 @@ default mainnet) for resolving on-chain imports.
 
 ### Audit Tools (4)
 
-These use flowkit gRPC gateways for on-chain data and pure Go for static analysis.
+These use flowkit gRPC gateways for on-chain data and pattern matching for code review.
 
 | Tool | Description | Parameters |
 |---|---|---|
 | `get_contract_source` | Fetch on-chain contract manifest (names, sizes, imports, dependency graph) | `address`, `network?`, `recurse?` |
 | `get_contract_code` | Fetch source code of contracts from an address | `address`, `contract_name?`, `network?` |
-| `cadence_code_review` | Static security analysis of Cadence code | `code`, `network?` |
+| `cadence_code_review` | Review Cadence code for common issues and best practices | `code`, `network?` |
 | `cadence_execute_script` | Execute a read-only Cadence script on-chain | `code`, `network?`, `args?` |
 
 ## Architecture
@@ -62,7 +62,7 @@ flow mcp (stdio)
 internal/mcp/
   mcp.go      - Cobra command + MCP server setup, tool registration
   lsp.go      - LSP wrapper: server.Server lifecycle, diagnostic capture
-  audit.go    - Security scan rules (cadence_code_review)
+  audit.go    - Code review rules (cadence_code_review)
   tools.go    - Tool handler implementations (all 9 tools)
 ```
 
@@ -169,19 +169,21 @@ Default network addresses:
 
 ## cadence_code_review Rules
 
-Ported from the TypeScript PR's regex-based static analysis:
+Regex-based pattern matching for common Cadence issues and best practices.
+These are heuristic checks — not a substitute for a proper security audit.
+Ported from the TypeScript PR:
 
 | Rule | Severity | Pattern |
 |---|---|---|
-| overly-permissive-access | high | `access(all) var/let` on state fields |
-| overly-permissive-function | medium | `access(all) fun` |
+| overly-permissive-access | warning | `access(all) var/let` on state fields |
+| overly-permissive-function | note | `access(all) fun` |
 | deprecated-pub | info | `pub` keyword (deprecated in Cadence 1.0) |
-| unsafe-force-unwrap | medium | Force-unwrap `!` |
-| auth-account-exposure | high | `AuthAccount` or `auth(...) &Account` |
-| hardcoded-address | low | Hardcoded `0x...` not in imports |
-| unguarded-capability | high | `.publish(` calls |
-| potential-reentrancy | medium | `.borrow` followed by `self.` mutation |
-| resource-loss-destroy | high | `destroy()` calls |
+| unsafe-force-unwrap | note | Force-unwrap `!` |
+| auth-account-exposure | warning | `AuthAccount` or `auth(...) &Account` |
+| hardcoded-address | info | Hardcoded `0x...` not in imports |
+| unguarded-capability | warning | `.publish(` calls |
+| potential-reentrancy | note | `.borrow` followed by `self.` mutation |
+| resource-loss-destroy | warning | `destroy()` calls |
 
 When the LSP is available, `cadence_code_review` also runs a full type check
 and merges those diagnostics into the output.
