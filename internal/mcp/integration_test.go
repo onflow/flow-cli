@@ -49,7 +49,7 @@ func TestIntegration_GetContractSource(t *testing.T) {
 	require.NoError(t, err)
 	assert.False(t, result.IsError)
 	text := result.Content[0].(mcplib.TextContent).Text
-	assert.Contains(t, text, "FungibleToken")
+	assert.Contains(t, text, "FlowToken")
 }
 
 func TestIntegration_GetContractCode(t *testing.T) {
@@ -59,7 +59,7 @@ func TestIntegration_GetContractCode(t *testing.T) {
 	req := mcplib.CallToolRequest{}
 	req.Params.Arguments = map[string]any{
 		"address":       "0x1654653399040a61",
-		"contract_name": "FungibleToken",
+		"contract_name": "FlowToken",
 		"network":       "mainnet",
 	}
 
@@ -67,7 +67,7 @@ func TestIntegration_GetContractCode(t *testing.T) {
 	require.NoError(t, err)
 	assert.False(t, result.IsError)
 	text := result.Content[0].(mcplib.TextContent).Text
-	assert.Contains(t, text, "FungibleToken")
+	assert.Contains(t, text, "FlowToken")
 }
 
 func TestIntegration_ExecuteScript(t *testing.T) {
