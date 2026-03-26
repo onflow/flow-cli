@@ -71,11 +71,21 @@ func runMCP(cmd *cobra.Command, args []string) {
 	loader := &afero.Afero{Fs: afero.NewOsFs()}
 	state, _ := flowkit.Load(config.DefaultPaths(), loader)
 
-	_ = state // will be used by tool handlers in subsequent tasks
+	// Initialize the LSP wrapper (without flow client for MCP use).
+	var lsp *LSPWrapper
+	if w, err := NewLSPWrapper(false); err == nil {
+		lsp = w
+	} else {
+		fmt.Fprintf(os.Stderr, "Warning: LSP initialization failed, LSP tools will be unavailable: %v\n", err)
+	}
+
+	mctx := &mcpContext{
+		lsp:   lsp,
+		state: state,
+	}
 
 	s := mcpserver.NewMCPServer("cadence-mcp", "1.0.0")
-
-	// TODO: register tools in subsequent tasks
+	registerTools(s, mctx)
 
 	if err := mcpserver.ServeStdio(s); err != nil {
 		fmt.Fprintf(os.Stderr, "MCP server error: %v\n", err)
