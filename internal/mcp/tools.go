@@ -22,6 +22,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 
@@ -40,14 +41,33 @@ type mcpContext struct {
 	state *flowkit.State // may be nil
 }
 
+// resolveCode returns Cadence source from either the "code" or "file" parameter.
+// If "file" is provided, it reads the file contents. "code" takes precedence.
+func resolveCode(req mcplib.CallToolRequest) (string, error) {
+	code := req.GetString("code", "")
+	if code != "" {
+		return code, nil
+	}
+	file := req.GetString("file", "")
+	if file == "" {
+		return "", fmt.Errorf("either 'code' or 'file' parameter is required")
+	}
+	data, err := os.ReadFile(file)
+	if err != nil {
+		return "", fmt.Errorf("reading file %q: %w", file, err)
+	}
+	return string(data), nil
+}
+
 // registerTools registers all MCP tools on the given server.
 func registerTools(s *mcpserver.MCPServer, mctx *mcpContext) {
 	// LSP tools — only register if the LSP wrapper is available.
 	if mctx.lsp != nil {
 		s.AddTool(
 			mcplib.NewTool("cadence_check",
-				mcplib.WithDescription("Check Cadence code for syntax and type errors"),
-				mcplib.WithString("code", mcplib.Required(), mcplib.Description("Cadence source code to check")),
+				mcplib.WithDescription("Check Cadence code for syntax and type errors. Provide either code or file path."),
+				mcplib.WithString("code", mcplib.Description("Cadence source code to check")),
+				mcplib.WithString("file", mcplib.Description("Path to a .cdc file to check (alternative to code)")),
 				mcplib.WithString("network", mcplib.Description("Flow network for address resolution"), mcplib.Enum("mainnet", "testnet", "emulator")),
 			),
 			mctx.cadenceCheck,
@@ -55,8 +75,9 @@ func registerTools(s *mcpserver.MCPServer, mctx *mcpContext) {
 
 		s.AddTool(
 			mcplib.NewTool("cadence_hover",
-				mcplib.WithDescription("Get type information for a symbol at a position in Cadence code"),
-				mcplib.WithString("code", mcplib.Required(), mcplib.Description("Cadence source code")),
+				mcplib.WithDescription("Get type information for a symbol at a position in Cadence code. Provide either code or file path."),
+				mcplib.WithString("code", mcplib.Description("Cadence source code")),
+				mcplib.WithString("file", mcplib.Description("Path to a .cdc file (alternative to code)")),
 				mcplib.WithNumber("line", mcplib.Required(), mcplib.Description("0-based line number")),
 				mcplib.WithNumber("character", mcplib.Required(), mcplib.Description("0-based column number")),
 				mcplib.WithString("network", mcplib.Description("Flow network for address resolution"), mcplib.Enum("mainnet", "testnet", "emulator")),
@@ -66,8 +87,9 @@ func registerTools(s *mcpserver.MCPServer, mctx *mcpContext) {
 
 		s.AddTool(
 			mcplib.NewTool("cadence_definition",
-				mcplib.WithDescription("Find where a symbol is defined in Cadence code"),
-				mcplib.WithString("code", mcplib.Required(), mcplib.Description("Cadence source code")),
+				mcplib.WithDescription("Find where a symbol is defined in Cadence code. Provide either code or file path."),
+				mcplib.WithString("code", mcplib.Description("Cadence source code")),
+				mcplib.WithString("file", mcplib.Description("Path to a .cdc file (alternative to code)")),
 				mcplib.WithNumber("line", mcplib.Required(), mcplib.Description("0-based line number")),
 				mcplib.WithNumber("character", mcplib.Required(), mcplib.Description("0-based column number")),
 				mcplib.WithString("network", mcplib.Description("Flow network for address resolution"), mcplib.Enum("mainnet", "testnet", "emulator")),
@@ -77,8 +99,9 @@ func registerTools(s *mcpserver.MCPServer, mctx *mcpContext) {
 
 		s.AddTool(
 			mcplib.NewTool("cadence_symbols",
-				mcplib.WithDescription("List all symbols in Cadence code"),
-				mcplib.WithString("code", mcplib.Required(), mcplib.Description("Cadence source code")),
+				mcplib.WithDescription("List all symbols in Cadence code. Provide either code or file path."),
+				mcplib.WithString("code", mcplib.Description("Cadence source code")),
+				mcplib.WithString("file", mcplib.Description("Path to a .cdc file (alternative to code)")),
 				mcplib.WithString("network", mcplib.Description("Flow network for address resolution"), mcplib.Enum("mainnet", "testnet", "emulator")),
 			),
 			mctx.cadenceSymbols,
@@ -86,8 +109,9 @@ func registerTools(s *mcpserver.MCPServer, mctx *mcpContext) {
 
 		s.AddTool(
 			mcplib.NewTool("cadence_completion",
-				mcplib.WithDescription("Get completion suggestions at a position in Cadence code"),
-				mcplib.WithString("code", mcplib.Required(), mcplib.Description("Cadence source code")),
+				mcplib.WithDescription("Get completion suggestions at a position in Cadence code. Provide either code or file path."),
+				mcplib.WithString("code", mcplib.Description("Cadence source code")),
+				mcplib.WithString("file", mcplib.Description("Path to a .cdc file (alternative to code)")),
 				mcplib.WithNumber("line", mcplib.Required(), mcplib.Description("0-based line number")),
 				mcplib.WithNumber("character", mcplib.Required(), mcplib.Description("0-based column number")),
 				mcplib.WithString("network", mcplib.Description("Flow network for address resolution"), mcplib.Enum("mainnet", "testnet", "emulator")),
@@ -118,8 +142,9 @@ func registerTools(s *mcpserver.MCPServer, mctx *mcpContext) {
 
 	s.AddTool(
 		mcplib.NewTool("cadence_code_review",
-			mcplib.WithDescription("Review Cadence code for common issues and anti-patterns"),
-			mcplib.WithString("code", mcplib.Required(), mcplib.Description("Cadence source code to review")),
+			mcplib.WithDescription("Review Cadence code for common issues and anti-patterns. Provide either code or file path."),
+			mcplib.WithString("code", mcplib.Description("Cadence source code to review")),
+			mcplib.WithString("file", mcplib.Description("Path to a .cdc file to review (alternative to code)")),
 			mcplib.WithString("network", mcplib.Description("Flow network for address resolution"), mcplib.Enum("mainnet", "testnet", "emulator")),
 		),
 		mctx.cadenceCodeReview,
@@ -127,8 +152,9 @@ func registerTools(s *mcpserver.MCPServer, mctx *mcpContext) {
 
 	s.AddTool(
 		mcplib.NewTool("cadence_execute_script",
-			mcplib.WithDescription("Execute a read-only Cadence script on-chain"),
-			mcplib.WithString("code", mcplib.Required(), mcplib.Description("Cadence script source code")),
+			mcplib.WithDescription("Execute a read-only Cadence script on-chain. Provide either code or file path."),
+			mcplib.WithString("code", mcplib.Description("Cadence script source code")),
+			mcplib.WithString("file", mcplib.Description("Path to a .cdc script file (alternative to code)")),
 			mcplib.WithString("network", mcplib.Description("Flow network to execute against"), mcplib.Enum("mainnet", "testnet", "emulator")),
 			mcplib.WithString("arguments", mcplib.Description("JSON array of arguments as strings, e.g. [\"String:hello\", \"UFix64:1.0\"]")),
 		),
@@ -141,7 +167,7 @@ func registerTools(s *mcpserver.MCPServer, mctx *mcpContext) {
 // ---------------------------------------------------------------------------
 
 func (m *mcpContext) cadenceCheck(_ context.Context, req mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
-	code, err := req.RequireString("code")
+	code, err := resolveCode(req)
 	if err != nil {
 		return mcplib.NewToolResultError(err.Error()), nil
 	}
@@ -155,7 +181,7 @@ func (m *mcpContext) cadenceCheck(_ context.Context, req mcplib.CallToolRequest)
 }
 
 func (m *mcpContext) cadenceHover(_ context.Context, req mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
-	code, err := req.RequireString("code")
+	code, err := resolveCode(req)
 	if err != nil {
 		return mcplib.NewToolResultError(err.Error()), nil
 	}
@@ -177,7 +203,7 @@ func (m *mcpContext) cadenceHover(_ context.Context, req mcplib.CallToolRequest)
 }
 
 func (m *mcpContext) cadenceDefinition(_ context.Context, req mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
-	code, err := req.RequireString("code")
+	code, err := resolveCode(req)
 	if err != nil {
 		return mcplib.NewToolResultError(err.Error()), nil
 	}
@@ -203,7 +229,7 @@ func (m *mcpContext) cadenceDefinition(_ context.Context, req mcplib.CallToolReq
 }
 
 func (m *mcpContext) cadenceSymbols(_ context.Context, req mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
-	code, err := req.RequireString("code")
+	code, err := resolveCode(req)
 	if err != nil {
 		return mcplib.NewToolResultError(err.Error()), nil
 	}
@@ -217,7 +243,7 @@ func (m *mcpContext) cadenceSymbols(_ context.Context, req mcplib.CallToolReques
 }
 
 func (m *mcpContext) cadenceCompletion(_ context.Context, req mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
-	code, err := req.RequireString("code")
+	code, err := resolveCode(req)
 	if err != nil {
 		return mcplib.NewToolResultError(err.Error()), nil
 	}
@@ -348,7 +374,7 @@ func (m *mcpContext) getContractCode(ctx context.Context, req mcplib.CallToolReq
 }
 
 func (m *mcpContext) cadenceCodeReview(_ context.Context, req mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
-	code, err := req.RequireString("code")
+	code, err := resolveCode(req)
 	if err != nil {
 		return mcplib.NewToolResultError(err.Error()), nil
 	}
@@ -369,7 +395,7 @@ func (m *mcpContext) cadenceCodeReview(_ context.Context, req mcplib.CallToolReq
 }
 
 func (m *mcpContext) cadenceExecuteScript(ctx context.Context, req mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
-	code, err := req.RequireString("code")
+	code, err := resolveCode(req)
 	if err != nil {
 		return mcplib.NewToolResultError(err.Error()), nil
 	}
