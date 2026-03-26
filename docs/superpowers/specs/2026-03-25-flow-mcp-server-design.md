@@ -103,13 +103,21 @@ Created at startup with:
 
 ### Document Lifecycle
 
-Each tool call follows this pattern:
-1. Use a fixed URI per network (e.g., `file:///mcp/mainnet.cdc`)
-2. First call: `DidOpenTextDocument` to register the document
-3. Subsequent calls: `DidChangeTextDocument` to update content
-4. Call the LSP method (`Hover`, `Completion`, etc.)
+The LSP server stores documents in an in-memory map (`s.documents`), not on
+disk. The `file:///` URI is purely virtual — no actual files are created.
 
-This avoids document accumulation since we reuse the same URI.
+Since the LSP server has no `DidCloseTextDocument` handler, opened documents
+stay in the map forever. To avoid unbounded accumulation, we reuse a single
+virtual URI (`file:///mcp/scratch.cdc`) as a scratch buffer:
+
+1. First call: `DidOpenTextDocument` with the virtual URI and the code string
+2. Every subsequent call: `DidChangeTextDocument` to replace the content
+3. The LSP runs the type checker on the updated content
+4. Call the LSP method (`Hover`, `Completion`, etc.) and return the result
+
+Each MCP tool call is independent — it overwrites the scratch buffer with its
+code, queries the LSP, and returns. Calls are serialized by the mutex so there
+is no contention over the single URI.
 
 ### Diagnostic Capture
 
