@@ -35,6 +35,7 @@ import (
 	"github.com/onflow/flow-cli/internal/events"
 	evm "github.com/onflow/flow-cli/internal/evm"
 	"github.com/onflow/flow-cli/internal/keys"
+	"github.com/onflow/flow-cli/internal/mcp"
 	"github.com/onflow/flow-cli/internal/project"
 	"github.com/onflow/flow-cli/internal/quick"
 	"github.com/onflow/flow-cli/internal/schedule"
@@ -92,6 +93,7 @@ func main() {
 	cmd.AddCommand(dependencymanager.Cmd)
 	cmd.AddCommand(evm.Cmd)
 	cmd.AddCommand(schedule.Cmd)
+	cmd.AddCommand(mcp.Cmd)
 
 	command.InitFlags(cmd)
 	cmd.AddGroup(&cobra.Group{
