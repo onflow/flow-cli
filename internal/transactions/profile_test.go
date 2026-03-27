@@ -148,6 +148,7 @@ func Test_ProfilingResult(t *testing.T) {
 
 func Test_Profile_Integration_LocalEmulator(t *testing.T) {
 	t.Run("Profile user transaction", func(t *testing.T) {
+		t.Parallel()
 		port := getFreePort(t)
 		emulatorHost := fmt.Sprintf("127.0.0.1:%d", port)
 		emulatorServer, testTxID, testBlockHeight := startEmulatorWithTestTransaction(t, emulatorHost, port)
@@ -159,6 +160,7 @@ func Test_Profile_Integration_LocalEmulator(t *testing.T) {
 	})
 
 	t.Run("Profile failed transaction", func(t *testing.T) {
+		t.Parallel()
 		port := getFreePort(t)
 		emulatorHost := fmt.Sprintf("127.0.0.1:%d", port)
 		emulatorServer, failedTxID, testBlockHeight := startEmulatorWithFailedTransaction(t, emulatorHost, port)
@@ -170,6 +172,7 @@ func Test_Profile_Integration_LocalEmulator(t *testing.T) {
 	})
 
 	t.Run("Profile transaction with multiple prior transactions", func(t *testing.T) {
+		t.Parallel()
 		port := getFreePort(t)
 		emulatorHost := fmt.Sprintf("127.0.0.1:%d", port)
 		emulatorServer, targetTxID, testBlockHeight := startEmulatorWithMultipleTransactions(t, emulatorHost, port, 5)
@@ -181,6 +184,7 @@ func Test_Profile_Integration_LocalEmulator(t *testing.T) {
 	})
 
 	t.Run("Profile system transaction", func(t *testing.T) {
+		t.Parallel()
 		port := getFreePort(t)
 		emulatorHost := fmt.Sprintf("127.0.0.1:%d", port)
 

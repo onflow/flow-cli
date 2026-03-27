@@ -45,8 +45,8 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("lints file with no issues", func(t *testing.T) {
-		state := setupMockState(t)
 		t.Parallel()
+		state := setupMockState(t)
 
 		results, err := lintFiles(state, "NoError.cdc")
 		require.NoError(t, err)
@@ -66,8 +66,8 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("lints file with import", func(t *testing.T) {
-		state := setupMockState(t)
 		t.Parallel()
+		state := setupMockState(t)
 
 		results, err := lintFiles(state, "foo/WithImports.cdc")
 		require.NoError(t, err)
@@ -88,8 +88,8 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("lints multiple files", func(t *testing.T) {
-		state := setupMockState(t)
 		t.Parallel()
+		state := setupMockState(t)
 
 		results, err := lintFiles(state, "NoError.cdc", "foo/WithImports.cdc")
 		require.NoError(t, err)
@@ -113,8 +113,8 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("lints file with warning", func(t *testing.T) {
-		state := setupMockState(t)
 		t.Parallel()
+		state := setupMockState(t)
 
 		results, err := lintFiles(state, "LintWarning.cdc")
 		require.NoError(t, err)
@@ -144,8 +144,8 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("lints file with error", func(t *testing.T) {
-		state := setupMockState(t)
 		t.Parallel()
+		state := setupMockState(t)
 
 		results, err := lintFiles(state, "LintError.cdc")
 		require.NoError(t, err)
@@ -185,8 +185,8 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("generates synthetic replacement for replacement category diagnostics", func(t *testing.T) {
-		state := setupMockState(t)
 		t.Parallel()
+		state := setupMockState(t)
 
 		results, err := lintFiles(state, "ReplacementHint.cdc")
 		require.NoError(t, err)
@@ -211,8 +211,8 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("linter resolves imports from flowkit state", func(t *testing.T) {
-		state := setupMockState(t)
 		t.Parallel()
+		state := setupMockState(t)
 
 		results, err := lintFiles(state, "WithFlowkitImport.cdc")
 		require.NoError(t, err)
@@ -232,8 +232,8 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("resolves stdlib imports contracts", func(t *testing.T) {
-		state := setupMockState(t)
 		t.Parallel()
+		state := setupMockState(t)
 
 		results, err := lintFiles(state, "StdlibImportsContract.cdc")
 		require.NoError(t, err)
@@ -265,8 +265,8 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("resolves stdlib imports transactions", func(t *testing.T) {
-		state := setupMockState(t)
 		t.Parallel()
+		state := setupMockState(t)
 
 		results, err := lintFiles(state, "StdlibImportsTransaction.cdc")
 		require.NoError(t, err)
@@ -298,8 +298,8 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("resolves stdlib imports scripts", func(t *testing.T) {
-		state := setupMockState(t)
 		t.Parallel()
+		state := setupMockState(t)
 
 		results, err := lintFiles(state, "StdlibImportsScript.cdc")
 		require.NoError(t, err)
@@ -319,8 +319,8 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("resolves stdlib imports Crypto", func(t *testing.T) {
-		state := setupMockState(t)
 		t.Parallel()
+		state := setupMockState(t)
 
 		results, err := lintFiles(state, "StdlibImportsCrypto.cdc")
 		require.NoError(t, err)
@@ -340,8 +340,8 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("resolves nested imports when contract imported by name", func(t *testing.T) {
-		state := setupMockState(t)
 		t.Parallel()
+		state := setupMockState(t)
 
 		results, err := lintFiles(state, "TransactionImportingContractWithNestedImports.cdc")
 		require.NoError(t, err)
@@ -361,8 +361,8 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("allows access(account) when contracts on same account", func(t *testing.T) {
-		state := setupMockStateWithAccountAccess(t)
 		t.Parallel()
+		state := setupMockStateWithAccountAccess(t)
 
 		results, err := lintFiles(state, "ContractA.cdc")
 		require.NoError(t, err)
@@ -383,8 +383,8 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("denies access(account) when contracts on different accounts", func(t *testing.T) {
-		state := setupMockStateWithAccountAccess(t)
 		t.Parallel()
+		state := setupMockStateWithAccountAccess(t)
 
 		results, err := lintFiles(state, "ContractC.cdc")
 		require.NoError(t, err)
@@ -398,8 +398,8 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("allows access(account) when dependencies on same account (peak-money repro)", func(t *testing.T) {
-		state := setupMockStateWithDependencies(t)
 		t.Parallel()
+		state := setupMockStateWithDependencies(t)
 
 		results, err := lintFiles(state, "imports/testaddr/DepA.cdc")
 		require.NoError(t, err)
@@ -420,8 +420,8 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("allows access(account) when dependencies have Source but no Aliases", func(t *testing.T) {
-		state := setupMockStateWithSourceOnly(t)
 		t.Parallel()
+		state := setupMockStateWithSourceOnly(t)
 
 		// Verify that AddDependencyAsContract automatically adds Source to Aliases
 		sourceAContract, _ := state.Contracts().ByName("SourceA")
@@ -547,11 +547,11 @@ func setupMockState(t *testing.T) *flowkit.State {
 	_ = afero.WriteFile(mockFs, "Helper.cdc", []byte(`
 	access(all) contract Helper {
 		access(all) let name: String
-		
+
 		init() {
 			self.name = "Helper"
 		}
-		
+
 		access(all) fun greet(): String {
 			return "Hello from ".concat(self.name)
 		}
@@ -560,7 +560,7 @@ func setupMockState(t *testing.T) *flowkit.State {
 
 	_ = afero.WriteFile(mockFs, "ContractWithNestedImports.cdc", []byte(`
 	import Helper from "./Helper.cdc"
-	
+
 	access(all) contract ContractWithNestedImports {
 		access(all) fun test(): String {
 			return Helper.greet()
@@ -571,7 +571,7 @@ func setupMockState(t *testing.T) *flowkit.State {
 
 	_ = afero.WriteFile(mockFs, "TransactionImportingContractWithNestedImports.cdc", []byte(`
 	import ContractWithNestedImports from "ContractWithNestedImports"
-	
+
 	transaction() {
 		prepare(signer: auth(Storage) &Account) {
 			log(ContractWithNestedImports.test())
@@ -617,7 +617,7 @@ func setupMockStateWithAccountAccess(t *testing.T) *flowkit.State {
 	// ContractA imports and calls ContractB's account function - should work (same account)
 	_ = afero.WriteFile(mockFs, "ContractA.cdc", []byte(`
 	import ContractB from "ContractB"
-	
+
 	access(all) contract ContractA {
 		access(all) fun callB() {
 			ContractB.accountOnlyFunction()
@@ -629,7 +629,7 @@ func setupMockStateWithAccountAccess(t *testing.T) *flowkit.State {
 	// ContractC imports and calls ContractB's account function - should fail (different account)
 	_ = afero.WriteFile(mockFs, "ContractC.cdc", []byte(`
 	import ContractB from "ContractB"
-	
+
 	access(all) contract ContractC {
 		access(all) fun callB() {
 			ContractB.accountOnlyFunction()
@@ -704,7 +704,7 @@ func setupMockStateWithDependencies(t *testing.T) *flowkit.State {
 	// DepA imports and calls DepB's account function (like FlowEVMBridgeConfig)
 	_ = afero.WriteFile(mockFs, "imports/testaddr/DepA.cdc", []byte(`
 	import DepB from "DepB"
-	
+
 	access(all) contract DepA {
 		access(all) fun callDepB(forType: Type) {
 			DepB.pauseConfig(forType: forType)
@@ -803,7 +803,7 @@ func setupMockStateWithSourceOnly(t *testing.T) *flowkit.State {
 	// SourceA imports and calls SourceB's account function
 	_ = afero.WriteFile(mockFs, "imports/testaddr/SourceA.cdc", []byte(`
 	import SourceB from "SourceB"
-	
+
 	access(all) contract SourceA {
 		access(all) fun callSourceB() {
 			SourceB.sourceOnlyFunction()
