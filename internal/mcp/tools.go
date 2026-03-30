@@ -63,7 +63,6 @@ func registerTools(s *mcpserver.MCPServer, mctx *mcpContext) {
 			mcplib.NewTool("cadence_check",
 				mcplib.WithDescription("Check Cadence code for syntax and type errors."),
 				mcplib.WithString("code", mcplib.Required(), mcplib.Description("Cadence source code to check")),
-	
 			),
 			mctx.cadenceCheck,
 		)
@@ -72,7 +71,7 @@ func registerTools(s *mcpserver.MCPServer, mctx *mcpContext) {
 			mcplib.NewTool("cadence_hover",
 				mcplib.WithDescription("Get type information for a symbol at a position in Cadence code."),
 				mcplib.WithString("code", mcplib.Required(), mcplib.Description("Cadence source code")),
-	
+
 				mcplib.WithNumber("line", mcplib.Required(), mcplib.Description("0-based line number")),
 				mcplib.WithNumber("character", mcplib.Required(), mcplib.Description("0-based column number")),
 			),
@@ -83,7 +82,7 @@ func registerTools(s *mcpserver.MCPServer, mctx *mcpContext) {
 			mcplib.NewTool("cadence_definition",
 				mcplib.WithDescription("Find where a symbol is defined in Cadence code."),
 				mcplib.WithString("code", mcplib.Required(), mcplib.Description("Cadence source code")),
-	
+
 				mcplib.WithNumber("line", mcplib.Required(), mcplib.Description("0-based line number")),
 				mcplib.WithNumber("character", mcplib.Required(), mcplib.Description("0-based column number")),
 			),
@@ -94,7 +93,6 @@ func registerTools(s *mcpserver.MCPServer, mctx *mcpContext) {
 			mcplib.NewTool("cadence_symbols",
 				mcplib.WithDescription("List all symbols in Cadence code."),
 				mcplib.WithString("code", mcplib.Required(), mcplib.Description("Cadence source code")),
-	
 			),
 			mctx.cadenceSymbols,
 		)
@@ -103,7 +101,7 @@ func registerTools(s *mcpserver.MCPServer, mctx *mcpContext) {
 			mcplib.NewTool("cadence_completion",
 				mcplib.WithDescription("Get completion suggestions at a position in Cadence code."),
 				mcplib.WithString("code", mcplib.Required(), mcplib.Description("Cadence source code")),
-	
+
 				mcplib.WithNumber("line", mcplib.Required(), mcplib.Description("0-based line number")),
 				mcplib.WithNumber("character", mcplib.Required(), mcplib.Description("0-based column number")),
 			),
@@ -135,7 +133,6 @@ func registerTools(s *mcpserver.MCPServer, mctx *mcpContext) {
 		mcplib.NewTool("cadence_code_review",
 			mcplib.WithDescription("Review Cadence code for common issues and anti-patterns."),
 			mcplib.WithString("code", mcplib.Required(), mcplib.Description("Cadence source code to review")),
-
 		),
 		mctx.cadenceCodeReview,
 	)
