@@ -42,7 +42,7 @@ func TestLSPWrapper_Check_ValidCode(t *testing.T) {
 			return "hello"
 		}
 	`
-	diags, err := w.Check(code, "")
+	diags, err := w.Check(code)
 	require.NoError(t, err)
 	assert.Empty(t, diags, "valid code should produce no diagnostics")
 }
@@ -57,7 +57,7 @@ func TestLSPWrapper_Check_InvalidCode(t *testing.T) {
 			return 42
 		}
 	`
-	diags, err := w.Check(code, "")
+	diags, err := w.Check(code)
 	require.NoError(t, err)
 	assert.NotEmpty(t, diags, "type mismatch should produce diagnostics")
 }
@@ -69,7 +69,7 @@ func TestLSPWrapper_Check_SyntaxError(t *testing.T) {
 	code := `
 		access(all) fun hello( {
 	`
-	diags, err := w.Check(code, "")
+	diags, err := w.Check(code)
 	require.NoError(t, err)
 	assert.NotEmpty(t, diags, "syntax error should produce diagnostics")
 }
@@ -84,7 +84,7 @@ access(all) fun hello(): String {
 }
 `
 	// Hover over "String" return type — line 1 (0-based), find the position of "String"
-	result, err := w.Hover(code, 1, 25, "")
+	result, err := w.Hover(code, 1, 25)
 	require.NoError(t, err)
 	// Hover may or may not return a result depending on the position;
 	// we just verify it doesn't error. If non-nil, it should have contents.
@@ -104,7 +104,7 @@ access(all) contract MyContract {
 	}
 }
 `
-	symbols, err := w.Symbols(code, "")
+	symbols, err := w.Symbols(code)
 	require.NoError(t, err)
 	require.NotEmpty(t, symbols, "contract with members should have symbols")
 
@@ -124,7 +124,7 @@ access(all) fun main() {
 }
 `
 	// Position right after "x." — line 3, character 3
-	items, err := w.Completion(code, 3, 3, "")
+	items, err := w.Completion(code, 3, 3)
 	require.NoError(t, err)
 	// String methods should appear as completions
 	assert.NotEmpty(t, items, "should get completion items for String methods")

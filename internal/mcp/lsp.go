@@ -171,7 +171,7 @@ func (w *LSPWrapper) updateDocument(code string) error {
 }
 
 // Check sends code to the LSP and returns any diagnostics.
-func (w *LSPWrapper) Check(code, network string) ([]protocol.Diagnostic, error) {
+func (w *LSPWrapper) Check(code string) ([]protocol.Diagnostic, error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
@@ -185,7 +185,7 @@ func (w *LSPWrapper) Check(code, network string) ([]protocol.Diagnostic, error) 
 }
 
 // Hover returns hover information at the given position.
-func (w *LSPWrapper) Hover(code string, line, character int, network string) (*protocol.Hover, error) {
+func (w *LSPWrapper) Hover(code string, line, character int) (*protocol.Hover, error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
@@ -202,7 +202,7 @@ func (w *LSPWrapper) Hover(code string, line, character int, network string) (*p
 }
 
 // Definition returns the definition location for the symbol at the given position.
-func (w *LSPWrapper) Definition(code string, line, character int, network string) (*protocol.Location, error) {
+func (w *LSPWrapper) Definition(code string, line, character int) (*protocol.Location, error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
@@ -219,7 +219,7 @@ func (w *LSPWrapper) Definition(code string, line, character int, network string
 }
 
 // Symbols returns the document symbols for the given code.
-func (w *LSPWrapper) Symbols(code, network string) ([]*protocol.DocumentSymbol, error) {
+func (w *LSPWrapper) Symbols(code string) ([]*protocol.DocumentSymbol, error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
@@ -235,7 +235,7 @@ func (w *LSPWrapper) Symbols(code, network string) ([]*protocol.DocumentSymbol, 
 }
 
 // Completion returns completion items at the given position.
-func (w *LSPWrapper) Completion(code string, line, character int, network string) ([]*protocol.CompletionItem, error) {
+func (w *LSPWrapper) Completion(code string, line, character int) ([]*protocol.CompletionItem, error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 

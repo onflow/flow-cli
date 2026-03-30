@@ -77,7 +77,6 @@ func registerTools(s *mcpserver.MCPServer, mctx *mcpContext) {
 				mcplib.WithDescription("Check Cadence code for syntax and type errors. Provide either code or file path."),
 				mcplib.WithString("code", mcplib.Description("Cadence source code to check")),
 				mcplib.WithString("file", mcplib.Description("Path to a .cdc file to check (alternative to code)")),
-				mcplib.WithString("network", mcplib.Description("Flow network for address resolution"), mcplib.Enum("mainnet", "testnet", "emulator")),
 			),
 			mctx.cadenceCheck,
 		)
@@ -89,7 +88,6 @@ func registerTools(s *mcpserver.MCPServer, mctx *mcpContext) {
 				mcplib.WithString("file", mcplib.Description("Path to a .cdc file (alternative to code)")),
 				mcplib.WithNumber("line", mcplib.Required(), mcplib.Description("0-based line number")),
 				mcplib.WithNumber("character", mcplib.Required(), mcplib.Description("0-based column number")),
-				mcplib.WithString("network", mcplib.Description("Flow network for address resolution"), mcplib.Enum("mainnet", "testnet", "emulator")),
 			),
 			mctx.cadenceHover,
 		)
@@ -101,7 +99,6 @@ func registerTools(s *mcpserver.MCPServer, mctx *mcpContext) {
 				mcplib.WithString("file", mcplib.Description("Path to a .cdc file (alternative to code)")),
 				mcplib.WithNumber("line", mcplib.Required(), mcplib.Description("0-based line number")),
 				mcplib.WithNumber("character", mcplib.Required(), mcplib.Description("0-based column number")),
-				mcplib.WithString("network", mcplib.Description("Flow network for address resolution"), mcplib.Enum("mainnet", "testnet", "emulator")),
 			),
 			mctx.cadenceDefinition,
 		)
@@ -111,7 +108,6 @@ func registerTools(s *mcpserver.MCPServer, mctx *mcpContext) {
 				mcplib.WithDescription("List all symbols in Cadence code. Provide either code or file path."),
 				mcplib.WithString("code", mcplib.Description("Cadence source code")),
 				mcplib.WithString("file", mcplib.Description("Path to a .cdc file (alternative to code)")),
-				mcplib.WithString("network", mcplib.Description("Flow network for address resolution"), mcplib.Enum("mainnet", "testnet", "emulator")),
 			),
 			mctx.cadenceSymbols,
 		)
@@ -123,7 +119,6 @@ func registerTools(s *mcpserver.MCPServer, mctx *mcpContext) {
 				mcplib.WithString("file", mcplib.Description("Path to a .cdc file (alternative to code)")),
 				mcplib.WithNumber("line", mcplib.Required(), mcplib.Description("0-based line number")),
 				mcplib.WithNumber("character", mcplib.Required(), mcplib.Description("0-based column number")),
-				mcplib.WithString("network", mcplib.Description("Flow network for address resolution"), mcplib.Enum("mainnet", "testnet", "emulator")),
 			),
 			mctx.cadenceCompletion,
 		)
@@ -154,7 +149,6 @@ func registerTools(s *mcpserver.MCPServer, mctx *mcpContext) {
 			mcplib.WithDescription("Review Cadence code for common issues and anti-patterns. Provide either code or file path."),
 			mcplib.WithString("code", mcplib.Description("Cadence source code to review")),
 			mcplib.WithString("file", mcplib.Description("Path to a .cdc file to review (alternative to code)")),
-			mcplib.WithString("network", mcplib.Description("Flow network for address resolution"), mcplib.Enum("mainnet", "testnet", "emulator")),
 		),
 		mctx.cadenceCodeReview,
 	)
@@ -180,9 +174,8 @@ func (m *mcpContext) cadenceCheck(_ context.Context, req mcplib.CallToolRequest)
 	if err != nil {
 		return mcplib.NewToolResultError(err.Error()), nil
 	}
-	network := req.GetString("network", "mainnet")
 
-	diags, err := m.lsp.Check(code, network)
+	diags, err := m.lsp.Check(code)
 	if err != nil {
 		return mcplib.NewToolResultError(fmt.Sprintf("LSP check failed: %v", err)), nil
 	}
@@ -202,9 +195,8 @@ func (m *mcpContext) cadenceHover(_ context.Context, req mcplib.CallToolRequest)
 	if err != nil {
 		return mcplib.NewToolResultError(err.Error()), nil
 	}
-	network := req.GetString("network", "mainnet")
 
-	result, err := m.lsp.Hover(code, line, character, network)
+	result, err := m.lsp.Hover(code, line, character)
 	if err != nil {
 		return mcplib.NewToolResultError(fmt.Sprintf("LSP hover failed: %v", err)), nil
 	}
@@ -224,9 +216,8 @@ func (m *mcpContext) cadenceDefinition(_ context.Context, req mcplib.CallToolReq
 	if err != nil {
 		return mcplib.NewToolResultError(err.Error()), nil
 	}
-	network := req.GetString("network", "mainnet")
 
-	loc, err := m.lsp.Definition(code, line, character, network)
+	loc, err := m.lsp.Definition(code, line, character)
 	if err != nil {
 		return mcplib.NewToolResultError(fmt.Sprintf("LSP definition failed: %v", err)), nil
 	}
@@ -242,9 +233,8 @@ func (m *mcpContext) cadenceSymbols(_ context.Context, req mcplib.CallToolReques
 	if err != nil {
 		return mcplib.NewToolResultError(err.Error()), nil
 	}
-	network := req.GetString("network", "mainnet")
 
-	symbols, err := m.lsp.Symbols(code, network)
+	symbols, err := m.lsp.Symbols(code)
 	if err != nil {
 		return mcplib.NewToolResultError(fmt.Sprintf("LSP symbols failed: %v", err)), nil
 	}
@@ -264,9 +254,8 @@ func (m *mcpContext) cadenceCompletion(_ context.Context, req mcplib.CallToolReq
 	if err != nil {
 		return mcplib.NewToolResultError(err.Error()), nil
 	}
-	network := req.GetString("network", "mainnet")
 
-	items, err := m.lsp.Completion(code, line, character, network)
+	items, err := m.lsp.Completion(code, line, character)
 	if err != nil {
 		return mcplib.NewToolResultError(fmt.Sprintf("LSP completion failed: %v", err)), nil
 	}
@@ -393,14 +382,13 @@ func (m *mcpContext) cadenceCodeReview(_ context.Context, req mcplib.CallToolReq
 	if err != nil {
 		return mcplib.NewToolResultError(err.Error()), nil
 	}
-	network := req.GetString("network", "mainnet")
 
 	result := codeReview(code)
 	text := formatReviewResult(result)
 
 	// If LSP is available, also run a check and append diagnostics.
 	if m.lsp != nil {
-		diags, lspErr := m.lsp.Check(code, network)
+		diags, lspErr := m.lsp.Check(code)
 		if lspErr == nil && len(diags) > 0 {
 			text += "\nLSP diagnostics:\n" + formatDiagnostics(diags)
 		}
