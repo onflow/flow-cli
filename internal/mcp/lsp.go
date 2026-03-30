@@ -39,17 +39,16 @@ type diagConn struct {
 
 func (c *diagConn) Notify(method string, params any) error {
 	if method == "textDocument/publishDiagnostics" {
-		// params may be encoded as JSON or as *protocol.PublishDiagnosticsParams
 		switch p := params.(type) {
 		case *protocol.PublishDiagnosticsParams:
-			c.captureDiagnostics(p.Diagnostics)
+			c.captureDiagnostics(p.URI, p.Diagnostics)
 		default:
 			// Try JSON round-trip for map types
 			data, err := json.Marshal(p)
 			if err == nil {
 				var pdp protocol.PublishDiagnosticsParams
 				if json.Unmarshal(data, &pdp) == nil {
-					c.captureDiagnostics(pdp.Diagnostics)
+					c.captureDiagnostics(pdp.URI, pdp.Diagnostics)
 				}
 			}
 		}
@@ -67,7 +66,7 @@ func (c *diagConn) LogMessage(_ *protocol.LogMessageParams) {}
 
 func (c *diagConn) PublishDiagnostics(params *protocol.PublishDiagnosticsParams) error {
 	if params != nil {
-		c.captureDiagnostics(params.Diagnostics)
+		c.captureDiagnostics(params.URI, params.Diagnostics)
 	}
 	return nil
 }
@@ -76,10 +75,13 @@ func (c *diagConn) RegisterCapability(_ *protocol.RegistrationParams) error {
 	return nil
 }
 
-func (c *diagConn) captureDiagnostics(diags []protocol.Diagnostic) {
+func (c *diagConn) captureDiagnostics(uri protocol.DocumentURI, diags []protocol.Diagnostic) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.diagnostics = append(c.diagnostics, diags...)
+	if uri != "" && uri != scratchURI {
+		return // ignore diagnostics for unrelated documents
+	}
+	c.diagnostics = diags // replace, not append — one publish per check cycle
 }
 
 func (c *diagConn) reset() {
