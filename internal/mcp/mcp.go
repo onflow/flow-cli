@@ -119,10 +119,14 @@ func resolveNetwork(state *flowkit.State, network string) (*config.Network, erro
 }
 
 // createGateway creates a gRPC gateway for the given network.
+// Uses a secure gateway when the network has a configured key.
 func createGateway(state *flowkit.State, network string) (gateway.Gateway, error) {
 	net, err := resolveNetwork(state, network)
 	if err != nil {
 		return nil, err
+	}
+	if net.Key != "" {
+		return gateway.NewSecureGrpcGateway(*net)
 	}
 	return gateway.NewGrpcGateway(*net)
 }
