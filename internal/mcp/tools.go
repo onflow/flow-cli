@@ -22,7 +22,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
+
 	"sort"
 	"strings"
 
@@ -41,22 +41,9 @@ type mcpContext struct {
 	state *flowkit.State // may be nil
 }
 
-// resolveCode returns Cadence source from either the "code" or "file" parameter.
-// If "file" is provided, it reads the file contents. "code" takes precedence.
+// resolveCode extracts the required "code" parameter from the request.
 func resolveCode(req mcplib.CallToolRequest) (string, error) {
-	code := req.GetString("code", "")
-	if code != "" {
-		return code, nil
-	}
-	file := req.GetString("file", "")
-	if file == "" {
-		return "", fmt.Errorf("either 'code' or 'file' parameter is required")
-	}
-	data, err := os.ReadFile(file)
-	if err != nil {
-		return "", fmt.Errorf("reading file %q: %w", file, err)
-	}
-	return string(data), nil
+	return req.RequireString("code")
 }
 
 // parseAddress parses a Flow address string and validates it is not empty.
@@ -74,18 +61,18 @@ func registerTools(s *mcpserver.MCPServer, mctx *mcpContext) {
 	if mctx.lsp != nil {
 		s.AddTool(
 			mcplib.NewTool("cadence_check",
-				mcplib.WithDescription("Check Cadence code for syntax and type errors. Provide either code or file path."),
-				mcplib.WithString("code", mcplib.Description("Cadence source code to check")),
-				mcplib.WithString("file", mcplib.Description("Path to a .cdc file to check (alternative to code)")),
+				mcplib.WithDescription("Check Cadence code for syntax and type errors."),
+				mcplib.WithString("code", mcplib.Required(), mcplib.Description("Cadence source code to check")),
+	
 			),
 			mctx.cadenceCheck,
 		)
 
 		s.AddTool(
 			mcplib.NewTool("cadence_hover",
-				mcplib.WithDescription("Get type information for a symbol at a position in Cadence code. Provide either code or file path."),
-				mcplib.WithString("code", mcplib.Description("Cadence source code")),
-				mcplib.WithString("file", mcplib.Description("Path to a .cdc file (alternative to code)")),
+				mcplib.WithDescription("Get type information for a symbol at a position in Cadence code."),
+				mcplib.WithString("code", mcplib.Required(), mcplib.Description("Cadence source code")),
+	
 				mcplib.WithNumber("line", mcplib.Required(), mcplib.Description("0-based line number")),
 				mcplib.WithNumber("character", mcplib.Required(), mcplib.Description("0-based column number")),
 			),
@@ -94,9 +81,9 @@ func registerTools(s *mcpserver.MCPServer, mctx *mcpContext) {
 
 		s.AddTool(
 			mcplib.NewTool("cadence_definition",
-				mcplib.WithDescription("Find where a symbol is defined in Cadence code. Provide either code or file path."),
-				mcplib.WithString("code", mcplib.Description("Cadence source code")),
-				mcplib.WithString("file", mcplib.Description("Path to a .cdc file (alternative to code)")),
+				mcplib.WithDescription("Find where a symbol is defined in Cadence code."),
+				mcplib.WithString("code", mcplib.Required(), mcplib.Description("Cadence source code")),
+	
 				mcplib.WithNumber("line", mcplib.Required(), mcplib.Description("0-based line number")),
 				mcplib.WithNumber("character", mcplib.Required(), mcplib.Description("0-based column number")),
 			),
@@ -105,18 +92,18 @@ func registerTools(s *mcpserver.MCPServer, mctx *mcpContext) {
 
 		s.AddTool(
 			mcplib.NewTool("cadence_symbols",
-				mcplib.WithDescription("List all symbols in Cadence code. Provide either code or file path."),
-				mcplib.WithString("code", mcplib.Description("Cadence source code")),
-				mcplib.WithString("file", mcplib.Description("Path to a .cdc file (alternative to code)")),
+				mcplib.WithDescription("List all symbols in Cadence code."),
+				mcplib.WithString("code", mcplib.Required(), mcplib.Description("Cadence source code")),
+	
 			),
 			mctx.cadenceSymbols,
 		)
 
 		s.AddTool(
 			mcplib.NewTool("cadence_completion",
-				mcplib.WithDescription("Get completion suggestions at a position in Cadence code. Provide either code or file path."),
-				mcplib.WithString("code", mcplib.Description("Cadence source code")),
-				mcplib.WithString("file", mcplib.Description("Path to a .cdc file (alternative to code)")),
+				mcplib.WithDescription("Get completion suggestions at a position in Cadence code."),
+				mcplib.WithString("code", mcplib.Required(), mcplib.Description("Cadence source code")),
+	
 				mcplib.WithNumber("line", mcplib.Required(), mcplib.Description("0-based line number")),
 				mcplib.WithNumber("character", mcplib.Required(), mcplib.Description("0-based column number")),
 			),
@@ -146,18 +133,18 @@ func registerTools(s *mcpserver.MCPServer, mctx *mcpContext) {
 
 	s.AddTool(
 		mcplib.NewTool("cadence_code_review",
-			mcplib.WithDescription("Review Cadence code for common issues and anti-patterns. Provide either code or file path."),
-			mcplib.WithString("code", mcplib.Description("Cadence source code to review")),
-			mcplib.WithString("file", mcplib.Description("Path to a .cdc file to review (alternative to code)")),
+			mcplib.WithDescription("Review Cadence code for common issues and anti-patterns."),
+			mcplib.WithString("code", mcplib.Required(), mcplib.Description("Cadence source code to review")),
+
 		),
 		mctx.cadenceCodeReview,
 	)
 
 	s.AddTool(
 		mcplib.NewTool("cadence_execute_script",
-			mcplib.WithDescription("Execute a read-only Cadence script on-chain. Provide either code or file path."),
-			mcplib.WithString("code", mcplib.Description("Cadence script source code")),
-			mcplib.WithString("file", mcplib.Description("Path to a .cdc script file (alternative to code)")),
+			mcplib.WithDescription("Execute a read-only Cadence script on-chain."),
+			mcplib.WithString("code", mcplib.Required(), mcplib.Description("Cadence script source code")),
+
 			mcplib.WithString("network", mcplib.Description("Flow network to execute against"), mcplib.Enum("mainnet", "testnet", "emulator")),
 			mcplib.WithString("arguments", mcplib.Description("JSON array of arguments as strings, e.g. [\"String:hello\", \"UFix64:1.0\"]")),
 		),
