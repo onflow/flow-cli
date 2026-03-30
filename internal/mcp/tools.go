@@ -59,6 +59,15 @@ func resolveCode(req mcplib.CallToolRequest) (string, error) {
 	return string(data), nil
 }
 
+// parseAddress parses a Flow address string and validates it is not empty.
+func parseAddress(address string) (flow.Address, error) {
+	addr := flow.HexToAddress(address)
+	if addr == flow.EmptyAddress {
+		return flow.EmptyAddress, fmt.Errorf("invalid Flow address: %q", address)
+	}
+	return addr, nil
+}
+
 // registerTools registers all MCP tools on the given server.
 func registerTools(s *mcpserver.MCPServer, mctx *mcpContext) {
 	// LSP tools — only register if the LSP wrapper is available.
@@ -292,7 +301,10 @@ func (m *mcpContext) getContractSource(ctx context.Context, req mcplib.CallToolR
 		return mcplib.NewToolResultError(fmt.Sprintf("failed to create gateway: %v", err)), nil
 	}
 
-	addr := flow.HexToAddress(address)
+	addr, err := parseAddress(address)
+	if err != nil {
+		return mcplib.NewToolResultError(err.Error()), nil
+	}
 	account, err := gw.GetAccount(ctx, addr)
 	if err != nil {
 		return mcplib.NewToolResultError(fmt.Sprintf("failed to get account: %v", err)), nil
@@ -339,7 +351,10 @@ func (m *mcpContext) getContractCode(ctx context.Context, req mcplib.CallToolReq
 		return mcplib.NewToolResultError(fmt.Sprintf("failed to create gateway: %v", err)), nil
 	}
 
-	addr := flow.HexToAddress(address)
+	addr, err := parseAddress(address)
+	if err != nil {
+		return mcplib.NewToolResultError(err.Error()), nil
+	}
 	account, err := gw.GetAccount(ctx, addr)
 	if err != nil {
 		return mcplib.NewToolResultError(fmt.Sprintf("failed to get account: %v", err)), nil
