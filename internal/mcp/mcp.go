@@ -19,6 +19,7 @@
 package mcp
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -69,7 +70,10 @@ Available tools:
 func runMCP(cmd *cobra.Command, args []string) {
 	// Try to load flow.json for custom network configs
 	loader := &afero.Afero{Fs: afero.NewOsFs()}
-	state, _ := flowkit.Load(config.DefaultPaths(), loader)
+	state, err := flowkit.Load(config.DefaultPaths(), loader)
+	if err != nil && !errors.Is(err, config.ErrDoesNotExist) {
+		fmt.Fprintf(os.Stderr, "Warning: failed to load flow.json: %v\n", err)
+	}
 
 	// Initialize the LSP wrapper (without flow client for MCP use).
 	var lsp *LSPWrapper
