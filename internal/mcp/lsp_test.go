@@ -34,6 +34,7 @@ func newTestWrapper(t *testing.T) *LSPWrapper {
 }
 
 func TestLSPWrapper_Check_ValidCode(t *testing.T) {
+	t.Parallel()
 	w := newTestWrapper(t)
 
 	code := `
@@ -47,6 +48,7 @@ func TestLSPWrapper_Check_ValidCode(t *testing.T) {
 }
 
 func TestLSPWrapper_Check_InvalidCode(t *testing.T) {
+	t.Parallel()
 	w := newTestWrapper(t)
 
 	// Type mismatch: returning Int from a String function
@@ -61,6 +63,7 @@ func TestLSPWrapper_Check_InvalidCode(t *testing.T) {
 }
 
 func TestLSPWrapper_Check_SyntaxError(t *testing.T) {
+	t.Parallel()
 	w := newTestWrapper(t)
 
 	code := `
@@ -72,6 +75,7 @@ func TestLSPWrapper_Check_SyntaxError(t *testing.T) {
 }
 
 func TestLSPWrapper_Hover(t *testing.T) {
+	t.Parallel()
 	w := newTestWrapper(t)
 
 	code := `
@@ -90,6 +94,7 @@ access(all) fun hello(): String {
 }
 
 func TestLSPWrapper_Symbols(t *testing.T) {
+	t.Parallel()
 	w := newTestWrapper(t)
 
 	code := `
@@ -108,6 +113,7 @@ access(all) contract MyContract {
 }
 
 func TestLSPWrapper_Completion(t *testing.T) {
+	t.Parallel()
 	w := newTestWrapper(t)
 
 	// Inside a function body, the LSP should offer completions

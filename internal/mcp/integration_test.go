@@ -36,6 +36,7 @@ func skipIfNoNetwork(t *testing.T) {
 }
 
 func TestIntegration_GetContractSource(t *testing.T) {
+	t.Parallel()
 	skipIfNoNetwork(t)
 
 	mctx := &mcpContext{state: nil}
@@ -53,6 +54,7 @@ func TestIntegration_GetContractSource(t *testing.T) {
 }
 
 func TestIntegration_GetContractCode(t *testing.T) {
+	t.Parallel()
 	skipIfNoNetwork(t)
 
 	mctx := &mcpContext{state: nil}
@@ -71,6 +73,7 @@ func TestIntegration_GetContractCode(t *testing.T) {
 }
 
 func TestIntegration_ExecuteScript(t *testing.T) {
+	t.Parallel()
 	skipIfNoNetwork(t)
 
 	mctx := &mcpContext{state: nil}

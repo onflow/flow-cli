@@ -27,6 +27,7 @@ import (
 )
 
 func TestCodeReview_CleanCode(t *testing.T) {
+	t.Parallel()
 	code := `
 access(all) contract MyContract {
     access(self) var counter: Int
@@ -54,6 +55,7 @@ access(all) contract MyContract {
 }
 
 func TestCodeReview_OverlyPermissiveAccess(t *testing.T) {
+	t.Parallel()
 	code := `
 access(all) contract MyContract {
     access(all) var balance: UFix64
@@ -74,6 +76,7 @@ access(all) contract MyContract {
 }
 
 func TestCodeReview_DeprecatedPub(t *testing.T) {
+	t.Parallel()
 	code := `
 pub fun greet(): String {
     return "hello"
@@ -94,6 +97,7 @@ pub fun greet(): String {
 }
 
 func TestCodeReview_ForceUnwrap(t *testing.T) {
+	t.Parallel()
 	code := `
 let value = someOptional!
 let other = foo()!
@@ -112,6 +116,7 @@ let other = foo()!
 }
 
 func TestCodeReview_HardcodedAddress(t *testing.T) {
+	t.Parallel()
 	code := `
 let addr: Address = 0x1234567890abcdef
 `
@@ -129,6 +134,7 @@ let addr: Address = 0x1234567890abcdef
 }
 
 func TestCodeReview_AddressImportNotFlagged(t *testing.T) {
+	t.Parallel()
 	code := `
 import FungibleToken from 0xf233dcee88fe0abe
 import NonFungibleToken from 0x1d7e57aa55817448
@@ -142,6 +148,7 @@ import NonFungibleToken from 0x1d7e57aa55817448
 }
 
 func TestCodeReview_FormatResult(t *testing.T) {
+	t.Parallel()
 	result := ReviewResult{
 		Findings: []Finding{
 			{Rule: "overly-permissive-access", Severity: SeverityWarning, Line: 3, Message: "State field with access(all) — consider restricting access with entitlements"},

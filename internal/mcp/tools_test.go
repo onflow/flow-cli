@@ -35,6 +35,7 @@ func newTestContext(t *testing.T) *mcpContext {
 }
 
 func TestTool_CadenceCheck_Valid(t *testing.T) {
+	t.Parallel()
 	mctx := newTestContext(t)
 
 	req := mcplib.CallToolRequest{}
@@ -52,6 +53,7 @@ func TestTool_CadenceCheck_Valid(t *testing.T) {
 }
 
 func TestTool_CadenceCheck_Invalid(t *testing.T) {
+	t.Parallel()
 	mctx := newTestContext(t)
 
 	req := mcplib.CallToolRequest{}
@@ -68,6 +70,7 @@ func TestTool_CadenceCheck_Invalid(t *testing.T) {
 }
 
 func TestTool_CadenceCheck_MissingCode(t *testing.T) {
+	t.Parallel()
 	mctx := newTestContext(t)
 
 	req := mcplib.CallToolRequest{}
@@ -80,6 +83,7 @@ func TestTool_CadenceCheck_MissingCode(t *testing.T) {
 }
 
 func TestTool_CadenceSymbols(t *testing.T) {
+	t.Parallel()
 	mctx := newTestContext(t)
 
 	req := mcplib.CallToolRequest{}
@@ -103,6 +107,7 @@ access(all) contract MyContract {
 }
 
 func TestTool_CadenceCodeReview(t *testing.T) {
+	t.Parallel()
 	mctx := newTestContext(t)
 
 	req := mcplib.CallToolRequest{}
