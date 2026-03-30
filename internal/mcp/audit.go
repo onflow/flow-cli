@@ -151,8 +151,8 @@ func codeReview(code string) ReviewResult {
 				continue
 			}
 
-			match := rule.pattern.FindStringSubmatch(line)
-			if match != nil {
+			matches := rule.pattern.FindAllStringSubmatch(line, -1)
+			for _, match := range matches {
 				findings = append(findings, Finding{
 					Rule:     rule.id,
 					Severity: rule.severity,
