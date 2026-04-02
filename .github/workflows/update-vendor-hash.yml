@@ -1,0 +1,53 @@
+# Nix builds require a pre-computed hash (vendorHash) of all Go dependencies.
+# This hash lives in flake.nix and must match the actual dependencies exactly —
+# if go.mod/go.sum change but vendorHash isn't updated, the Nix build breaks.
+#
+# This workflow automatically recalculates the hash whenever Go dependencies
+# change, so contributors don't need Nix installed locally to keep it in sync.
+#
+# Similar workflows in other repos:
+#   https://github.com/open-component-model/ocm/blob/main/.github/workflows/flake_vendorhash.yaml
+#   https://github.com/Tarow/dockdns/blob/main/.github/workflows/go_vendorhash.yaml
+#   https://github.com/Mic92/sops-nix/blob/master/.github/workflows/update-vendor-hash.yml
+name: Update Nix vendorHash
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - go.mod
+      - go.sum
+  pull_request:
+    branches:
+      - master
+    paths:
+      - go.mod
+      - go.sum
+
+jobs:
+  update-vendor-hash:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+
+      - uses: DeterminateSystems/nix-installer-action@main
+
+      # nix-update recalculates vendorHash by building the Go module fetcher,
+      # comparing the expected vs actual hash, and patching flake.nix in-place.
+      # --version=skip tells it to only update hashes, not the package version.
+      - name: Update vendorHash
+        run: nix run nixpkgs#nix-update -- --flake --version=skip flow-cli
+
+      - name: Commit updated vendorHash
+        run: |
+          git diff --quiet flake.nix && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add flake.nix
+          git commit -m "flake: update vendorHash"
+          git push
