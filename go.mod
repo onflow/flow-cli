@@ -9,36 +9,36 @@ require (
 	github.com/coreos/go-semver v0.3.1
 	github.com/dukex/mixpanel v1.0.1
 	github.com/ethereum/go-ethereum v1.16.8
-	github.com/getsentry/sentry-go v0.42.0
+	github.com/getsentry/sentry-go v0.43.0
 	github.com/gosuri/uilive v0.0.4
 	github.com/logrusorgru/aurora/v4 v4.0.0
 	github.com/onflow/cadence v1.9.10
-	github.com/onflow/cadence-tools/languageserver v1.9.4
-	github.com/onflow/cadence-tools/lint v1.7.5
-	github.com/onflow/cadence-tools/test v1.11.1
+	github.com/onflow/cadence-tools/languageserver v1.9.6
+	github.com/onflow/cadence-tools/lint v1.7.6
+	github.com/onflow/cadence-tools/test v1.11.4
 	github.com/onflow/fcl-dev-wallet v0.9.1
 	github.com/onflow/flixkit-go/v2 v2.7.4
 	github.com/onflow/flow-core-contracts/lib/go/contracts v1.9.3
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.9.3
-	github.com/onflow/flow-emulator v1.17.0
-	github.com/onflow/flow-evm-gateway v1.4.8-0.20260311083540-75525b282115
-	github.com/onflow/flow-go v0.47.0-ledger-service.1.0.20260306194353-7770192048a9
+	github.com/onflow/flow-emulator v1.18.0
+	github.com/onflow/flow-evm-gateway v1.4.8-0.20260319182047-38311c7efd1f
+	github.com/onflow/flow-go v0.47.0-ledger-service.1.0.20260318224013-f6e2e8f41961
 	github.com/onflow/flow-go-sdk v1.9.16
-	github.com/onflow/flow/protobuf/go/flow v0.4.19
-	github.com/onflow/flowkit/v2 v2.11.1
+	github.com/onflow/flow/protobuf/go/flow v0.4.20
+	github.com/onflow/flowkit/v2 v2.11.2
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/pkg/errors v0.9.1
 	github.com/psiemens/sconfig v0.1.0
 	github.com/radovskyb/watcher v1.0.7
-	github.com/rs/zerolog v1.34.0
+	github.com/rs/zerolog v1.35.0
 	github.com/sergi/go-diff v1.4.0
 	github.com/spf13/afero v1.15.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/exp v0.0.0-20251023183803-a4bb9ffd2546
-	golang.org/x/term v0.40.0
+	golang.org/x/term v0.41.0
 	google.golang.org/grpc v1.79.2
 )
 
@@ -287,7 +287,7 @@ require (
 	golang.org/x/net v0.49.0 // indirect
 	golang.org/x/oauth2 v0.35.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
-	golang.org/x/sys v0.41.0 // indirect
+	golang.org/x/sys v0.42.0 // indirect
 	golang.org/x/text v0.33.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect

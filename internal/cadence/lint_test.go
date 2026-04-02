@@ -48,7 +48,7 @@ func Test_Lint(t *testing.T) {
 		t.Parallel()
 		state := setupMockState(t)
 
-		results, err := lintFiles(state, "NoError.cdc")
+		results, err := lintFiles(state, false, "NoError.cdc")
 		require.NoError(t, err)
 
 		require.Equal(t,
@@ -69,7 +69,7 @@ func Test_Lint(t *testing.T) {
 		t.Parallel()
 		state := setupMockState(t)
 
-		results, err := lintFiles(state, "foo/WithImports.cdc")
+		results, err := lintFiles(state, false, "foo/WithImports.cdc")
 		require.NoError(t, err)
 
 		// Should not have results for imported file, only for the file being linted
@@ -91,7 +91,7 @@ func Test_Lint(t *testing.T) {
 		t.Parallel()
 		state := setupMockState(t)
 
-		results, err := lintFiles(state, "NoError.cdc", "foo/WithImports.cdc")
+		results, err := lintFiles(state, false, "NoError.cdc", "foo/WithImports.cdc")
 		require.NoError(t, err)
 
 		require.Equal(t,
@@ -116,7 +116,7 @@ func Test_Lint(t *testing.T) {
 		t.Parallel()
 		state := setupMockState(t)
 
-		results, err := lintFiles(state, "LintWarning.cdc")
+		results, err := lintFiles(state, false, "LintWarning.cdc")
 		require.NoError(t, err)
 
 		require.Equal(t,
@@ -143,11 +143,25 @@ func Test_Lint(t *testing.T) {
 		)
 	})
 
+	t.Run("warnings as errors: exits 0 without flag, exits 1 with flag", func(t *testing.T) {
+		t.Parallel()
+
+		state := setupMockState(t)
+
+		results, err := lintFiles(state, false, "LintWarning.cdc")
+		require.NoError(t, err)
+		require.Equal(t, 0, results.exitCode)
+
+		results, err = lintFiles(state, true, "LintWarning.cdc")
+		require.NoError(t, err)
+		require.Equal(t, 1, results.exitCode)
+	})
+
 	t.Run("lints file with error", func(t *testing.T) {
 		t.Parallel()
 		state := setupMockState(t)
 
-		results, err := lintFiles(state, "LintError.cdc")
+		results, err := lintFiles(state, false, "LintError.cdc")
 		require.NoError(t, err)
 
 		require.Equal(t,
@@ -188,7 +202,7 @@ func Test_Lint(t *testing.T) {
 		t.Parallel()
 		state := setupMockState(t)
 
-		results, err := lintFiles(state, "ReplacementHint.cdc")
+		results, err := lintFiles(state, false, "ReplacementHint.cdc")
 		require.NoError(t, err)
 
 		require.Len(t, results.Results, 1)
@@ -214,7 +228,7 @@ func Test_Lint(t *testing.T) {
 		t.Parallel()
 		state := setupMockState(t)
 
-		results, err := lintFiles(state, "WithFlowkitImport.cdc")
+		results, err := lintFiles(state, false, "WithFlowkitImport.cdc")
 		require.NoError(t, err)
 
 		require.Equal(t,
@@ -235,7 +249,7 @@ func Test_Lint(t *testing.T) {
 		t.Parallel()
 		state := setupMockState(t)
 
-		results, err := lintFiles(state, "StdlibImportsContract.cdc")
+		results, err := lintFiles(state, false, "StdlibImportsContract.cdc")
 		require.NoError(t, err)
 
 		// Expects an error because getAuthAccount is only available in scripts
@@ -268,7 +282,7 @@ func Test_Lint(t *testing.T) {
 		t.Parallel()
 		state := setupMockState(t)
 
-		results, err := lintFiles(state, "StdlibImportsTransaction.cdc")
+		results, err := lintFiles(state, false, "StdlibImportsTransaction.cdc")
 		require.NoError(t, err)
 
 		// Expects an error because getAuthAccount is only available in scripts
@@ -301,7 +315,7 @@ func Test_Lint(t *testing.T) {
 		t.Parallel()
 		state := setupMockState(t)
 
-		results, err := lintFiles(state, "StdlibImportsScript.cdc")
+		results, err := lintFiles(state, false, "StdlibImportsScript.cdc")
 		require.NoError(t, err)
 
 		require.Equal(t,
@@ -322,7 +336,7 @@ func Test_Lint(t *testing.T) {
 		t.Parallel()
 		state := setupMockState(t)
 
-		results, err := lintFiles(state, "StdlibImportsCrypto.cdc")
+		results, err := lintFiles(state, false, "StdlibImportsCrypto.cdc")
 		require.NoError(t, err)
 
 		require.Equal(t,
@@ -343,7 +357,7 @@ func Test_Lint(t *testing.T) {
 		t.Parallel()
 		state := setupMockState(t)
 
-		results, err := lintFiles(state, "TransactionImportingContractWithNestedImports.cdc")
+		results, err := lintFiles(state, false, "TransactionImportingContractWithNestedImports.cdc")
 		require.NoError(t, err)
 
 		require.Equal(t,
@@ -364,7 +378,7 @@ func Test_Lint(t *testing.T) {
 		t.Parallel()
 		state := setupMockStateWithAccountAccess(t)
 
-		results, err := lintFiles(state, "ContractA.cdc")
+		results, err := lintFiles(state, false, "ContractA.cdc")
 		require.NoError(t, err)
 
 		// Should have no errors since ContractA and ContractB are on same account
@@ -386,7 +400,7 @@ func Test_Lint(t *testing.T) {
 		t.Parallel()
 		state := setupMockStateWithAccountAccess(t)
 
-		results, err := lintFiles(state, "ContractC.cdc")
+		results, err := lintFiles(state, false, "ContractC.cdc")
 		require.NoError(t, err)
 
 		// Should have error since ContractC and ContractB are on different accounts
@@ -401,7 +415,7 @@ func Test_Lint(t *testing.T) {
 		t.Parallel()
 		state := setupMockStateWithDependencies(t)
 
-		results, err := lintFiles(state, "imports/testaddr/DepA.cdc")
+		results, err := lintFiles(state, false, "imports/testaddr/DepA.cdc")
 		require.NoError(t, err)
 
 		// Should have no errors since DepA and DepB are dependencies on same address
@@ -432,7 +446,7 @@ func Test_Lint(t *testing.T) {
 		require.NotNil(t, alias, "Alias should be automatically created from Source")
 		require.Equal(t, "dfc20aee650fcbdf", alias.Address.String(), "Alias address should match Source address")
 
-		results, err := lintFiles(state, "imports/testaddr/SourceA.cdc")
+		results, err := lintFiles(state, false, "imports/testaddr/SourceA.cdc")
 		require.NoError(t, err)
 
 		// Should have no errors since SourceA and SourceB have same Source.Address (converted to Aliases)

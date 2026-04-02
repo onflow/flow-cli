@@ -39,7 +39,9 @@ import (
 	"github.com/onflow/flow-cli/internal/util"
 )
 
-type lintFlagsCollection struct{}
+type lintFlagsCollection struct {
+	WarningsAsErrors bool `default:"false" flag:"warnings-as-errors" info:"Treat warnings as errors"`
+}
 
 type fileResult struct {
 	FilePath    string
@@ -98,7 +100,7 @@ func lint(
 		filePaths = args
 	}
 
-	result, err := lintFiles(state, filePaths...)
+	result, err := lintFiles(state, lintFlags.WarningsAsErrors, filePaths...)
 	if err != nil {
 		return nil, err
 	}
@@ -108,6 +110,7 @@ func lint(
 
 func lintFiles(
 	state *flowkit.State,
+	warningsAsErrors bool,
 	filePaths ...string,
 ) (
 	*lintResult,
@@ -140,11 +143,15 @@ func lintFiles(
 			Diagnostics: diagnostics,
 		})
 
-		// Set the exitCode to 1 if any of the diagnostics are error-level
-		// In the future, this may be configurable
+		// Set the exitCode to 1 if any of the diagnostics are error-level,
+		// or warning-level when warningsAsErrors is set.
 		for _, diagnostic := range diagnostics {
 			severity := getDiagnosticSeverity(diagnostic)
 			if severity == errorSeverity {
+				exitCode = 1
+				break
+			}
+			if severity == warningSeverity && warningsAsErrors {
 				exitCode = 1
 				break
 			}

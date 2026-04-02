@@ -79,6 +79,7 @@ type flagsTests struct {
 	Seed         int64  `default:"0" flag:"seed" info:"Use the seed flag to manipulate random execution of test cases"`
 	Name         string `default:"" flag:"name" info:"Use the name flag to run only tests that match the given name"`
 	Jobs         int    `default:"0" flag:"jobs" info:"Maximum number of test files to run concurrently (default: number of CPU cores)"`
+	BaseDir      string `default:"" flag:"base-dir" info:"Directory to search for test files (defaults to current directory)"`
 
 	// Fork mode flags
 	Fork       string // Use definition in init()
@@ -132,8 +133,12 @@ func run(
 
 	var filenames []string
 	if len(args) == 0 {
+		baseDir := "."
+		if testFlags.BaseDir != "" {
+			baseDir = testFlags.BaseDir
+		}
 		var err error
-		filenames, err = findAllTestFiles(".")
+		filenames, err = findAllTestFiles(baseDir)
 		if err != nil {
 			return nil, fmt.Errorf("error loading script files: %w", err)
 		}
