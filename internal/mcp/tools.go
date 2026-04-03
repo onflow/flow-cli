@@ -130,6 +130,14 @@ func registerTools(s *mcpserver.MCPServer, mctx *mcpContext) {
 	)
 
 	s.AddTool(
+		mcplib.NewTool("cadence_lint",
+			mcplib.WithDescription("Run Cadence lint analyzers on code. Detects common issues like unnecessary casts, deprecated patterns, unused variables, and more using AST-based analysis."),
+			mcplib.WithString("code", mcplib.Required(), mcplib.Description("Cadence source code to lint")),
+		),
+		mctx.cadenceLint,
+	)
+
+	s.AddTool(
 		mcplib.NewTool("cadence_code_review",
 			mcplib.WithDescription("Review Cadence code for common issues and anti-patterns."),
 			mcplib.WithString("code", mcplib.Required(), mcplib.Description("Cadence source code to review")),
@@ -359,6 +367,19 @@ func (m *mcpContext) getContractCode(ctx context.Context, req mcplib.CallToolReq
 		return mcplib.NewToolResultText("No contracts found on this account."), nil
 	}
 	return mcplib.NewToolResultText(b.String()), nil
+}
+
+func (m *mcpContext) cadenceLint(_ context.Context, req mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
+	code, err := resolveCode(req)
+	if err != nil {
+		return mcplib.NewToolResultError(err.Error()), nil
+	}
+
+	diagnostics, err := lintCode(code)
+	if err != nil {
+		return mcplib.NewToolResultError(fmt.Sprintf("lint failed: %v", err)), nil
+	}
+	return mcplib.NewToolResultText(formatLintDiagnostics(diagnostics)), nil
 }
 
 func (m *mcpContext) cadenceCodeReview(_ context.Context, req mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {

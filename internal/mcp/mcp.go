@@ -62,6 +62,7 @@ Available tools:
   cadence_completion     Get completions at a position
   get_contract_source    Fetch on-chain contract manifest
   get_contract_code      Fetch contract source code from an address
+  cadence_lint           Run Cadence lint analyzers (AST-based)
   cadence_code_review    Review Cadence code for common issues
   cadence_execute_script Execute a read-only Cadence script on-chain`,
 	Run: runMCP,
