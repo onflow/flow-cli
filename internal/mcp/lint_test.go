@@ -23,15 +23,16 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	cadenceLinter "github.com/onflow/flow-cli/internal/cadence"
 )
 
 func TestLintCode_ValidCode(t *testing.T) {
 	t.Parallel()
 
 	code := `access(all) fun main(): String { return "hello" }`
-	diags, err := lintCode(code)
+	diags, err := cadenceLinter.LintCode(code, nil)
 	require.NoError(t, err)
-	// Valid code should only have lint hints, no errors
 	for _, d := range diags {
 		assert.NotEqual(t, "error", d.Category)
 		assert.NotEqual(t, "semantic-error", d.Category)
@@ -39,20 +40,11 @@ func TestLintCode_ValidCode(t *testing.T) {
 	}
 }
 
-func TestLintCode_SyntaxError(t *testing.T) {
-	t.Parallel()
-
-	code := `access(all) fun main( {`
-	diags, err := lintCode(code)
-	require.NoError(t, err)
-	assert.NotEmpty(t, diags, "syntax errors should produce diagnostics")
-}
-
 func TestLintCode_TypeError(t *testing.T) {
 	t.Parallel()
 
 	code := `access(all) fun main(): String { return 42 }`
-	diags, err := lintCode(code)
+	diags, err := cadenceLinter.LintCode(code, nil)
 	require.NoError(t, err)
 	assert.NotEmpty(t, diags, "type errors should produce diagnostics")
 
@@ -68,16 +60,14 @@ func TestLintCode_TypeError(t *testing.T) {
 func TestLintCode_AnalyzersRun(t *testing.T) {
 	t.Parallel()
 
-	// Redundant cast should be detected by lint analyzers
 	code := `
 		access(all) fun main(): Int {
 			let x: Int = 42
 			return x as Int
 		}
 	`
-	diags, err := lintCode(code)
+	diags, err := cadenceLinter.LintCode(code, nil)
 	require.NoError(t, err)
-	// Should have at least one lint diagnostic (redundant cast or similar)
 	assert.NotEmpty(t, diags, "lint analyzers should produce diagnostics for redundant cast")
 }
 

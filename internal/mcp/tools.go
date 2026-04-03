@@ -29,10 +29,13 @@ import (
 	mcplib "github.com/mark3labs/mcp-go/mcp"
 	mcpserver "github.com/mark3labs/mcp-go/server"
 	"github.com/onflow/cadence"
+	"github.com/onflow/cadence/tools/analysis"
 	flow "github.com/onflow/flow-go-sdk"
 
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/arguments"
+
+	cadenceLinter "github.com/onflow/flow-cli/internal/cadence"
 )
 
 // mcpContext holds shared dependencies for all MCP tool handlers.
@@ -375,7 +378,7 @@ func (m *mcpContext) cadenceLint(_ context.Context, req mcplib.CallToolRequest) 
 		return mcplib.NewToolResultError(err.Error()), nil
 	}
 
-	diagnostics, err := lintCode(code)
+	diagnostics, err := cadenceLinter.LintCode(code, m.state)
 	if err != nil {
 		return mcplib.NewToolResultError(fmt.Sprintf("lint failed: %v", err)), nil
 	}
@@ -434,4 +437,33 @@ func (m *mcpContext) cadenceExecuteScript(ctx context.Context, req mcplib.CallTo
 	}
 
 	return mcplib.NewToolResultText(val.String()), nil
+}
+
+// formatLintDiagnostics formats analysis diagnostics as human-readable text.
+func formatLintDiagnostics(diagnostics []analysis.Diagnostic) string {
+	if len(diagnostics) == 0 {
+		return "Lint passed — no issues found."
+	}
+
+	var b strings.Builder
+	numErrors := 0
+	numWarnings := 0
+	for _, d := range diagnostics {
+		sev := "warning"
+		if d.Category == "error" || d.Category == "semantic-error" || d.Category == "syntax-error" {
+			sev = "error"
+			numErrors++
+		} else {
+			numWarnings++
+		}
+		fmt.Fprintf(&b, "[%s] line %d:%d (%s): %s\n",
+			sev,
+			d.Range.StartPos.Line,
+			d.Range.StartPos.Column,
+			d.Category,
+			d.Message,
+		)
+	}
+	fmt.Fprintf(&b, "\n%d error(s), %d warning(s)\n", numErrors, numWarnings)
+	return b.String()
 }
