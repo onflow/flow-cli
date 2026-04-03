@@ -261,16 +261,12 @@ func formatDiagnostics(diagnostics []protocol.Diagnostic) string {
 
 	var b strings.Builder
 	for _, d := range diagnostics {
-		severity := "error"
-		switch d.Severity {
-		case protocol.SeverityWarning:
-			severity = "warning"
-		case protocol.SeverityInformation:
-			severity = "info"
-		case protocol.SeverityHint:
-			severity = "hint"
-		}
-		fmt.Fprintf(&b, "[%s] line %d:%d: %s\n", severity, d.Range.Start.Line+1, d.Range.Start.Character+1, d.Message)
+		fmt.Fprintf(&b, "[%s] line %d:%d: %s\n",
+			d.Severity.String(),
+			d.Range.Start.Line+1,
+			d.Range.Start.Character+1,
+			d.Message,
+		)
 	}
 	return b.String()
 }
@@ -289,7 +285,7 @@ func formatSymbols(symbols []*protocol.DocumentSymbol, indent int) string {
 	var b strings.Builder
 	prefix := strings.Repeat("  ", indent)
 	for _, s := range symbols {
-		fmt.Fprintf(&b, "%s%s %s", prefix, symbolKindName(s.Kind), s.Name)
+		fmt.Fprintf(&b, "%s%s %s", prefix, s.Kind.String(), s.Name)
 		if s.Detail != "" {
 			fmt.Fprintf(&b, " — %s", s.Detail)
 		}
@@ -306,7 +302,7 @@ func formatSymbolValues(symbols []protocol.DocumentSymbol, indent int) string {
 	var b strings.Builder
 	prefix := strings.Repeat("  ", indent)
 	for _, s := range symbols {
-		fmt.Fprintf(&b, "%s%s %s", prefix, symbolKindName(s.Kind), s.Name)
+		fmt.Fprintf(&b, "%s%s %s", prefix, s.Kind.String(), s.Name)
 		if s.Detail != "" {
 			fmt.Fprintf(&b, " — %s", s.Detail)
 		}
@@ -318,62 +314,3 @@ func formatSymbolValues(symbols []protocol.DocumentSymbol, indent int) string {
 	return b.String()
 }
 
-// symbolKindName returns a human-readable name for a SymbolKind.
-func symbolKindName(kind protocol.SymbolKind) string {
-	switch kind {
-	case protocol.File:
-		return "File"
-	case protocol.Module:
-		return "Module"
-	case protocol.Namespace:
-		return "Namespace"
-	case protocol.Package:
-		return "Package"
-	case protocol.Class:
-		return "Class"
-	case protocol.Method:
-		return "Method"
-	case protocol.Property:
-		return "Property"
-	case protocol.Field:
-		return "Field"
-	case protocol.Constructor:
-		return "Constructor"
-	case protocol.Enum:
-		return "Enum"
-	case protocol.Interface:
-		return "Interface"
-	case protocol.Function:
-		return "Function"
-	case protocol.Variable:
-		return "Variable"
-	case protocol.Constant:
-		return "Constant"
-	case protocol.String:
-		return "String"
-	case protocol.Number:
-		return "Number"
-	case protocol.Boolean:
-		return "Boolean"
-	case protocol.Array:
-		return "Array"
-	case protocol.Object:
-		return "Object"
-	case protocol.Key:
-		return "Key"
-	case protocol.Null:
-		return "Null"
-	case protocol.EnumMember:
-		return "EnumMember"
-	case protocol.Struct:
-		return "Struct"
-	case protocol.Event:
-		return "Event"
-	case protocol.Operator:
-		return "Operator"
-	case protocol.TypeParameter:
-		return "TypeParameter"
-	default:
-		return fmt.Sprintf("SymbolKind(%d)", kind)
-	}
-}

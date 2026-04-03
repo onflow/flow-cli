@@ -14,7 +14,7 @@ require (
 	github.com/logrusorgru/aurora/v4 v4.0.0
 	github.com/mark3labs/mcp-go v0.45.0
 	github.com/onflow/cadence v1.9.10
-	github.com/onflow/cadence-tools/languageserver v1.9.6
+	github.com/onflow/cadence-tools/languageserver v1.9.7-0.20260403002008-7987884568ce
 	github.com/onflow/cadence-tools/lint v1.7.6
 	github.com/onflow/cadence-tools/test v1.11.4
 	github.com/onflow/fcl-dev-wallet v0.9.1

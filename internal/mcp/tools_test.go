@@ -66,7 +66,7 @@ func TestTool_CadenceCheck_Invalid(t *testing.T) {
 	require.NotNil(t, result)
 
 	textContent := result.Content[0].(mcplib.TextContent)
-	assert.Contains(t, textContent.Text, "error")
+	assert.Contains(t, textContent.Text, "Error")
 }
 
 func TestTool_CadenceCheck_MissingCode(t *testing.T) {
