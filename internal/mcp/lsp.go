@@ -313,4 +313,3 @@ func formatSymbolValues(symbols []protocol.DocumentSymbol, indent int) string {
 	}
 	return b.String()
 }
-
