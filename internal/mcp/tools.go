@@ -414,4 +414,3 @@ func (m *mcpContext) cadenceExecuteScript(ctx context.Context, req mcplib.CallTo
 
 	return mcplib.NewToolResultText(val.String()), nil
 }
-
