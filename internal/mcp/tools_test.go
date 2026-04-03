@@ -105,25 +105,3 @@ access(all) contract MyContract {
 	textContent := result.Content[0].(mcplib.TextContent)
 	assert.Contains(t, textContent.Text, "MyContract")
 }
-
-func TestTool_CadenceCodeReview(t *testing.T) {
-	t.Parallel()
-	mctx := newTestContext(t)
-
-	req := mcplib.CallToolRequest{}
-	req.Params.Arguments = map[string]any{
-		"code": `
-access(all) contract MyContract {
-	access(all) var balance: UFix64
-}
-`,
-	}
-
-	result, err := mctx.cadenceCodeReview(context.Background(), req)
-	require.NoError(t, err)
-	require.NotNil(t, result)
-	assert.False(t, result.IsError)
-
-	textContent := result.Content[0].(mcplib.TextContent)
-	assert.Contains(t, textContent.Text, "overly-permissive-access")
-}

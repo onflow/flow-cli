@@ -22,14 +22,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-
 	"sort"
 	"strings"
 
 	mcplib "github.com/mark3labs/mcp-go/mcp"
 	mcpserver "github.com/mark3labs/mcp-go/server"
 	"github.com/onflow/cadence"
-	flow "github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk"
 
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/arguments"
@@ -127,14 +126,6 @@ func registerTools(s *mcpserver.MCPServer, mctx *mcpContext) {
 			mcplib.WithString("network", mcplib.Description("Flow network to query"), mcplib.Enum("mainnet", "testnet", "emulator")),
 		),
 		mctx.getContractCode,
-	)
-
-	s.AddTool(
-		mcplib.NewTool("cadence_code_review",
-			mcplib.WithDescription("Review Cadence code for common issues and anti-patterns."),
-			mcplib.WithString("code", mcplib.Required(), mcplib.Description("Cadence source code to review")),
-		),
-		mctx.cadenceCodeReview,
 	)
 
 	s.AddTool(
@@ -359,26 +350,6 @@ func (m *mcpContext) getContractCode(ctx context.Context, req mcplib.CallToolReq
 		return mcplib.NewToolResultText("No contracts found on this account."), nil
 	}
 	return mcplib.NewToolResultText(b.String()), nil
-}
-
-func (m *mcpContext) cadenceCodeReview(_ context.Context, req mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
-	code, err := resolveCode(req)
-	if err != nil {
-		return mcplib.NewToolResultError(err.Error()), nil
-	}
-
-	result := codeReview(code)
-	text := formatReviewResult(result)
-
-	// If LSP is available, also run a check and append diagnostics.
-	if m.lsp != nil {
-		diags, lspErr := m.lsp.Check(code)
-		if lspErr == nil && len(diags) > 0 {
-			text += "\nLSP diagnostics:\n" + formatDiagnostics(diags)
-		}
-	}
-
-	return mcplib.NewToolResultText(text), nil
 }
 
 func (m *mcpContext) cadenceExecuteScript(ctx context.Context, req mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
