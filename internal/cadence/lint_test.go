@@ -332,8 +332,18 @@ func Test_Lint(t *testing.T) {
 			&lintResult{
 				Results: []fileResult{
 					{
-						FilePath:    "StdlibImportsScript.cdc",
-						Diagnostics: []analysis.Diagnostic{},
+						FilePath: "StdlibImportsScript.cdc",
+						Diagnostics: []analysis.Diagnostic{
+							{
+								Location: common.StringLocation("StdlibImportsScript.cdc"),
+								Category: "security",
+								Message:  "hardcoded address detected — consider using named address imports for portability",
+								Range: ast.Range{
+									StartPos: ast.Position{Offset: 109, Line: 5, Column: 37},
+									EndPos:   ast.Position{Offset: 112, Line: 5, Column: 40},
+								},
+							},
+						},
 					},
 				},
 				exitCode: 0,
