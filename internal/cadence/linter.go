@@ -79,6 +79,18 @@ func newLinter(state *flowkit.State) *linter {
 func (l *linter) lintFile(
 	filePath string,
 ) (diagnostics []analysis.Diagnostic, err error) {
+	code, readErr := l.state.ReadFile(filePath)
+	if readErr != nil {
+		return nil, readErr
+	}
+
+	return l.lintCode(code, common.StringLocation(filePath))
+}
+
+func (l *linter) lintCode(
+	code []byte,
+	location common.Location,
+) (diagnostics []analysis.Diagnostic, err error) {
 	// Recover from panics in the Cadence checker
 	defer func() {
 		if r := recover(); r != nil {
@@ -88,12 +100,6 @@ func (l *linter) lintFile(
 	}()
 
 	diagnostics = make([]analysis.Diagnostic, 0)
-	location := common.StringLocation(filePath)
-
-	code, readErr := l.state.ReadFile(filePath)
-	if readErr != nil {
-		return nil, readErr
-	}
 	codeStr := string(code)
 
 	// Parse program & convert any parsing errors to diagnostics
@@ -179,6 +185,13 @@ func (l *linter) lintFile(
 	}
 
 	return diagnostics, nil
+}
+
+// LintCode runs all registered Cadence lint analyzers on inline code.
+// This is the public entry point used by the MCP server.
+func LintCode(code string, state *flowkit.State) ([]analysis.Diagnostic, error) {
+	l := newLinter(state)
+	return l.lintCode([]byte(code), common.StringLocation("code.cdc"))
 }
 
 // isContractName returns true if the location string is a contract name (not a file path)
