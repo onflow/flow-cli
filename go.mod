@@ -12,7 +12,7 @@ require (
 	github.com/getsentry/sentry-go v0.43.0
 	github.com/gosuri/uilive v0.0.4
 	github.com/logrusorgru/aurora/v4 v4.0.0
-	github.com/mark3labs/mcp-go v0.45.0
+	github.com/mark3labs/mcp-go v0.47.0
 	github.com/onflow/cadence v1.10.0
 	github.com/onflow/cadence-tools/languageserver v1.10.0
 	github.com/onflow/cadence-tools/lint v1.9.0
@@ -134,6 +134,7 @@ require (
 	github.com/google/go-dap v0.11.0 // indirect
 	github.com/google/go-github v17.0.0+incompatible // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
+	github.com/google/jsonschema-go v0.4.2 // indirect
 	github.com/google/pprof v0.0.0-20250630185457-6e76a2b096b5 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/google/uuid v1.6.0 // indirect
