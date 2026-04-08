@@ -28,6 +28,7 @@ import (
 	"regexp"
 	goRuntime "runtime"
 	"strings"
+	"sync"
 
 	cdcTests "github.com/onflow/cadence-tools/test"
 	"github.com/onflow/cadence/common"
@@ -77,6 +78,7 @@ type flagsTests struct {
 	Random       bool   `default:"false" flag:"random" info:"Use the random flag to execute test cases randomly"`
 	Seed         int64  `default:"0" flag:"seed" info:"Use the seed flag to manipulate random execution of test cases"`
 	Name         string `default:"" flag:"name" info:"Use the name flag to run only tests that match the given name"`
+	Jobs         int    `default:"0" flag:"jobs" info:"Maximum number of test files to run concurrently (default: number of CPU cores)"`
 	BaseDir      string `default:"" flag:"base-dir" info:"Directory to search for test files (defaults to current directory)"`
 
 	// Fork mode flags
@@ -195,41 +197,6 @@ func testCode(
 	// Track network resolutions per file for pragma-based fork detection
 	// Map: filename -> resolved network name
 	fileNetworkResolutions := make(map[string]string)
-	var currentTestFile string
-
-	// Resolve network labels using flow.json state
-	resolveNetworkFromState := func(label string) (string, bool) {
-		normalizedLabel := strings.ToLower(strings.TrimSpace(label))
-		network, err := state.Networks().ByName(normalizedLabel)
-		if err != nil || network == nil {
-			return "", false
-		}
-
-		// If network has a fork, resolve the fork network's host
-		host := strings.TrimSpace(network.Host)
-		if network.Fork != "" {
-			forkName := strings.ToLower(strings.TrimSpace(network.Fork))
-			forkNetwork, err := state.Networks().ByName(forkName)
-			if err != nil {
-				return "", false
-			}
-			host = strings.TrimSpace(forkNetwork.Host)
-		}
-
-		if host == "" {
-			return "", false
-		}
-
-		// Track network resolution for current test file (indicates pragma-based fork usage)
-		// Only track if it's not the default "testing" network
-		if currentTestFile != "" && normalizedLabel != "testing" {
-			if _, exists := fileNetworkResolutions[currentTestFile]; !exists {
-				fileNetworkResolutions[currentTestFile] = normalizedLabel
-			}
-		}
-
-		return host, true
-	}
 
 	// Configure fork mode if requested
 	var effectiveForkHost string
@@ -305,92 +272,173 @@ func testCode(
 		seed = int64(rand.Intn(150000))
 	}
 
+	// Limit concurrency to flags.Jobs, defaulting to number of CPU cores.
+	jobs := flags.Jobs
+	if jobs <= 0 {
+		jobs = goRuntime.NumCPU()
+	}
+	sem := make(chan struct{}, jobs)
+
+	type fileResult struct {
+		scriptPath        string
+		results           cdcTests.Results
+		networkResolution string
+		err               error
+	}
+
+	resultCh := make(chan fileResult, len(testFiles))
+	var wg sync.WaitGroup
+
+	for scriptPath, code := range testFiles {
+		wg.Add(1)
+		go func(scriptPath string, code []byte) {
+			defer wg.Done()
+			sem <- struct{}{}
+			defer func() { <-sem }()
+
+			// Each file gets its own resolver so network resolution tracking is per-file.
+			var resolvedNetwork string
+			resolveNetworkFromState := func(label string) (string, bool) {
+				normalizedLabel := strings.ToLower(strings.TrimSpace(label))
+				network, err := state.Networks().ByName(normalizedLabel)
+				if err != nil || network == nil {
+					return "", false
+				}
+
+				// If network has a fork, resolve the fork network's host
+				host := strings.TrimSpace(network.Host)
+				if network.Fork != "" {
+					forkName := strings.ToLower(strings.TrimSpace(network.Fork))
+					forkNetwork, err := state.Networks().ByName(forkName)
+					if err != nil {
+						return "", false
+					}
+					host = strings.TrimSpace(forkNetwork.Host)
+				}
+
+				if host == "" {
+					return "", false
+				}
+
+				// Track network resolution for current test file (indicates pragma-based fork usage)
+				// Only track if it's not the default "testing" network
+				if resolvedNetwork == "" && normalizedLabel != "testing" {
+					resolvedNetwork = normalizedLabel
+				}
+
+				return host, true
+			}
+
+			// Create a new test runner per file to ensure complete isolation.
+			// Each file gets its own runner with its own backend state.
+			fileRunner := cdcTests.NewTestRunner().
+				WithLogger(logger).
+				WithNetworkResolver(resolveNetworkFromState).
+				WithNetworkLabel(networkLabel).
+				WithImportResolver(importResolver(scriptPath, state)).
+				WithFileResolver(fileResolver(scriptPath, state)).
+				WithContractAddressResolver(func(network string, contractName string) (common.Address, error) {
+					contractsByName := make(map[string]config.Contract)
+					for _, c := range *state.Contracts() {
+						contractsByName[c.Name] = c
+					}
+
+					contract, exists := contractsByName[contractName]
+					if !exists {
+						return common.Address{}, fmt.Errorf("contract not found: %s", contractName)
+					}
+
+					alias := contract.Aliases.ByNetwork(network)
+					if alias != nil {
+						return common.Address(alias.Address), nil
+					}
+
+					// Fallback to fork network if configured
+					networkConfig, err := state.Networks().ByName(network)
+					if err == nil && networkConfig != nil && networkConfig.Fork != "" {
+						forkAlias := contract.Aliases.ByNetwork(networkConfig.Fork)
+						if forkAlias != nil {
+							return common.Address(forkAlias.Address), nil
+						}
+					}
+
+					return common.Address{}, fmt.Errorf("no address for contract %s on network %s", contractName, network)
+				})
+
+			if forkCfg != nil {
+				fileRunner = fileRunner.WithFork(*forkCfg)
+			}
+			if coverageReport != nil {
+				fileRunner = fileRunner.WithCoverageReport(coverageReport)
+			}
+			if seed > 0 {
+				fileRunner = fileRunner.WithRandomSeed(seed)
+			}
+
+			var fileResults cdcTests.Results
+			var runErr error
+
+			if flags.Name != "" {
+				testFunctions, err := fileRunner.GetTests(string(code))
+				if err != nil {
+					resultCh <- fileResult{scriptPath: scriptPath, err: err}
+					return
+				}
+
+				for _, testFunction := range testFunctions {
+					if testFunction != flags.Name {
+						continue
+					}
+
+					r, err := fileRunner.RunTest(string(code), flags.Name)
+					if err != nil {
+						runErr = err
+						break
+					}
+					fileResults = []cdcTests.Result{*r}
+				}
+			} else {
+				fileResults, runErr = fileRunner.RunTests(string(code))
+			}
+
+			resultCh <- fileResult{
+				scriptPath:        scriptPath,
+				results:           fileResults,
+				networkResolution: resolvedNetwork,
+				err:               runErr,
+			}
+		}(scriptPath, code)
+	}
+
+	go func() {
+		wg.Wait()
+		close(resultCh)
+	}()
+
 	testResults := make(map[string]cdcTests.Results, 0)
 	exitCode := 0
-	for scriptPath, code := range testFiles {
-		// Set current test file for network resolution tracking
-		currentTestFile = scriptPath
+	var firstErr error
 
-		// Create a new test runner per file to ensure complete isolation.
-		// Each file gets its own runner with its own backend state.
-		fileRunner := cdcTests.NewTestRunner().
-			WithLogger(logger).
-			WithNetworkResolver(resolveNetworkFromState).
-			WithNetworkLabel(networkLabel).
-			WithImportResolver(importResolver(scriptPath, state)).
-			WithFileResolver(fileResolver(scriptPath, state)).
-			WithContractAddressResolver(func(network string, contractName string) (common.Address, error) {
-				contractsByName := make(map[string]config.Contract)
-				for _, c := range *state.Contracts() {
-					contractsByName[c.Name] = c
-				}
-
-				contract, exists := contractsByName[contractName]
-				if !exists {
-					return common.Address{}, fmt.Errorf("contract not found: %s", contractName)
-				}
-
-				alias := contract.Aliases.ByNetwork(network)
-				if alias != nil {
-					return common.Address(alias.Address), nil
-				}
-
-				// Fallback to fork network if configured
-				networkConfig, err := state.Networks().ByName(network)
-				if err == nil && networkConfig != nil && networkConfig.Fork != "" {
-					forkAlias := contract.Aliases.ByNetwork(networkConfig.Fork)
-					if forkAlias != nil {
-						return common.Address(forkAlias.Address), nil
-					}
-				}
-
-				return common.Address{}, fmt.Errorf("no address for contract %s on network %s", contractName, network)
-			})
-
-		if forkCfg != nil {
-			fileRunner = fileRunner.WithFork(*forkCfg)
+	for r := range resultCh {
+		if r.err != nil && firstErr == nil {
+			firstErr = r.err
 		}
-		if coverageReport != nil {
-			fileRunner = fileRunner.WithCoverageReport(coverageReport)
+		if r.results != nil {
+			testResults[r.scriptPath] = r.results
 		}
-		if seed > 0 {
-			fileRunner = fileRunner.WithRandomSeed(seed)
+		if r.networkResolution != "" {
+			fileNetworkResolutions[r.scriptPath] = r.networkResolution
 		}
-
-		if flags.Name != "" {
-			testFunctions, err := fileRunner.GetTests(string(code))
-			if err != nil {
-				return nil, err
-			}
-
-			for _, testFunction := range testFunctions {
-				if testFunction != flags.Name {
-					continue
-				}
-
-				result, err := fileRunner.RunTest(string(code), flags.Name)
-				if err != nil {
-					return nil, err
-				}
-				testResults[scriptPath] = []cdcTests.Result{*result}
-			}
-		} else {
-			results, err := fileRunner.RunTests(string(code))
-			if err != nil {
-				return nil, err
-			}
-			testResults[scriptPath] = results
-		}
-
-		for _, result := range testResults[scriptPath] {
-			if result.Error != nil {
+		for _, res := range testResults[r.scriptPath] {
+			if res.Error != nil {
 				exitCode = 1
 				break
 			}
 		}
+	}
 
-		// Clear current test file after processing
-		currentTestFile = ""
+	if firstErr != nil {
+		return nil, firstErr
 	}
 
 	// Track fork test usage metrics - aggregate into single event

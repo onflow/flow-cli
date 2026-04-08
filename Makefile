@@ -37,6 +37,7 @@ endif
 .PHONY: ci
 ci: generate test coverage
 
+.PHONY: $(BINARY)
 $(BINARY):
 	CGO_ENABLED=1 \
 	CGO_CFLAGS="-O2 -D__BLST_PORTABLE__ -std=gnu11" \

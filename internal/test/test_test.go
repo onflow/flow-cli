@@ -45,9 +45,8 @@ func TestExecutingTests(t *testing.T) {
 	}}
 
 	t.Run("simple", func(t *testing.T) {
-		t.Parallel()
-
 		_, state, _ := util.TestMocks(t)
+		t.Parallel()
 
 		script := tests.TestScriptSimple
 		testFiles := map[string][]byte{
@@ -61,9 +60,8 @@ func TestExecutingTests(t *testing.T) {
 	})
 
 	t.Run("simple failing", func(t *testing.T) {
-		t.Parallel()
-
 		_, state, _ := util.TestMocks(t)
+		t.Parallel()
 
 		script := tests.TestScriptSimpleFailing
 		testFiles := map[string][]byte{
@@ -81,16 +79,14 @@ func TestExecutingTests(t *testing.T) {
 	})
 
 	t.Run("with import", func(t *testing.T) {
-		t.Parallel()
-
 		_, state, _ := util.TestMocks(t)
-
 		c := config.Contract{
 			Name:     tests.ContractHelloString.Name,
 			Location: tests.ContractHelloString.Filename,
 			Aliases:  aliases,
 		}
 		state.Contracts().AddOrUpdate(c)
+		t.Parallel()
 
 		// Execute script
 		script := tests.TestScriptWithImport
@@ -105,8 +101,6 @@ func TestExecutingTests(t *testing.T) {
 	})
 
 	t.Run("with relative imports", func(t *testing.T) {
-		t.Parallel()
-
 		// Setup
 		_, state, _ := util.TestMocks(t)
 		readerWriter := state.ReaderWriter()
@@ -133,6 +127,7 @@ func TestExecutingTests(t *testing.T) {
 			Aliases:  aliases,
 		}
 		state.Contracts().AddOrUpdate(contractFoo)
+		t.Parallel()
 
 		// Execute script
 		script := tests.TestScriptWithRelativeImports
@@ -147,9 +142,8 @@ func TestExecutingTests(t *testing.T) {
 	})
 
 	t.Run("with helper script import", func(t *testing.T) {
-		t.Parallel()
-
 		_, state, _ := util.TestMocks(t)
+		t.Parallel()
 
 		// Execute script
 		script := tests.TestScriptWithHelperImport
@@ -164,10 +158,9 @@ func TestExecutingTests(t *testing.T) {
 	})
 
 	t.Run("with missing contract in config", func(t *testing.T) {
-		t.Parallel()
-
 		// Setup
 		_, state, _ := util.TestMocks(t)
+		t.Parallel()
 
 		// Execute script
 		script := tests.TestScriptWithMissingContract
@@ -185,11 +178,8 @@ func TestExecutingTests(t *testing.T) {
 	})
 
 	t.Run("with missing testing alias in config", func(t *testing.T) {
-		t.Parallel()
-
 		// Setup
 		_, state, _ := util.TestMocks(t)
-
 		c := config.Contract{
 			Name:     tests.ContractHelloString.Name,
 			Location: tests.ContractHelloString.Filename,
@@ -199,6 +189,7 @@ func TestExecutingTests(t *testing.T) {
 			}},
 		}
 		state.Contracts().AddOrUpdate(c)
+		t.Parallel()
 
 		// Execute script
 		script := tests.TestScriptWithImport
@@ -216,11 +207,8 @@ func TestExecutingTests(t *testing.T) {
 	})
 
 	t.Run("without testing alias for common contracts", func(t *testing.T) {
-		t.Parallel()
-
 		// Setup
 		_, state, _ := util.TestMocks(t)
-
 		c := config.Contract{
 			Name:     tests.ContractHelloString.Name,
 			Location: tests.ContractHelloString.Filename,
@@ -234,6 +222,7 @@ func TestExecutingTests(t *testing.T) {
 			Location: "cadence/contracts/FungibleToken.cdc",
 		}
 		state.Contracts().AddOrUpdate(fungibleToken)
+		t.Parallel()
 
 		// Execute script
 		script := tests.TestScriptWithImport
@@ -246,15 +235,13 @@ func TestExecutingTests(t *testing.T) {
 	})
 
 	t.Run("with file read", func(t *testing.T) {
-		t.Parallel()
-
 		_, state, rw := util.TestMocks(t)
-
 		_ = rw.WriteFile(
 			tests.SomeFile.Filename,
 			tests.SomeFile.Source,
 			os.ModeTemporary,
 		)
+		t.Parallel()
 
 		// Execute script
 		script := tests.TestScriptWithFileRead
@@ -269,16 +256,14 @@ func TestExecutingTests(t *testing.T) {
 	})
 
 	t.Run("with code coverage", func(t *testing.T) {
-		t.Parallel()
-
 		// Setup
 		_, state, _ := util.TestMocks(t)
-
 		state.Contracts().AddOrUpdate(config.Contract{
 			Name:     tests.ContractFooCoverage.Name,
 			Location: tests.ContractFooCoverage.Filename,
 			Aliases:  aliases,
 		})
+		t.Parallel()
 
 		// Execute script
 		script := tests.TestScriptWithCoverage
@@ -397,16 +382,14 @@ func TestExecutingTests(t *testing.T) {
 	})
 
 	t.Run("with code coverage for contracts only", func(t *testing.T) {
-		t.Parallel()
-
 		// Setup
 		_, state, _ := util.TestMocks(t)
-
 		state.Contracts().AddOrUpdate(config.Contract{
 			Name:     tests.ContractFooCoverage.Name,
 			Location: tests.ContractFooCoverage.Filename,
 			Aliases:  aliases,
 		})
+		t.Parallel()
 
 		// Execute script
 		script := tests.TestScriptWithCoverage
@@ -523,16 +506,14 @@ func TestExecutingTests(t *testing.T) {
 	})
 
 	t.Run("with random test case execution", func(t *testing.T) {
-		t.Parallel()
-
 		// Setup
 		_, state, _ := util.TestMocks(t)
-
 		state.Contracts().AddOrUpdate(config.Contract{
 			Name:     tests.ContractFooCoverage.Name,
 			Location: tests.ContractFooCoverage.Filename,
 			Aliases:  aliases,
 		})
+		t.Parallel()
 
 		// Execute script
 		script := tests.TestScriptWithCoverage
@@ -558,16 +539,14 @@ func TestExecutingTests(t *testing.T) {
 	})
 
 	t.Run("with input seed for test case execution", func(t *testing.T) {
-		t.Parallel()
-
 		// Setup
 		_, state, _ := util.TestMocks(t)
-
 		state.Contracts().AddOrUpdate(config.Contract{
 			Name:     tests.ContractFooCoverage.Name,
 			Location: tests.ContractFooCoverage.Filename,
 			Aliases:  aliases,
 		})
+		t.Parallel()
 
 		// Execute script
 		script := tests.TestScriptWithCoverage
@@ -607,16 +586,14 @@ Seed: 1521
 	})
 
 	t.Run("with JSON output", func(t *testing.T) {
-		t.Parallel()
-
 		// Setup
 		_, state, _ := util.TestMocks(t)
-
 		state.Contracts().AddOrUpdate(config.Contract{
 			Name:     tests.ContractFooCoverage.Name,
 			Location: tests.ContractFooCoverage.Filename,
 			Aliases:  aliases,
 		})
+		t.Parallel()
 
 		// Execute script
 		script := tests.TestScriptWithCoverage
@@ -660,10 +637,9 @@ Seed: 1521
 	})
 
 	t.Run("run specific test case by name", func(t *testing.T) {
-		t.Parallel()
-
 		// Setup
 		_, state, _ := util.TestMocks(t)
+		t.Parallel()
 
 		// Execute script
 		script := tests.TestScriptSimple
@@ -689,10 +665,9 @@ Seed: 1521
 	})
 
 	t.Run("run specific test case by name multiple files", func(t *testing.T) {
-		t.Parallel()
-
 		// Setup
 		_, state, _ := util.TestMocks(t)
+		t.Parallel()
 
 		scriptPassing := tests.TestScriptSimple
 		scriptFailing := tests.TestScriptSimpleFailing
@@ -730,10 +705,9 @@ Seed: 1521
 	})
 
 	t.Run("run specific test case by name will do nothing if not found", func(t *testing.T) {
-		t.Parallel()
-
 		// Setup
 		_, state, _ := util.TestMocks(t)
+		t.Parallel()
 
 		// Execute script
 		script := tests.TestScriptSimple
@@ -760,7 +734,6 @@ func TestForkMode_UsesMainnetAliases(t *testing.T) {
 	if os.Getenv("SKIP_NETWORK_TESTS") != "" {
 		t.Skip("skipping network-dependent test")
 	}
-	t.Parallel()
 
 	_, state, _ := util.TestMocks(t)
 
@@ -787,6 +760,7 @@ func TestForkMode_UsesMainnetAliases(t *testing.T) {
 		Aliases:  mainnetAliases,
 	}
 	state.Contracts().AddOrUpdate(c)
+	t.Parallel()
 
 	// Test script that deploys and uses the contract
 	testScript := []byte(`
@@ -799,7 +773,7 @@ func TestForkMode_UsesMainnetAliases(t *testing.T) {
 				arguments: []
 			)
 			Test.expect(err, Test.beNil())
-			
+
 			// Verify the contract deployed and works
 			let script = "import TestContract from 0x1654653399040a61\naccess(all) fun main(): Int { return TestContract.getValue() }"
 			let result = Test.executeScript(script, [])
@@ -828,7 +802,6 @@ func TestForkMode_UsesTestnetAliasesExplicit(t *testing.T) {
 	if os.Getenv("SKIP_NETWORK_TESTS") != "" {
 		t.Skip("skipping network-dependent test")
 	}
-	t.Parallel()
 
 	_, state, _ := util.TestMocks(t)
 
@@ -855,6 +828,7 @@ func TestForkMode_UsesTestnetAliasesExplicit(t *testing.T) {
 		Aliases:  testnetAliases,
 	}
 	state.Contracts().AddOrUpdate(c)
+	t.Parallel()
 
 	// Test script that deploys and uses the contract
 	testScript := []byte(`
@@ -867,7 +841,7 @@ func TestForkMode_UsesTestnetAliasesExplicit(t *testing.T) {
 				arguments: []
 			)
 			Test.expect(err, Test.beNil())
-			
+
 			// Verify the contract deployed and works
 			let script = "import TestContract from 0x7e60df042a9c0868\naccess(all) fun main(): String { return TestContract.getValue() }"
 			let result = Test.executeScript(script, [])
@@ -893,9 +867,8 @@ func TestForkMode_UsesTestnetAliasesExplicit(t *testing.T) {
 }
 
 func TestForkMode_AutodetectFailureRequiresExplicitNetwork(t *testing.T) {
-	t.Parallel()
-
 	_, state, _ := util.TestMocks(t)
+	t.Parallel()
 
 	// No network hints in URL; expect early error
 	flags := flagsTests{
@@ -911,7 +884,6 @@ func TestNetworkForkResolution_Success(t *testing.T) {
 	if os.Getenv("SKIP_NETWORK_TESTS") != "" {
 		t.Skip("skipping network-dependent test")
 	}
-	t.Parallel()
 
 	_, state, _ := util.TestMocks(t)
 
@@ -926,6 +898,7 @@ func TestNetworkForkResolution_Success(t *testing.T) {
 		Name: "mainnet-fork",
 		Fork: "mainnet",
 	})
+	t.Parallel()
 
 	// Create a simple test that uses the test_fork pragma
 	testScript := []byte(`
@@ -950,8 +923,6 @@ access(all) fun testSimple() {
 }
 
 func TestNetworkForkResolution_ForkNetworkNotFound(t *testing.T) {
-	t.Parallel()
-
 	_, state, _ := util.TestMocks(t)
 
 	// Add mainnet-fork that references non-existent network
@@ -959,6 +930,7 @@ func TestNetworkForkResolution_ForkNetworkNotFound(t *testing.T) {
 		Name: "mainnet-fork",
 		Fork: "nonexistent",
 	})
+	t.Parallel()
 
 	// Create a simple test that uses the fork network
 	testScript := []byte(`
@@ -982,8 +954,6 @@ access(all) fun testSimple() {
 }
 
 func TestNetworkForkResolution_ForkNetworkHasNoHost(t *testing.T) {
-	t.Parallel()
-
 	_, state, _ := util.TestMocks(t)
 
 	// Add mainnet network with no host
@@ -996,6 +966,7 @@ func TestNetworkForkResolution_ForkNetworkHasNoHost(t *testing.T) {
 		Name: "mainnet-fork",
 		Fork: "mainnet",
 	})
+	t.Parallel()
 
 	// Create a simple test that uses the fork network
 	testScript := []byte(`
@@ -1023,7 +994,6 @@ func TestNetworkForkResolution_WithOwnHost(t *testing.T) {
 	if os.Getenv("SKIP_NETWORK_TESTS") != "" {
 		t.Skip("skipping network-dependent test")
 	}
-	t.Parallel()
 
 	_, state, _ := util.TestMocks(t)
 
@@ -1040,6 +1010,7 @@ func TestNetworkForkResolution_WithOwnHost(t *testing.T) {
 		Host: "127.0.0.1:3569",
 		Fork: "mainnet",
 	})
+	t.Parallel()
 
 	// Create a simple test that uses the fork network
 	testScript := []byte(`
@@ -1067,7 +1038,6 @@ func TestContractAddressForkResolution_UsesMainnetForkFirst(t *testing.T) {
 	if os.Getenv("SKIP_NETWORK_TESTS") != "" {
 		t.Skip("skipping network-dependent test")
 	}
-	t.Parallel()
 
 	_, state, _ := util.TestMocks(t)
 
@@ -1105,6 +1075,7 @@ access(all) contract TestContract {
 		},
 	}
 	state.Contracts().AddOrUpdate(c)
+	t.Parallel()
 
 	testScript := []byte(`
 #test_fork(network: "mainnet-fork", height: nil)
@@ -1134,7 +1105,6 @@ func TestContractAddressForkResolution_FallbackToMainnet(t *testing.T) {
 	if os.Getenv("SKIP_NETWORK_TESTS") != "" {
 		t.Skip("skipping network-dependent test")
 	}
-	t.Parallel()
 
 	_, state, _ := util.TestMocks(t)
 
@@ -1172,6 +1142,7 @@ access(all) contract TestContract {
 		},
 	}
 	state.Contracts().AddOrUpdate(c)
+	t.Parallel()
 
 	testScript := []byte(`
 #test_fork(network: "mainnet-fork", height: nil)
@@ -1201,7 +1172,6 @@ func TestContractAddressForkResolution_PrioritizesForkOverParent(t *testing.T) {
 	if os.Getenv("SKIP_NETWORK_TESTS") != "" {
 		t.Skip("skipping network-dependent test")
 	}
-	t.Parallel()
 
 	_, state, _ := util.TestMocks(t)
 
@@ -1245,6 +1215,7 @@ access(all) contract TestContract {
 		},
 	}
 	state.Contracts().AddOrUpdate(c)
+	t.Parallel()
 
 	// Should use the mainnet-fork address (0xf233dcee88fe0abe), not mainnet (0x1654653399040a61)
 	testScript := []byte(`
@@ -1269,4 +1240,78 @@ access(all) fun testPrioritizesFork() {
 	require.NoError(t, err)
 	require.Len(t, result.Results, 1)
 	assert.NoError(t, result.Results["test_priority.cdc"][0].Error)
+}
+
+func TestMultipleFiles_ForkNetwork(t *testing.T) {
+	if os.Getenv("SKIP_NETWORK_TESTS") != "" {
+		t.Skip("skipping network-dependent test")
+	}
+
+	_, state, _ := util.TestMocks(t)
+
+	state.Networks().AddOrUpdate(config.Network{
+		Name: "mainnet",
+		Host: "access.mainnet.nodes.onflow.org:9000",
+	})
+	state.Networks().AddOrUpdate(config.Network{
+		Name: "mainnet-fork",
+		Host: "127.0.0.1:3569",
+		Fork: "mainnet",
+	})
+
+	addrA := flowsdk.HexToAddress("0x1654653399040a61")
+	addrB := flowsdk.HexToAddress("0xf233dcee88fe0abe")
+
+	_ = state.ReaderWriter().WriteFile("ContractA.cdc", []byte(`
+access(all) contract ContractA {
+	access(all) var value: Int
+	init() { self.value = 1 }
+}
+`), 0644)
+	_ = state.ReaderWriter().WriteFile("ContractB.cdc", []byte(`
+access(all) contract ContractB {
+	access(all) var value: Int
+	init() { self.value = 2 }
+}
+`), 0644)
+
+	state.Contracts().AddOrUpdate(config.Contract{
+		Name:     "ContractA",
+		Location: "ContractA.cdc",
+		Aliases:  config.Aliases{{Network: "mainnet-fork", Address: addrA}},
+	})
+	state.Contracts().AddOrUpdate(config.Contract{
+		Name:     "ContractB",
+		Location: "ContractB.cdc",
+		Aliases:  config.Aliases{{Network: "mainnet-fork", Address: addrB}},
+	})
+	t.Parallel()
+
+	testFiles := map[string][]byte{
+		"test_file_a.cdc": []byte(`
+#test_fork(network: "mainnet-fork", height: nil)
+import Test
+import "ContractA"
+access(all) fun testContractA() {
+	let addr = Type<ContractA>().address!
+	Test.assertEqual(0x1654653399040a61 as Address, addr)
+}
+`),
+		"test_file_b.cdc": []byte(`
+#test_fork(network: "mainnet-fork", height: nil)
+import Test
+import "ContractB"
+access(all) fun testContractB() {
+	let addr = Type<ContractB>().address!
+	Test.assertEqual(0xf233dcee88fe0abe as Address, addr)
+}
+`),
+	}
+
+	result, err := testCode(testFiles, state, flagsTests{})
+
+	require.NoError(t, err)
+	require.Len(t, result.Results, 2)
+	assert.NoError(t, result.Results["test_file_a.cdc"][0].Error)
+	assert.NoError(t, result.Results["test_file_b.cdc"][0].Error)
 }
