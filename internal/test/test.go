@@ -421,7 +421,7 @@ func testCode(
 
 	for r := range resultCh {
 		if r.err != nil && firstErr == nil {
-			firstErr = r.err
+			firstErr = fmt.Errorf("error in test file %q: %w", r.scriptPath, r.err)
 		}
 		if r.results != nil {
 			testResults[r.scriptPath] = r.results
