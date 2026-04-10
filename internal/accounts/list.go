@@ -213,7 +213,7 @@ func validateAccountOnNetwork(account *accounts.Account, network *config.Network
 	var gw gateway.Gateway
 	var err error
 
-	gw, err = gateway.NewGrpcGateway(*network)
+	gw, err = gateway.NewGrpcGateway(*network, util.GRPCDialOptionForHost(network.Host))
 
 	if err != nil {
 		result.Error = fmt.Sprintf("Failed to create gateway: %v", err)

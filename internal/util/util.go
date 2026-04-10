@@ -21,6 +21,7 @@ package util
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/hex"
 	"fmt"
 	"net"
@@ -38,6 +39,7 @@ import (
 	flowGo "github.com/onflow/flow-go/model/flow"
 	flowaccess "github.com/onflow/flow/protobuf/go/flow/access"
 	grpcOpts "google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 
 	emulatorUtils "github.com/onflow/flow-emulator/utils"
@@ -74,7 +76,7 @@ func IsAddressValidForNetwork(address flow.Address, networkName string) bool {
 // by querying the access node to get the actual chain ID
 func ValidateAddressForNetwork(address flow.Address, network *config.Network) error {
 	// Create a grpc client to query the network
-	client, err := grpc.NewBaseClient(network.Host, grpcOpts.WithTransportCredentials(insecure.NewCredentials()))
+	client, err := grpc.NewBaseClient(network.Host, TransportCredentialForHost(network.Host))
 	if err != nil {
 		return fmt.Errorf("failed to connect to access node: %w", err)
 	}
@@ -244,6 +246,22 @@ func AddFlowEntriesToCursorIgnore(targetDir string, loader flowkit.ReaderWriter)
 	return addEntriesToIgnoreFile(cursorIgnorePath, flowEntries, loader)
 }
 
+// TransportCredentialForHost returns TLS credentials using system CA certificates
+// if the host uses port 443, or insecure credentials otherwise.
+func TransportCredentialForHost(host string) grpcOpts.DialOption {
+	_, port, err := net.SplitHostPort(host)
+	if err == nil && port == "443" {
+		return grpcOpts.WithTransportCredentials(credentials.NewTLS(&tls.Config{MinVersion: tls.VersionTLS12}))
+	}
+	return grpcOpts.WithTransportCredentials(insecure.NewCredentials())
+}
+
+// GRPCDialOptionForHost returns a grpcAccess.ClientOption that configures
+// TLS using system CA certificates for port 443 hosts, or insecure credentials otherwise.
+func GRPCDialOptionForHost(host string) grpc.ClientOption {
+	return grpc.WithGRPCDialOptions(TransportCredentialForHost(host))
+}
+
 // GetAddressNetwork returns the chain ID for an address.
 func GetAddressNetwork(address flow.Address) (flow.ChainID, error) {
 	networks := []flow.ChainID{
@@ -282,7 +300,7 @@ func GetChainIDFromHost(host string) (flowGo.ChainID, error) {
 
 	conn, err := grpcOpts.NewClient(
 		host,
-		grpcOpts.WithTransportCredentials(insecure.NewCredentials()),
+		TransportCredentialForHost(host),
 		emulatorUtils.DefaultGRPCRetryInterceptor(),
 	)
 	if err != nil {

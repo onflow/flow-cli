@@ -59,7 +59,7 @@ func createInteractive(
 	privateFile := accounts.PrivateKeyFile(name, "")
 
 	// create new gateway based on chosen network
-	gw, err := gateway.NewGrpcGateway(selectedNetwork)
+	gw, err := gateway.NewGrpcGateway(selectedNetwork, util.GRPCDialOptionForHost(selectedNetwork.Host))
 	if err != nil {
 		return nil, err
 	}

@@ -167,17 +167,17 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State, saveStat
 		return nil, fmt.Errorf("cannot use both --update and --skip-update-prompts flags together")
 	}
 
-	emulatorGateway, err := gateway.NewGrpcGateway(config.EmulatorNetwork)
+	emulatorGateway, err := gateway.NewGrpcGateway(config.EmulatorNetwork, util.GRPCDialOptionForHost(config.EmulatorNetwork.Host))
 	if err != nil {
 		return nil, fmt.Errorf("error creating emulator gateway: %v", err)
 	}
 
-	testnetGateway, err := gateway.NewGrpcGateway(config.TestnetNetwork)
+	testnetGateway, err := gateway.NewGrpcGateway(config.TestnetNetwork, util.GRPCDialOptionForHost(config.TestnetNetwork.Host))
 	if err != nil {
 		return nil, fmt.Errorf("error creating testnet gateway: %v", err)
 	}
 
-	mainnetGateway, err := gateway.NewGrpcGateway(config.MainnetNetwork)
+	mainnetGateway, err := gateway.NewGrpcGateway(config.MainnetNetwork, util.GRPCDialOptionForHost(config.MainnetNetwork.Host))
 	if err != nil {
 		return nil, fmt.Errorf("error creating mainnet gateway: %v", err)
 	}
