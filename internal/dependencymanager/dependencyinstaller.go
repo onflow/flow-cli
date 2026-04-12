@@ -24,6 +24,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/psiemens/sconfig"
 
@@ -585,19 +586,19 @@ func (di *DependencyInstaller) fetchDependenciesWithDepth(dependency config.Depe
 	}
 
 	// Log installation with visual hierarchy and branding colors
-	indent := ""
+	var indent strings.Builder
 	prefix := ""
 
 	if depth > 0 {
 		// Create indentation with proper tree characters
 		for i := 0; i < depth; i++ {
-			indent += "  "
+			indent.WriteString("  ")
 		}
 		prefix = "├─ "
 
 		// Add depth limit warning for very deep chains
 		if depth >= 5 {
-			di.Logger.Info(fmt.Sprintf("%s⚠️  Deep dependency chain (depth %d)", indent, depth))
+			di.Logger.Info(fmt.Sprintf("%s⚠️  Deep dependency chain (depth %d)", indent.String(), depth))
 		}
 	}
 
@@ -606,7 +607,7 @@ func (di *DependencyInstaller) fetchDependenciesWithDepth(dependency config.Depe
 	shortAddress := "0x..." + fullAddress[len(fullAddress)-4:]
 	addressStyled := branding.GreenStyle.Render(shortAddress)
 	networkStyled := branding.GrayStyle.Render(networkName)
-	di.Logger.Info(fmt.Sprintf("%s%s%s @ %s (%s)", indent, prefix, contractNameStyled, addressStyled, networkStyled))
+	di.Logger.Info(fmt.Sprintf("%s%s%s @ %s (%s)", indent.String(), prefix, contractNameStyled, addressStyled, networkStyled))
 	di.installCount++
 
 	err := di.addDependency(dependency)
