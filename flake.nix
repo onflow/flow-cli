@@ -11,6 +11,15 @@
       let
         pkgs = import nixpkgs { inherit system; };
 
+        # Pin Go 1.25 — onflow/crypto v0.25.4 is incompatible with Go 1.26
+        # (see https://github.com/onflow/crypto/issues/40).
+        # Go 1.26 changed ecdsa.PrivateKey.ECDH() to go through a FIPS path
+        # that dereferences PublicKey.X/Y before they are set, causing a nil
+        # pointer panic in goecdsaPrivateKey(). Remove this pin once
+        # onflow/crypto ships a Go 1.26-compatible release.
+        go = pkgs.go_1_25;
+        buildGoModule = pkgs.buildGoModule.override { inherit go; };
+
         # Version detection:
         # - When building from a git tag (e.g., nix build github:onflow/flow-cli/v2.14.2),
         #   the version is extracted from the tag.
@@ -33,7 +42,7 @@
       in
       {
         packages = {
-          flow-cli = pkgs.buildGoModule {
+          flow-cli = buildGoModule {
             pname = "flow-cli";
             version = version;
             src = ./.;
@@ -81,7 +90,7 @@
 
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
-            go
+            go_1_25
             golangci-lint
             gotools
             gopls
