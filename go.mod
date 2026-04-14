@@ -30,6 +30,7 @@ require (
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/pkg/errors v0.9.1
+	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
 	github.com/psiemens/sconfig v0.1.0
 	github.com/radovskyb/watcher v1.0.7
 	github.com/rs/zerolog v1.35.0
@@ -228,7 +229,6 @@ require (
 	github.com/pion/transport/v2 v2.2.10 // indirect
 	github.com/pion/transport/v3 v3.0.7 // indirect
 	github.com/pkg/term v1.2.0-beta.2 // indirect
-	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_golang v1.23.2 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
 	github.com/prometheus/common v0.66.1 // indirect

@@ -54,12 +54,13 @@ Usage:
   transactions Build, sign, send and retrieve transactions
 
 🔨 Flow Tools
-  cadence      Execute Cadence code
-  dev-wallet   Run a development wallet
-  emulator     Run Flow network for development
-  flix         execute, generate, package
-  flowser      Run Flowser project explorer
-  test         Run Cadence tests
+  cadence        Execute Cadence code
+  dev-wallet     Run a development wallet
+  diff-contract  Diff a local contract against a deployed one
+  emulator       Run Flow network for development
+  flix           execute, generate, package
+  flowser        Run Flowser project explorer
+  test           Run Cadence tests
 
 🏄 Flow Project
   deploy       Deploy all project contracts
