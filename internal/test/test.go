@@ -550,11 +550,17 @@ func fileResolver(scriptPath string, state *flowkit.State) cdcTests.FileResolver
 		importFilePath := util.AbsolutePath(scriptPath, path)
 
 		content, err := state.ReadFile(importFilePath)
-		if err != nil {
+		if err == nil {
+			return string(content), nil
+		}
+
+		// Fall back to resolving relative to the project root (CWD, where flow.json lives).
+		projectContent, projectErr := state.ReadFile(filepath.Clean(path))
+		if projectErr != nil {
 			return "", err
 		}
 
-		return string(content), nil
+		return string(projectContent), nil
 	}
 }
 
