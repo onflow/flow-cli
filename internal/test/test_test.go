@@ -255,6 +255,29 @@ func TestExecutingTests(t *testing.T) {
 		assert.NoError(t, result.Results[script.Filename][0].Error)
 	})
 
+	t.Run("with file read from project root when not found relative to test file", func(t *testing.T) {
+		_, state, rw := util.TestMocks(t)
+		_ = rw.WriteFile(
+			tests.SomeFile.Filename,
+			tests.SomeFile.Source,
+			os.ModeTemporary,
+		)
+		t.Parallel()
+
+		// Place the test script in a subdirectory. SomeFile only exists at the
+		// project root, so the first lookup (relative to the script) will fail
+		// and the resolver must fall back to the project root.
+		script := tests.TestScriptWithFileRead
+		testFiles := map[string][]byte{
+			"subdir/" + script.Filename: script.Source,
+		}
+		result, err := testCode(testFiles, state, flagsTests{})
+
+		require.NoError(t, err)
+		require.Len(t, result.Results, 1)
+		assert.NoError(t, result.Results["subdir/"+script.Filename][0].Error)
+	})
+
 	t.Run("with code coverage", func(t *testing.T) {
 		// Setup
 		_, state, _ := util.TestMocks(t)
