@@ -13,20 +13,20 @@ require (
 	github.com/gosuri/uilive v0.0.4
 	github.com/logrusorgru/aurora/v4 v4.0.0
 	github.com/mark3labs/mcp-go v0.45.0
-	github.com/onflow/cadence v1.10.0
-	github.com/onflow/cadence-tools/languageserver v1.10.0
-	github.com/onflow/cadence-tools/lint v1.9.0
-	github.com/onflow/cadence-tools/test v1.12.0
+	github.com/onflow/cadence v1.10.2
+	github.com/onflow/cadence-tools/languageserver v1.11.0
+	github.com/onflow/cadence-tools/lint v1.11.0
+	github.com/onflow/cadence-tools/test v1.13.0
 	github.com/onflow/fcl-dev-wallet v0.9.1
-	github.com/onflow/flixkit-go/v2 v2.8.0
+	github.com/onflow/flixkit-go/v2 v2.9.0
 	github.com/onflow/flow-core-contracts/lib/go/contracts v1.9.3
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.9.3
-	github.com/onflow/flow-emulator v1.19.0
-	github.com/onflow/flow-evm-gateway v1.4.8-0.20260403204150-78dfa5f14aa6
-	github.com/onflow/flow-go v0.47.0-ledger-service.1.0.20260320214141-968222a41c12
-	github.com/onflow/flow-go-sdk v1.10.0
+	github.com/onflow/flow-emulator v1.20.0
+	github.com/onflow/flow-evm-gateway v1.4.8-0.20260416220035-8e60e61cc40a
+	github.com/onflow/flow-go v0.47.0-ledger-service.1.0.20260415182425-f08ee47a2bec
+	github.com/onflow/flow-go-sdk v1.10.2
 	github.com/onflow/flow/protobuf/go/flow v0.4.20
-	github.com/onflow/flowkit/v2 v2.12.0
+	github.com/onflow/flowkit/v2 v2.13.0
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/pkg/errors v0.9.1
@@ -40,7 +40,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/exp v0.0.0-20251023183803-a4bb9ffd2546
 	golang.org/x/term v0.41.0
-	google.golang.org/grpc v1.79.2
+	google.golang.org/grpc v1.79.3
 )
 
 require (
@@ -49,7 +49,7 @@ require (
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
 	cloud.google.com/go/compute/metadata v0.9.0 // indirect
 	cloud.google.com/go/iam v1.5.3 // indirect
-	cloud.google.com/go/kms v1.25.0 // indirect
+	cloud.google.com/go/kms v1.26.0 // indirect
 	cloud.google.com/go/longrunning v0.8.0 // indirect
 	github.com/DataDog/zstd v1.5.6-0.20230824185856-869dae002e5e // indirect
 	github.com/FactomProject/basen v0.0.0-20150613233007-fe3947df716e // indirect
@@ -113,7 +113,7 @@ require (
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/ferranbt/fastssz v0.1.4 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
-	github.com/fxamacker/cbor/v2 v2.9.1-0.20251019205732-39888e6be013 // indirect
+	github.com/fxamacker/cbor/v2 v2.9.2-0.20260331174317-a78e92ec038e // indirect
 	github.com/fxamacker/circlehash v0.3.0 // indirect
 	github.com/go-kit/kit v0.12.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
@@ -206,7 +206,7 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/ncruces/go-strftime v1.0.0 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
-	github.com/onflow/atree v0.14.0 // indirect
+	github.com/onflow/atree v0.16.0 // indirect
 	github.com/onflow/crypto v0.25.4 // indirect
 	github.com/onflow/fixed-point v0.1.1 // indirect
 	github.com/onflow/flow-evm-bridge v0.1.0 // indirect
@@ -300,7 +300,7 @@ require (
 	google.golang.org/api v0.267.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto v0.0.0-20260128011058-8636f8732409 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260128011058-8636f8732409 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260203192932-546029d2fa20 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260203192932-546029d2fa20 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
