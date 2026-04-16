@@ -89,6 +89,65 @@ func Test_Lint(t *testing.T) {
 		)
 	})
 
+	t.Run("detects unused import", func(t *testing.T) {
+		t.Parallel()
+
+		state := setupMockState(t)
+
+		results, err := lintFiles(state, false, "UnusedImport.cdc")
+		require.NoError(t, err)
+
+		require.Len(t, results.Results, 1)
+		require.Len(t, results.Results[0].Diagnostics, 1)
+
+		diagnostic := results.Results[0].Diagnostics[0]
+		require.Equal(t, "unused-import-hint", diagnostic.Category)
+		require.Equal(t, "unused import", diagnostic.Message)
+		require.Equal(t, 0, results.exitCode)
+	})
+
+	t.Run("detects unused contract-name import", func(t *testing.T) {
+		t.Parallel()
+
+		state := setupMockState(t)
+
+		results, err := lintFiles(state, false, "UnusedContractNameImport.cdc")
+		require.NoError(t, err)
+
+		require.Len(t, results.Results, 1)
+		require.Len(t, results.Results[0].Diagnostics, 1)
+
+		diagnostic := results.Results[0].Diagnostics[0]
+		require.Equal(t, "unused-import-hint", diagnostic.Category)
+		require.Equal(t, 0, results.exitCode)
+	})
+
+	t.Run("does not flag import used only in resource conformance", func(t *testing.T) {
+		t.Parallel()
+
+		state := setupMockState(t)
+
+		results, err := lintFiles(state, false, "ConformanceUser.cdc")
+		require.NoError(t, err)
+
+		require.Len(t, results.Results, 1)
+		require.Empty(t, results.Results[0].Diagnostics)
+		require.Equal(t, 0, results.exitCode)
+	})
+
+	t.Run("does not flag import used only in entitlement access specifier", func(t *testing.T) {
+		t.Parallel()
+
+		state := setupMockState(t)
+
+		results, err := lintFiles(state, false, "EntitlementUser.cdc")
+		require.NoError(t, err)
+
+		require.Len(t, results.Results, 1)
+		require.Empty(t, results.Results[0].Diagnostics)
+		require.Equal(t, 0, results.exitCode)
+	})
+
 	t.Run("lints multiple files", func(t *testing.T) {
 		t.Parallel()
 
@@ -503,6 +562,20 @@ func setupMockState(t *testing.T) *flowkit.State {
 	_ = afero.WriteFile(mockFs, "foo/WithImports.cdc", []byte(`
 	import "../NoError.cdc"
 	access(all) contract WithImports {
+		init() {
+			let _ = NoError.getType()
+		}
+	}
+	`), 0644)
+	_ = afero.WriteFile(mockFs, "UnusedImport.cdc", []byte(`
+	import "NoError.cdc"
+	access(all) contract UnusedImport {
+		init() {}
+	}
+	`), 0644)
+	_ = afero.WriteFile(mockFs, "UnusedContractNameImport.cdc", []byte(`
+	import "NoError"
+	access(all) contract UnusedContractNameImport {
 		init() {}
 	}
 	`), 0644)
@@ -635,6 +708,10 @@ func setupMockState(t *testing.T) *flowkit.State {
 	state.Contracts().AddOrUpdate(config.Contract{
 		Name:     "ContractWithNestedImports",
 		Location: "ContractWithNestedImports.cdc",
+	})
+	state.Contracts().AddOrUpdate(config.Contract{
+		Name:     "Scheduler",
+		Location: "Scheduler.cdc",
 	})
 
 	return state
