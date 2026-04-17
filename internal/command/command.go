@@ -193,7 +193,7 @@ func createGateway(network config.Network) (gateway.Gateway, error) {
 		return gateway.NewSecureGrpcGateway(network)
 	}
 
-	return gateway.NewGrpcGateway(network)
+	return gateway.NewGrpcGateway(network, util.GRPCDialOptionForHost(network.Host))
 }
 
 // resolveHost from the flags provided.

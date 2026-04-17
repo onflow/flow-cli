@@ -30,6 +30,8 @@ import (
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/gateway"
+
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 var Cmd = &cobra.Command{
@@ -128,5 +130,5 @@ func createGateway(state *flowkit.State, network string) (gateway.Gateway, error
 	if net.Key != "" {
 		return gateway.NewSecureGrpcGateway(*net)
 	}
-	return gateway.NewGrpcGateway(*net)
+	return gateway.NewGrpcGateway(*net, util.GRPCDialOptionForHost(net.Host))
 }
