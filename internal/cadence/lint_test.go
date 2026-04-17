@@ -458,6 +458,78 @@ func Test_Lint(t *testing.T) {
 		)
 	})
 
+	t.Run("lint:ignore on previous line suppresses matching diagnostic", func(t *testing.T) {
+		t.Parallel()
+
+		state := setupMockState(t)
+
+		results, err := lintFiles(state, false, "IgnoreOnPreviousLine.cdc")
+		require.NoError(t, err)
+
+		require.Len(t, results.Results, 1)
+		require.Empty(t, results.Results[0].Diagnostics)
+		require.Len(t, results.Results[0].IgnoredDiagnostics, 1)
+		require.Equal(t, "semantic-error", results.Results[0].IgnoredDiagnostics[0].Category)
+		require.Equal(t, 0, results.exitCode)
+	})
+
+	t.Run("lint:ignore on same line suppresses matching diagnostic", func(t *testing.T) {
+		t.Parallel()
+
+		state := setupMockState(t)
+
+		results, err := lintFiles(state, false, "IgnoreOnSameLine.cdc")
+		require.NoError(t, err)
+
+		require.Len(t, results.Results, 1)
+		require.Empty(t, results.Results[0].Diagnostics)
+		require.Len(t, results.Results[0].IgnoredDiagnostics, 1)
+		require.Equal(t, "semantic-error", results.Results[0].IgnoredDiagnostics[0].Category)
+		require.Equal(t, 0, results.exitCode)
+	})
+
+	t.Run("lint:ignore for wrong category does not suppress diagnostic", func(t *testing.T) {
+		t.Parallel()
+
+		state := setupMockState(t)
+
+		results, err := lintFiles(state, false, "IgnoreWrongCategory.cdc")
+		require.NoError(t, err)
+
+		require.Len(t, results.Results, 1)
+		require.Len(t, results.Results[0].Diagnostics, 1)
+		require.Equal(t, "semantic-error", results.Results[0].Diagnostics[0].Category)
+		require.Empty(t, results.Results[0].IgnoredDiagnostics)
+		require.Equal(t, 1, results.exitCode)
+	})
+
+	t.Run("lint:ignore suppresses warning and does not affect exit code", func(t *testing.T) {
+		t.Parallel()
+
+		state := setupMockState(t)
+
+		results, err := lintFiles(state, true, "IgnoreWarning.cdc")
+		require.NoError(t, err)
+
+		require.Len(t, results.Results, 1)
+		require.Empty(t, results.Results[0].Diagnostics)
+		require.Len(t, results.Results[0].IgnoredDiagnostics, 1)
+		require.Equal(t, "removal-hint", results.Results[0].IgnoredDiagnostics[0].Category)
+		require.Equal(t, 0, results.exitCode)
+	})
+
+	t.Run("parseLintIgnoreDirectives parses directives correctly", func(t *testing.T) {
+		t.Parallel()
+
+		code := "access(all) contract Foo {\n\t//lint:ignore semantic-error\n\tlet x = 1\n\tlet y = 2 //lint:ignore removal-hint\n}"
+		directives := parseLintIgnoreDirectives(code)
+
+		require.Equal(t, map[string]bool{"semantic-error": true}, directives[2])
+		require.Equal(t, map[string]bool{"removal-hint": true}, directives[4])
+		require.Nil(t, directives[1])
+		require.Nil(t, directives[3])
+	})
+
 	t.Run("allows access(account) when dependencies have Source but no Aliases", func(t *testing.T) {
 		t.Parallel()
 
@@ -582,6 +654,36 @@ func setupMockState(t *testing.T) *flowkit.State {
 		}
 	}
 	`), 0644)
+
+	// lint:ignore directive test files
+	_ = afero.WriteFile(mockFs, "IgnoreOnPreviousLine.cdc", []byte(
+		"access(all) contract IgnoreOnPreviousLine {\n"+
+			"\tinit() {\n"+
+			"\t\t//lint:ignore semantic-error\n"+
+			"\t\tqqq\n"+
+			"\t}\n"+
+			"}"), 0644)
+	_ = afero.WriteFile(mockFs, "IgnoreOnSameLine.cdc", []byte(
+		"access(all) contract IgnoreOnSameLine {\n"+
+			"\tinit() {\n"+
+			"\t\tqqq //lint:ignore semantic-error\n"+
+			"\t}\n"+
+			"}"), 0644)
+	_ = afero.WriteFile(mockFs, "IgnoreWrongCategory.cdc", []byte(
+		"access(all) contract IgnoreWrongCategory {\n"+
+			"\tinit() {\n"+
+			"\t\t//lint:ignore removal-hint\n"+
+			"\t\tqqq\n"+
+			"\t}\n"+
+			"}"), 0644)
+	_ = afero.WriteFile(mockFs, "IgnoreWarning.cdc", []byte(
+		"access(all) contract IgnoreWarning {\n"+
+			"\tinit() {\n"+
+			"\t\t//lint:ignore removal-hint\n"+
+			"\t\tlet x = 1!\n"+
+			"\t\tlog(x)\n"+
+			"\t}\n"+
+			"}"), 0644)
 
 	// Regression test files for nested import bug
 	_ = afero.WriteFile(mockFs, "Helper.cdc", []byte(`

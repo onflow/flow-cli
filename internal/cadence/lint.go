@@ -42,16 +42,19 @@ import (
 type lintFlagsCollection struct {
 	WarningsAsErrors bool   `default:"false" flag:"warnings-as-errors" info:"Treat warnings as errors"`
 	BaseDir          string `default:"" flag:"base-dir" info:"Directory to search for .cdc files (defaults to current directory)"`
+	ShowIgnored      bool   `default:"false" flag:"show-ignored" info:"Show diagnostics suppressed by //lint:ignore <category> directives"`
 }
 
 type fileResult struct {
-	FilePath    string
-	Diagnostics []analysis.Diagnostic
+	FilePath           string
+	Diagnostics        []analysis.Diagnostic
+	IgnoredDiagnostics []analysis.Diagnostic
 }
 
 type lintResult struct {
-	Results  []fileResult
-	exitCode int
+	Results     []fileResult
+	exitCode    int
+	showIgnored bool
 }
 
 var _ command.ResultWithExitCode = &lintResult{}
@@ -110,6 +113,7 @@ func lint(
 		return nil, err
 	}
 
+	result.showIgnored = lintFlags.ShowIgnored
 	return result, nil
 }
 
@@ -139,18 +143,26 @@ func lintFiles(
 				},
 			}
 			exitCode = 1
+			sortDiagnostics(diagnostics)
+			results = append(results, fileResult{
+				FilePath:    location,
+				Diagnostics: diagnostics,
+			})
+			continue
 		}
 
-		// Sort for consistent output
-		sortDiagnostics(diagnostics)
+		active, ignored := filterIgnoredDiagnostics(diagnostics, state, location)
+		sortDiagnostics(active)
+		sortDiagnostics(ignored)
 		results = append(results, fileResult{
-			FilePath:    location,
-			Diagnostics: diagnostics,
+			FilePath:           location,
+			Diagnostics:        active,
+			IgnoredDiagnostics: ignored,
 		})
 
-		// Set the exitCode to 1 if any of the diagnostics are error-level,
+		// Set the exitCode to 1 if any of the active diagnostics are error-level,
 		// or warning-level when warningsAsErrors is set.
-		for _, diagnostic := range diagnostics {
+		for _, diagnostic := range active {
 			severity := getDiagnosticSeverity(diagnostic)
 			if severity == errorSeverity {
 				exitCode = 1
@@ -167,6 +179,71 @@ func lintFiles(
 		Results:  results,
 		exitCode: exitCode,
 	}, nil
+}
+
+// parseLintIgnoreDirectives returns a map of 1-indexed line number to the set of
+// categories ignored on that line via //lint:ignore <category> comments.
+func parseLintIgnoreDirectives(code string) map[int]map[string]bool {
+	directives := make(map[int]map[string]bool)
+	for i, line := range strings.Split(code, "\n") {
+		lineNum := i + 1
+		_, after, found := strings.Cut(line, "//lint:ignore ")
+		if !found {
+			continue
+		}
+		category := strings.TrimSpace(after)
+		if sp := strings.IndexByte(category, ' '); sp >= 0 {
+			category = category[:sp]
+		}
+		if category == "" {
+			continue
+		}
+		if directives[lineNum] == nil {
+			directives[lineNum] = make(map[string]bool)
+		}
+		directives[lineNum][category] = true
+	}
+	return directives
+}
+
+func isDiagnosticIgnored(d analysis.Diagnostic, directives map[int]map[string]bool) bool {
+	line := d.Range.StartPos.Line
+	for _, l := range []int{line, line - 1} {
+		if cats, ok := directives[l]; ok && cats[d.Category] {
+			return true
+		}
+	}
+	return false
+}
+
+// filterIgnoredDiagnostics reads the source for location and splits diagnostics
+// into active and ignored based on //lint:ignore directives. If the source cannot
+// be read, all diagnostics are returned as active.
+func filterIgnoredDiagnostics(
+	diagnostics []analysis.Diagnostic,
+	state *flowkit.State,
+	location string,
+) (active, ignored []analysis.Diagnostic) {
+	code, err := state.ReadFile(location)
+	if err != nil {
+		if diagnostics == nil {
+			return []analysis.Diagnostic{}, nil
+		}
+		return diagnostics, nil
+	}
+
+	directives := parseLintIgnoreDirectives(string(code))
+	for _, d := range diagnostics {
+		if isDiagnosticIgnored(d, directives) {
+			ignored = append(ignored, d)
+		} else {
+			active = append(active, d)
+		}
+	}
+	if active == nil {
+		active = []analysis.Diagnostic{}
+	}
+	return active, ignored
 }
 
 func getDiagnosticSeverity(
@@ -212,6 +289,18 @@ func renderDiagnostic(diagnostic analysis.Diagnostic) string {
 	)
 }
 
+func renderIgnoredDiagnostic(diagnostic analysis.Diagnostic) string {
+	startPos := diagnostic.Range.StartPos
+	locationText := fmt.Sprintf("%s:%d:%d:", diagnostic.Location.String(), startPos.Line, startPos.Column)
+	categoryText := fmt.Sprintf("%s:", diagnostic.Category)
+
+	return fmt.Sprintf("%s %s %s (ignored)",
+		aurora.Gray(12, locationText).String(),
+		aurora.Gray(12, categoryText).String(),
+		aurora.Gray(12, diagnostic.Message).String(),
+	)
+}
+
 func (r *lintResult) countProblems() (int, int) {
 	numErrors := 0
 	numWarnings := 0
@@ -227,25 +316,56 @@ func (r *lintResult) countProblems() (int, int) {
 	return numErrors, numWarnings
 }
 
+func (r *lintResult) countIgnored() int {
+	n := 0
+	for _, result := range r.Results {
+		n += len(result.IgnoredDiagnostics)
+	}
+	return n
+}
+
 func (r *lintResult) String() string {
 	var sb strings.Builder
 
 	for _, result := range r.Results {
 		for _, diagnostic := range result.Diagnostics {
-			sb.WriteString(fmt.Sprintf("%s\n\n", renderDiagnostic(diagnostic)))
+			fmt.Fprintf(&sb, "%s\n\n", renderDiagnostic(diagnostic))
+		}
+		if r.showIgnored {
+			for _, diagnostic := range result.IgnoredDiagnostics {
+				fmt.Fprintf(&sb, "%s\n\n", renderIgnoredDiagnostic(diagnostic))
+			}
 		}
 	}
 
-	var color aurora.Color
 	numErrors, numWarnings := r.countProblems()
+	numIgnored := r.countIgnored()
+	total := numErrors + numWarnings + numIgnored
+
+	var color aurora.Color
 	if numErrors > 0 {
 		color = aurora.RedFg
 	} else if numWarnings > 0 {
 		color = aurora.YellowFg
 	}
 
-	total := numErrors + numWarnings
-	if total > 0 {
+	if total == 0 {
+		sb.WriteString(aurora.Green("Lint passed").String())
+		return sb.String()
+	}
+
+	if numIgnored > 0 {
+		sb.WriteString(aurora.Colorize(fmt.Sprintf(
+			"%d %s (%d %s, %d %s, %d ignored)",
+			total,
+			util.Pluralize("problem", total),
+			numErrors,
+			util.Pluralize("error", numErrors),
+			numWarnings,
+			util.Pluralize("warning", numWarnings),
+			numIgnored,
+		), color).String())
+	} else {
 		sb.WriteString(aurora.Colorize(fmt.Sprintf(
 			"%d %s (%d %s, %d %s)",
 			total,
@@ -255,8 +375,6 @@ func (r *lintResult) String() string {
 			numWarnings,
 			util.Pluralize("warning", numWarnings),
 		), color).String())
-	} else {
-		sb.WriteString(aurora.Green("Lint passed").String())
 	}
 
 	return sb.String()
@@ -268,12 +386,27 @@ func (r *lintResult) JSON() any {
 
 func (r *lintResult) Oneliner() string {
 	numErrors, numWarnings := r.countProblems()
-	total := numErrors + numWarnings
+	numIgnored := r.countIgnored()
+	total := numErrors + numWarnings + numIgnored
 
-	if total > 0 {
-		return fmt.Sprintf("%d %s (%d %s, %d %s)", total, util.Pluralize("problem", total), numErrors, util.Pluralize("error", numErrors), numWarnings, util.Pluralize("warning", numWarnings))
+	if total == 0 {
+		return "Lint passed"
 	}
-	return "Lint passed"
+
+	if numIgnored > 0 {
+		return fmt.Sprintf("%d %s (%d %s, %d %s, %d ignored)",
+			total, util.Pluralize("problem", total),
+			numErrors, util.Pluralize("error", numErrors),
+			numWarnings, util.Pluralize("warning", numWarnings),
+			numIgnored,
+		)
+	}
+
+	return fmt.Sprintf("%d %s (%d %s, %d %s)",
+		total, util.Pluralize("problem", total),
+		numErrors, util.Pluralize("error", numErrors),
+		numWarnings, util.Pluralize("warning", numWarnings),
+	)
 }
 
 func (r *lintResult) ExitCode() int {
