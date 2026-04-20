@@ -273,8 +273,12 @@ func testCode(
 	}
 
 	// Limit concurrency to flags.Jobs, defaulting to number of CPU cores.
+	// When coverage is enabled, force sequential execution because the
+	// coverage report is shared across all test file goroutines.
 	jobs := flags.Jobs
-	if jobs <= 0 {
+	if flags.Cover {
+		jobs = 1
+	} else if jobs <= 0 {
 		jobs = goRuntime.NumCPU()
 	}
 	sem := make(chan struct{}, jobs)
