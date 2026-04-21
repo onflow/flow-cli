@@ -125,10 +125,16 @@ func run(
 		return nil, fmt.Errorf("the '--coverprofile' flag requires the '--cover' flag")
 	}
 	if testFlags.Random && testFlags.Seed > 0 {
-		fmt.Printf(
-			"%s Both '--seed' and '--random' flags are used. Hence, the '--random' flag will be ignored.\n",
+		logger.Info(fmt.Sprintf(
+			"%s Both '--seed' and '--random' flags are used. Hence, the '--random' flag will be ignored.",
 			output.WarningEmoji(),
-		)
+		))
+	}
+	if testFlags.Cover && testFlags.Jobs > 1 {
+		logger.Info(fmt.Sprintf(
+			"%s The '--jobs' flag is ignored when coverage is enabled. Tests will run sequentially.",
+			output.WarningEmoji(),
+		))
 	}
 
 	var filenames []string
