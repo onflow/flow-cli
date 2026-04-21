@@ -553,11 +553,15 @@ func (l *linter) getExportedIdentifiers(filePath string) []ast.Identifier {
 
 func exportedIdentifiersFromProgram(program *ast.Program) []ast.Identifier {
 	var identifiers []ast.Identifier
-	for _, decl := range program.CompositeDeclarations() {
-		identifiers = append(identifiers, decl.Identifier)
-	}
-	for _, decl := range program.InterfaceDeclarations() {
-		identifiers = append(identifiers, decl.Identifier)
+	for _, decl := range program.Declarations() {
+		identifier := decl.DeclarationIdentifier()
+		if identifier == nil {
+			continue
+		}
+		if decl.DeclarationAccess() != ast.AccessAll {
+			continue
+		}
+		identifiers = append(identifiers, *identifier)
 	}
 	return identifiers
 }
