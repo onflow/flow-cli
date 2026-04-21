@@ -682,6 +682,42 @@ func setupMockState(t *testing.T) *flowkit.State {
 	}
 	`), 0644)
 
+	_ = afero.WriteFile(mockFs, "ConformanceProvider.cdc", []byte(`
+	access(all) contract ConformanceProvider {
+		access(all) resource interface Greeter {
+			access(all) fun greet(): String
+		}
+		init() {}
+	}
+	`), 0644)
+
+	_ = afero.WriteFile(mockFs, "ConformanceUser.cdc", []byte(`
+	import "ConformanceProvider"
+	access(all) contract ConformanceUser {
+		access(all) resource MyGreeter: ConformanceProvider.Greeter {
+			access(all) fun greet(): String { return "hi" }
+		}
+		init() {}
+	}
+	`), 0644)
+
+	_ = afero.WriteFile(mockFs, "EntitlementProvider.cdc", []byte(`
+	access(all) contract EntitlementProvider {
+		access(all) entitlement Admin
+		init() {}
+	}
+	`), 0644)
+
+	_ = afero.WriteFile(mockFs, "EntitlementUser.cdc", []byte(`
+	import "EntitlementProvider"
+	access(all) contract EntitlementUser {
+		access(all) resource Admin {
+			access(EntitlementProvider.Admin) fun doAdminStuff() {}
+		}
+		init() {}
+	}
+	`), 0644)
+
 	_ = afero.WriteFile(mockFs, "TransactionImportingContractWithNestedImports.cdc", []byte(`
 	import ContractWithNestedImports from "ContractWithNestedImports"
 	
@@ -712,6 +748,22 @@ func setupMockState(t *testing.T) *flowkit.State {
 	state.Contracts().AddOrUpdate(config.Contract{
 		Name:     "Scheduler",
 		Location: "Scheduler.cdc",
+	})
+	state.Contracts().AddOrUpdate(config.Contract{
+		Name:     "ConformanceProvider",
+		Location: "ConformanceProvider.cdc",
+	})
+	state.Contracts().AddOrUpdate(config.Contract{
+		Name:     "ConformanceUser",
+		Location: "ConformanceUser.cdc",
+	})
+	state.Contracts().AddOrUpdate(config.Contract{
+		Name:     "EntitlementProvider",
+		Location: "EntitlementProvider.cdc",
+	})
+	state.Contracts().AddOrUpdate(config.Contract{
+		Name:     "EntitlementUser",
+		Location: "EntitlementUser.cdc",
 	})
 
 	return state

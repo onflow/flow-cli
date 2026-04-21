@@ -42,12 +42,12 @@ import (
 )
 
 type linter struct {
-	checkers                map[string]*sema.Checker
-	exportedIdentifiers     map[string][]ast.Identifier
-	state                   *flowkit.State
-	checkerStandardConfig   *sema.Config
-	checkerScriptConfig     *sema.Config
-	currentLocation         common.Location
+	checkers              map[string]*sema.Checker
+	exportedIdentifiers   map[string][]ast.Identifier
+	state                 *flowkit.State
+	checkerStandardConfig *sema.Config
+	checkerScriptConfig   *sema.Config
+	currentLocation       common.Location
 }
 
 type positionedError interface {
