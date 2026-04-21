@@ -125,10 +125,16 @@ func run(
 		return nil, fmt.Errorf("the '--coverprofile' flag requires the '--cover' flag")
 	}
 	if testFlags.Random && testFlags.Seed > 0 {
-		fmt.Printf(
-			"%s Both '--seed' and '--random' flags are used. Hence, the '--random' flag will be ignored.\n",
+		logger.Info(fmt.Sprintf(
+			"%s Both '--seed' and '--random' flags are used. Hence, the '--random' flag will be ignored.",
 			output.WarningEmoji(),
-		)
+		))
+	}
+	if testFlags.Cover && testFlags.Jobs > 1 {
+		logger.Info(fmt.Sprintf(
+			"%s The '--jobs' flag is ignored when coverage is enabled. Tests will run sequentially.",
+			output.WarningEmoji(),
+		))
 	}
 
 	var filenames []string
@@ -273,8 +279,12 @@ func testCode(
 	}
 
 	// Limit concurrency to flags.Jobs, defaulting to number of CPU cores.
+	// When coverage is enabled, force sequential execution because the
+	// coverage report is shared across all test file goroutines.
 	jobs := flags.Jobs
-	if jobs <= 0 {
+	if flags.Cover {
+		jobs = 1
+	} else if jobs <= 0 {
 		jobs = goRuntime.NumCPU()
 	}
 	sem := make(chan struct{}, jobs)
