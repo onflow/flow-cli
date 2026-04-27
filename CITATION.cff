@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use flow-cli in your research or reference it, please cite it as below."
+title: "flow-cli: The Flow Command-Line Interface"
+authors:
+  - name: "Flow Foundation"
+    website: "https://flow.com"
+repository-code: "https://github.com/onflow/flow-cli"
+url: "https://flow.com"
+license: Apache-2.0
+type: software
+keywords:
+  - flow
+  - flow-network
+  - flow-cli
+  - cadence
+  - blockchain
+  - developer-tools
