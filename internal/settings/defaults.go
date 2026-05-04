@@ -20,7 +20,7 @@ package settings
 
 import (
 	"fmt"
-	"os/user"
+	"os"
 	"runtime"
 )
 
@@ -48,13 +48,19 @@ func getDefaultInstallDir() string {
 		return "/Applications"
 	case Windows:
 		// https://superuser.com/questions/1327037/what-choices-do-i-have-about-where-to-install-software-on-windows-10
-		usr, _ := user.Current() // safe to ignore cache errors
-		return fmt.Sprintf(`%s\AppData\Local\Programs`, usr.HomeDir)
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			return ""
+		}
+		return fmt.Sprintf(`%s\AppData\Local\Programs`, homeDir)
 	case Linux:
 		// https://unix.stackexchange.com/questions/127076/into-which-directory-should-i-install-programs-in-linux
-		usr, _ := user.Current() // safe to ignore cache errors
 		// Use path in users home folder to not require sudo permissions for installation
-		return fmt.Sprintf(`%s/.local/bin`, usr.HomeDir)
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			return ""
+		}
+		return fmt.Sprintf(`%s/.local/bin`, homeDir)
 	default:
 		return ""
 	}
