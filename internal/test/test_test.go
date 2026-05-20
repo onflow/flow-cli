@@ -508,6 +508,7 @@ func TestExecutingTests(t *testing.T) {
 				"A.0000000000000001.IFlowEVMTokenBridge",
 				"A.0000000000000001.FlowTransactionScheduler",
 				"A.0000000000000001.FlowTransactionSchedulerUtils",
+				"A.0000000000000001.FlowEVMBridgeCustomAssociations",
 			},
 			coverageReport.ExcludedLocationIDs(),
 		)
