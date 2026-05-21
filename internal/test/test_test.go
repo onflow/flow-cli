@@ -380,11 +380,12 @@ func TestExecutingTests(t *testing.T) {
 				"A.0000000000000001.IFlowEVMTokenBridge",
 				"A.0000000000000001.FlowTransactionScheduler",
 				"A.0000000000000001.FlowTransactionSchedulerUtils",
+				"A.0000000000000001.FlowEVMBridgeCustomAssociations",
 			},
 			coverageReport.ExcludedLocationIDs(),
 		)
 
-		expected := "Coverage: 90.4% of statements"
+		expected := "Coverage: 90.3% of statements"
 
 		assert.Equal(
 			t,
@@ -507,6 +508,7 @@ func TestExecutingTests(t *testing.T) {
 				"A.0000000000000001.IFlowEVMTokenBridge",
 				"A.0000000000000001.FlowTransactionScheduler",
 				"A.0000000000000001.FlowTransactionSchedulerUtils",
+				"A.0000000000000001.FlowEVMBridgeCustomAssociations",
 			},
 			coverageReport.ExcludedLocationIDs(),
 		)
