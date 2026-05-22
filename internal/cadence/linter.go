@@ -43,9 +43,11 @@ import (
 
 type linter struct {
 	checkers              map[string]*sema.Checker
+	exportedIdentifiers   map[string][]ast.Identifier
 	state                 *flowkit.State
 	checkerStandardConfig *sema.Config
 	checkerScriptConfig   *sema.Config
+	currentLocation       common.Location
 }
 
 type positionedError interface {
@@ -64,8 +66,9 @@ var analyzers = maps.Values(cdclint.Analyzers)
 
 func newLinter(state *flowkit.State) *linter {
 	l := &linter{
-		checkers: make(map[string]*sema.Checker),
-		state:    state,
+		checkers:            make(map[string]*sema.Checker),
+		exportedIdentifiers: make(map[string][]ast.Identifier),
+		state:               state,
 	}
 
 	// Create checker configs for both standard and script
@@ -101,6 +104,8 @@ func (l *linter) lintCode(
 
 	diagnostics = make([]analysis.Diagnostic, 0)
 	codeStr := string(code)
+
+	l.currentLocation = location
 
 	// Parse program & convert any parsing errors to diagnostics
 	program, parseProgramErr := parser.ParseProgram(nil, code, parser.Config{})
@@ -332,6 +337,7 @@ func (l *linter) newCheckerConfig(standardLibrary *util.StandardLibrary) *sema.C
 		PositionInfoEnabled:        true, // Must be enabled for linters
 		ExtendedElaborationEnabled: true, // Must be enabled for linters
 		ImportHandler:              l.handleImport,
+		LocationHandler:            l.resolveLocation,
 		SuggestionsEnabled:         true, // Must be enabled to offer semantic suggestions
 	}
 }
@@ -437,7 +443,13 @@ func (l *linter) handleImport(
 			}
 
 			l.checkers[filepath] = importedChecker
+			// Pre-populate so resolveLocation doesn't re-parse during sub-checking
+			l.exportedIdentifiers[filepath] = exportedIdentifiersFromProgram(importedProgram)
+
+			prevLocation := l.currentLocation
+			l.currentLocation = fileLocation
 			err = importedChecker.Check()
+			l.currentLocation = prevLocation
 			if err != nil {
 				return nil, err
 			}
@@ -472,6 +484,86 @@ func (l *linter) resolveImportFilepath(
 	default:
 		return "", fmt.Errorf("unsupported location: %T", location)
 	}
+}
+
+// resolveLocation is the LocationHandler for the sema.Checker config.
+// For implicit imports (no explicit identifiers), it resolves the exported names
+// from the imported file so the unused-import analyzer can track usage.
+func (l *linter) resolveLocation(
+	identifiers []ast.Identifier,
+	location common.Location,
+) ([]sema.ResolvedLocation, error) {
+	defaultResolution := []sema.ResolvedLocation{{
+		Location:    location,
+		Identifiers: identifiers,
+	}}
+
+	// Explicit imports already carry their identifiers — nothing to add
+	if len(identifiers) > 0 {
+		return defaultResolution, nil
+	}
+
+	// Only handle string locations (path-based or contract-name imports)
+	if _, ok := location.(common.StringLocation); !ok {
+		return defaultResolution, nil
+	}
+
+	// Normalize relative path imports against the current file's location,
+	// then resolve to a file path (handles both .cdc paths and contract names)
+	resolvedLoc := location
+	if l.currentLocation != nil && util.IsPathLocation(location) {
+		resolvedLoc = util.NormalizePathLocation(l.currentLocation, location)
+	}
+
+	filePath, err := l.resolveImportFilepath(resolvedLoc, l.currentLocation)
+	if err != nil {
+		return defaultResolution, nil
+	}
+
+	exportedIdents := l.getExportedIdentifiers(filePath)
+	if len(exportedIdents) == 0 {
+		return defaultResolution, nil
+	}
+
+	return []sema.ResolvedLocation{{
+		Location:    location,
+		Identifiers: exportedIdents,
+	}}, nil
+}
+
+func (l *linter) getExportedIdentifiers(filePath string) []ast.Identifier {
+	if cached, ok := l.exportedIdentifiers[filePath]; ok {
+		return cached
+	}
+
+	code, err := l.state.ReadFile(filePath)
+	if err != nil {
+		return nil
+	}
+
+	program, err := parser.ParseProgram(nil, code, parser.Config{})
+	if err != nil || program == nil {
+		return nil
+	}
+
+	identifiers := exportedIdentifiersFromProgram(program)
+	l.exportedIdentifiers[filePath] = identifiers
+	return identifiers
+}
+
+func exportedIdentifiersFromProgram(program *ast.Program) []ast.Identifier {
+	var identifiers []ast.Identifier
+	for _, decl := range program.Declarations() {
+		identifier := decl.DeclarationIdentifier()
+		if identifier == nil {
+			continue
+		}
+		if decl.DeclarationAccess() != ast.AccessAll {
+			continue
+		}
+		identifiers = append(identifiers, *identifier)
+	}
+	return identifiers
 }
 
 // helpers
