@@ -3,9 +3,8 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "custom"
-      interval-count: 14
-      time: "12:00" # Adjust the time to your preferred schedule
+      interval: "weekly"
+      time: "12:00"
 
   - package-ecosystem: "gomod"
     allow:
@@ -15,9 +14,8 @@ updates:
       update-type: "semver-major"
     directory: "/"
     schedule:
-      interval: "custom"
-      interval-count: 14
-      time: "12:00" # Adjust the time to your preferred schedule
+      interval: "weekly"
+      time: "12:00"
     ignore:
       - dependency-name: "github.com/onflow/flow-go"
       - dependency-name: "github.com/onflow/cadence"
