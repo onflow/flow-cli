@@ -799,8 +799,8 @@ github.com/onflow/fixed-point v0.1.1 h1:j0jYZVO8VGyk1476alGudEg7XqCkeTVxb5ElRJRK
 github.com/onflow/fixed-point v0.1.1/go.mod h1:gJdoHqKtToKdOZbvryJvDZfcpzC7d2fyWuo3ZmLtcGY=
 github.com/onflow/flixkit-go/v2 v2.9.1 h1:AW6qj3PAt7wdUYMYnI14lk3xu3zJutXc4KozJffeczI=
 github.com/onflow/flixkit-go/v2 v2.9.1/go.mod h1:G4sR9UdPnS3ilS45vNs/wwN73m0Mpbzp7uKR/3dQF6o=
-github.com/onflow/flow-core-contracts/lib/go/contracts v1.10.2 h1:OQr7LyoAzk9kVfVjPcHXoFtWIBSqbB7ksNb6wIJlFE8=
-github.com/onflow/flow-core-contracts/lib/go/contracts v1.10.2/go.mod h1:fn0eOOINlOdQSOWptENC92MpPorB7dHzZaC3VTAmiQY=
+github.com/onflow/flow-core-contracts/lib/go/contracts v1.10.3 h1:OTJo6PzE8F0EtvBsBvXKVqSA8eCm1uzN+aWwV5gtjPs=
+github.com/onflow/flow-core-contracts/lib/go/contracts v1.10.3/go.mod h1:fn0eOOINlOdQSOWptENC92MpPorB7dHzZaC3VTAmiQY=
 github.com/onflow/flow-core-contracts/lib/go/templates v1.10.2 h1:qq16IwoT+xAh45GfmC9lR+gFCixJWx9NxKgkkP/W4Nw=
 github.com/onflow/flow-core-contracts/lib/go/templates v1.10.2/go.mod h1:bXe+VkZmvM3QYGjfizprStRfasLA/7ii7l6+LHP5V1U=
 github.com/onflow/flow-emulator v1.21.0 h1:dWMnRzrMxeu3bMIl8gPxHVWnGl117eG/tx/SIocmilU=
