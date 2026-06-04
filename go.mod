@@ -14,19 +14,19 @@ require (
 	github.com/logrusorgru/aurora/v4 v4.0.0
 	github.com/mark3labs/mcp-go v0.45.0
 	github.com/onflow/cadence v1.10.3
-	github.com/onflow/cadence-tools/languageserver v1.11.1
+	github.com/onflow/cadence-tools/languageserver v1.11.2
 	github.com/onflow/cadence-tools/lint v1.11.1
-	github.com/onflow/cadence-tools/test v1.13.1
+	github.com/onflow/cadence-tools/test v1.13.2
 	github.com/onflow/fcl-dev-wallet v0.9.1
 	github.com/onflow/flixkit-go/v2 v2.9.1
 	github.com/onflow/flow-core-contracts/lib/go/contracts v1.10.3
-	github.com/onflow/flow-core-contracts/lib/go/templates v1.10.2
-	github.com/onflow/flow-emulator v1.21.0
-	github.com/onflow/flow-evm-gateway v1.5.0
-	github.com/onflow/flow-go v0.48.1-evm-cache-block.0.20260518173711-5b9fa9c8352e
+	github.com/onflow/flow-core-contracts/lib/go/templates v1.10.3
+	github.com/onflow/flow-emulator v1.21.1
+	github.com/onflow/flow-evm-gateway v1.5.1
+	github.com/onflow/flow-go v0.48.1-evm-cache-block.0.20260602223212-19c6bdbbe069
 	github.com/onflow/flow-go-sdk v1.10.3
 	github.com/onflow/flow/protobuf/go/flow v0.4.20
-	github.com/onflow/flowkit/v2 v2.14.0
+	github.com/onflow/flowkit/v2 v2.14.1
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/pkg/errors v0.9.1
