@@ -26,7 +26,7 @@ require (
 	github.com/onflow/flow-go v0.48.1-evm-cache-block.0.20260602223212-19c6bdbbe069
 	github.com/onflow/flow-go-sdk v1.10.3
 	github.com/onflow/flow/protobuf/go/flow v0.4.20
-	github.com/onflow/flowkit/v2 v2.14.1
+	github.com/onflow/flowkit/v2 v2.15.0
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/pkg/errors v0.9.1
