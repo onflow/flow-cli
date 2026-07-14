@@ -1,6 +1,6 @@
 module github.com/onflow/flow-cli
 
-go 1.25.1
+go 1.25.5
 
 require (
 	github.com/charmbracelet/bubbles v0.21.1
@@ -12,7 +12,7 @@ require (
 	github.com/getsentry/sentry-go v0.43.0
 	github.com/gosuri/uilive v0.0.4
 	github.com/logrusorgru/aurora/v4 v4.0.0
-	github.com/mark3labs/mcp-go v0.45.0
+	github.com/mark3labs/mcp-go v0.54.1
 	github.com/onflow/cadence v1.10.3
 	github.com/onflow/cadence-tools/languageserver v1.11.2
 	github.com/onflow/cadence-tools/lint v1.11.1
@@ -100,7 +100,7 @@ require (
 	github.com/dgraph-io/ristretto v0.1.0 // indirect
 	github.com/dgryski/go-farm v0.0.0-20190423205320-6a90982ecee2 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
-	github.com/dlclark/regexp2 v1.7.0 // indirect
+	github.com/dlclark/regexp2 v1.11.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/dop251/goja v0.0.0-20230806174421-c933cf95e127 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
@@ -134,6 +134,7 @@ require (
 	github.com/google/go-dap v0.11.0 // indirect
 	github.com/google/go-github v17.0.0+incompatible // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
+	github.com/google/jsonschema-go v0.4.2 // indirect
 	github.com/google/pprof v0.0.0-20250630185457-6e76a2b096b5 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/google/uuid v1.6.0 // indirect
@@ -242,6 +243,7 @@ require (
 	github.com/sahilm/fuzzy v0.1.1 // indirect
 	github.com/samber/lo v1.39.0 // indirect
 	github.com/samber/slog-zerolog v1.0.0 // indirect
+	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2 // indirect
 	github.com/schollz/progressbar/v3 v3.18.0 // indirect
 	github.com/sethvargo/go-limiter v1.0.0 // indirect
 	github.com/sethvargo/go-retry v0.2.3 // indirect
