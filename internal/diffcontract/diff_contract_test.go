@@ -198,7 +198,7 @@ func Test_DiffContract(t *testing.T) {
 		)
 
 		assert.Nil(t, result)
-		assert.EqualError(t, err, "contract 'TestContract' not found on account f8d6e0586b0a20c7")
+		assert.EqualError(t, err, "contract 'TestContract' not found on account 0xf8d6e0586b0a20c7")
 	})
 
 	t.Run("Non-existing file", func(t *testing.T) {

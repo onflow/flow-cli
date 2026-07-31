@@ -24,6 +24,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/pmezard/go-difflib/difflib"
 	"github.com/spf13/cobra"
@@ -39,7 +40,7 @@ import (
 )
 
 type diffContractFlags struct {
-	Quiet bool `default:"false" flag:"quiet" info:"Exit with non-zero code if contracts differ, without output"`
+	Quiet bool `default:"false" flag:"quiet,q" info:"Exit with non-zero code if contracts differ, without output"`
 }
 
 var diffFlags = diffContractFlags{}
@@ -56,10 +57,6 @@ var DiffContractCommand = &command.Command{
 	RunS:  diffContract,
 }
 
-func init() {
-	DiffContractCommand.Cmd.Flags().BoolVarP(&diffFlags.Quiet, "quiet", "q", false, "Exit with non-zero code if contracts differ, without output")
-}
-
 func diffContract(
 	args []string,
 	globalFlags command.GlobalFlags,
@@ -71,7 +68,6 @@ func diffContract(
 
 	// Read source code from file or URL
 	var code []byte
-	var location string
 	var err error
 
 	if strings.HasPrefix(source, "http://") || strings.HasPrefix(source, "https://") {
@@ -79,17 +75,15 @@ func diffContract(
 		if err != nil {
 			return nil, fmt.Errorf("error fetching contract from URL: %w", err)
 		}
-		location = source
 	} else {
 		code, err = state.ReadFile(source)
 		if err != nil {
 			return nil, fmt.Errorf("error loading contract file: %w", err)
 		}
-		location = source
 	}
 
 	// Extract contract name from source
-	program, err := project.NewProgram(code, nil, location)
+	program, err := project.NewProgram(code, nil, source)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing contract source: %w", err)
 	}
@@ -103,7 +97,7 @@ func diffContract(
 	ctx := context.Background()
 	resolved, err := flow.ReplaceImportsInScript(ctx, flowkit.Script{
 		Code:     code,
-		Location: location,
+		Location: source,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("error resolving imports: %w", err)
@@ -124,7 +118,7 @@ func diffContract(
 	}
 
 	// Fetch deployed contract
-	logger.StartProgress(fmt.Sprintf("Fetching contract '%s' from %s...", contractName, address))
+	logger.StartProgress(fmt.Sprintf("Fetching contract '%s' from %s...", contractName, address.HexWithPrefix()))
 	defer logger.StopProgress()
 
 	account, err := flow.GetAccount(ctx, address)
@@ -134,7 +128,7 @@ func diffContract(
 
 	deployedCode, ok := account.Contracts[contractName]
 	if !ok {
-		return nil, fmt.Errorf("contract '%s' not found on account %s", contractName, address)
+		return nil, fmt.Errorf("contract '%s' not found on account %s", contractName, address.HexWithPrefix())
 	}
 
 	// Normalize and diff
@@ -143,20 +137,13 @@ func diffContract(
 
 	identical := localCode == remoteCode
 
-	exitCode := 0
-	if !identical {
-		exitCode = 1
-	}
-
 	diffText := ""
 	if !identical {
-		localLabel := source
-		remoteLabel := fmt.Sprintf("0x%s/%s (deployed)", address, contractName)
 		diff := difflib.UnifiedDiff{
 			A:        difflib.SplitLines(remoteCode),
 			B:        difflib.SplitLines(localCode),
-			FromFile: remoteLabel,
-			ToFile:   localLabel,
+			FromFile: fmt.Sprintf("%s/%s (deployed)", address.HexWithPrefix(), contractName),
+			ToFile:   source,
 			Context:  3,
 		}
 		diffText, err = difflib.GetUnifiedDiffString(diff)
@@ -168,10 +155,9 @@ func diffContract(
 	return &diffContractResult{
 		diff:         diffText,
 		contractName: contractName,
-		address:      address.String(),
+		address:      address.HexWithPrefix(),
 		identical:    identical,
 		quiet:        diffFlags.Quiet,
-		exitCode:     exitCode,
 	}, nil
 }
 
@@ -204,7 +190,8 @@ func resolveAddressFromConfig(state *flowkit.State, contractName string, network
 }
 
 func fetchURL(url string) ([]byte, error) {
-	resp, err := http.Get(url) //nolint:gosec
+	client := http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Get(url)
 	if err != nil {
 		return nil, err
 	}
@@ -224,7 +211,6 @@ type diffContractResult struct {
 	address      string
 	identical    bool
 	quiet        bool
-	exitCode     int
 }
 
 var _ command.ResultWithExitCode = &diffContractResult{}
@@ -234,7 +220,7 @@ func (r *diffContractResult) String() string {
 		return ""
 	}
 	if r.identical {
-		return fmt.Sprintf("Contract '%s' on 0x%s is up to date", r.contractName, r.address)
+		return fmt.Sprintf("Contract '%s' on %s is up to date", r.contractName, r.address)
 	}
 	return r.diff
 }
@@ -259,5 +245,8 @@ func (r *diffContractResult) JSON() any {
 }
 
 func (r *diffContractResult) ExitCode() int {
-	return r.exitCode
+	if r.identical {
+		return 0
+	}
+	return 1
 }
