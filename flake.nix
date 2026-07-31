@@ -47,7 +47,7 @@
             version = version;
             src = ./.;
 
-            vendorHash = "sha256-TjNZgqQ5U2ZkOck/pG68789hkTKjV7zP4xxRxxJQcdw=";
+            vendorHash = "sha256-xi3A9V862Mohwlqw9cbEtgolR2oDnSM6U4RL49YKFWo=";
             proxyVendor = true;
 
             subPackages = [ "cmd/flow" ];
