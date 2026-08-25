@@ -7,7 +7,7 @@ unverified commands or paths.
 ## Overview
 
 `flow-cli` is the official command-line tool for the Flow blockchain: deploy contracts, run
-transactions/scripts, manage accounts/keys, and run a bundled emulator. Go 1.25.1 module
+transactions/scripts, manage accounts/keys, and run a bundled emulator. Go 1.26.0 module
 (`github.com/onflow/flow-cli`), built on [Cobra](https://github.com/spf13/cobra). All
 blockchain logic is delegated to the external `github.com/onflow/flowkit/v2` module. Entry
 point is `cmd/flow/main.go`. License: Apache-2.0.
@@ -29,7 +29,7 @@ CGO is required (BLS crypto). `go build` / `go test` need these env vars set:
 - `make clean` — removes binaries under `cmd/flow/`
 - `make versioned-binaries` — cross-compiles linux/darwin/windows × amd64/arm64
 - `make publish` — uploads versioned binaries to `gs://flow-cli` via `gsutil`
-- `make release` — runs `ghcr.io/goreleaser/goreleaser-cross:v1.25.0` in Docker
+- `make release` — runs `ghcr.io/goreleaser/goreleaser-cross:v1.26.4` in Docker
 - `make test-e2e-emulator` — `flow -f tests/flow.json emulator start`
 - `SKIP_NETWORK_TESTS=1 make test` — skip tests that reach Flow mainnet/testnet (CONTRIBUTING.md)
 - `nix develop` — enter dev shell from `flake.nix`; then `go run cmd/flow/main.go`
@@ -87,7 +87,7 @@ developers.flow.com.
 - **goimports `local-prefixes: github.com/onflow/flow-cli`** (`.golangci.yml`) — internal
   imports group separately from third-party.
 - **Linters enabled:** `errcheck`, `govet`, `ineffassign`, `misspell`, plus `goimports`
-  formatter. CI pins `golangci-lint v2.4.0` (`.github/workflows/ci.yml`).
+  formatter. CI pins `golangci-lint v2.13.1` (`.github/workflows/ci.yml`).
 - **`SKIP_NETWORK_TESTS=1`** skips tests that reach mainnet/testnet nodes — use in Nix or
   egress-restricted CI (CONTRIBUTING.md "Skipping Network-Dependent Tests").
 - **`syscall.Exit` in `cmd/flow/main.go` is intentional** — works around a gRPC cleanup
