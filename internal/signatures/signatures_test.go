@@ -54,7 +54,7 @@ func Test_Verify(t *testing.T) {
 			err:  "invalid public key: encoding/hex: invalid byte: U+0069 'i'",
 		}, {
 			args: []string{"invalid", "0xaaaa", "0x1234"},
-			err:  "invalid public key: input has incorrect ECDSA_P256 key size, got 2, expects 64",
+			err:  "invalid public key: input is not a valid ECDSA_P256 key of 64 bytes: invalid P256 point encoding",
 		}}
 
 		for _, test := range inArgsTests {
