@@ -41,7 +41,7 @@ import (
 
 type lintFlagsCollection struct {
 	WarningsAsErrors bool   `default:"false" flag:"warnings-as-errors" info:"Treat warnings as errors"`
-	BaseDir          string `default:"" flag:"base-dir" info:"Directory to search for .cdc files (defaults to current directory)"`
+	BaseDir          string `default:"" flag:"base-dir" info:"Directory to search for .cdc files (defaults to cadence/)"`
 }
 
 type fileResult struct {
@@ -89,7 +89,7 @@ func lint(
 ) (command.Result, error) {
 	var filePaths []string
 	if len(args) == 0 {
-		baseDir := "."
+		baseDir := "cadence"
 		if lintFlags.BaseDir != "" {
 			baseDir = lintFlags.BaseDir
 		}
