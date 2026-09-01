@@ -38,10 +38,8 @@ import (
 
 // Error styling
 var (
-	errorStyle        = branding.ErrorStyle
-	errorMessageStyle = branding.ErrorStyle
-	suggestionStyle   = branding.GreenStyle.Copy().Italic(true)
-	descriptionStyle  = branding.GrayStyle.Copy().Bold(true)
+	errorStyle      = branding.ErrorStyle
+	suggestionStyle = branding.GreenStyle.Copy().Italic(true)
 )
 
 // Result interface describes all the formats for the result output.
@@ -140,6 +138,18 @@ func filterResultValue(result Result, filter string) (any, error) {
 	return value, nil
 }
 
+// renderErrorMsg unescapes literal \n sequences and styles each line
+// individually — passing a multiline string to lipgloss causes it to pad every
+// line to the width of the longest one, producing unreadable trailing spaces.
+func renderErrorMsg(msg string) string {
+	msg = strings.ReplaceAll(msg, `\n`, "\n")
+	lines := strings.Split(msg, "\n")
+	for i, line := range lines {
+		lines[i] = branding.ErrorStyle.Render(line)
+	}
+	return strings.Join(lines, "\n")
+}
+
 // handleError handle errors returned from command execution, try to understand why error happens and offer help to the user.
 func handleError(description string, err error) {
 	if err == nil {
@@ -151,38 +161,38 @@ func handleError(description string, err error) {
 	switch t := err.(type) {
 	case *grpc.RPCError:
 		errorMsg := errorStyle.Render(fmt.Sprintf("%s Grpc Error:", output.ErrorEmoji()))
-		detailMsg := errorMessageStyle.Render(t.GRPCStatus().Err().Error())
+		detailMsg := renderErrorMsg(t.GRPCStatus().Err().Error())
 		_, _ = fmt.Fprintf(os.Stderr, "%s %s\n", errorMsg, detailMsg)
 	default:
 		if errors.Is(err, config.ErrOutdatedFormat) {
 			errorMsg := errorStyle.Render(fmt.Sprintf("%s Config Error:", output.ErrorEmoji()))
-			detailMsg := errorMessageStyle.Render(err.Error())
+			detailMsg := renderErrorMsg(err.Error())
 			_, _ = fmt.Fprintf(os.Stderr, "%s %s\n", errorMsg, detailMsg)
 
 			suggestion := suggestionStyle.Render(fmt.Sprintf("%s Please reset configuration using: 'flow init --reset'. Read more about new configuration here: https://github.com/onflow/flow-cli/releases/tag/v0.17.0", output.TryEmoji()))
 			_, _ = fmt.Fprintf(os.Stderr, "%s\n", suggestion)
 		} else if errors.Is(err, config.ErrDoesNotExist) {
 			errorMsg := errorStyle.Render(fmt.Sprintf("%s Config Error:", output.ErrorEmoji()))
-			detailMsg := errorMessageStyle.Render(err.Error())
+			detailMsg := renderErrorMsg(err.Error())
 			_, _ = fmt.Fprintf(os.Stderr, "%s %s\n", errorMsg, detailMsg)
 
 			suggestion := suggestionStyle.Render(fmt.Sprintf("%s Please create configuration using: flow init", output.TryEmoji()))
 			_, _ = fmt.Fprintf(os.Stderr, "%s\n", suggestion)
 		} else if strings.Contains(err.Error(), "transport:") {
 			errorMsg := errorStyle.Render(fmt.Sprintf("%s Connection Error:", output.ErrorEmoji()))
-			detailMsg := errorMessageStyle.Render(strings.Split(err.Error(), "transport:")[1])
+			detailMsg := renderErrorMsg(strings.Split(err.Error(), "transport:")[1])
 			_, _ = fmt.Fprintf(os.Stderr, "%s %s\n", errorMsg, detailMsg)
 
 			suggestion := suggestionStyle.Render(fmt.Sprintf("%s Make sure your emulator is running or connection address is correct.", output.TryEmoji()))
 			_, _ = fmt.Fprintf(os.Stderr, "%s\n", suggestion)
 		} else if strings.Contains(err.Error(), "NotFound desc =") {
 			errorMsg := errorStyle.Render(fmt.Sprintf("%s Not Found:", output.ErrorEmoji()))
-			detailMsg := errorMessageStyle.Render(strings.Split(err.Error(), "NotFound desc =")[1])
+			detailMsg := renderErrorMsg(strings.Split(err.Error(), "NotFound desc =")[1])
 			_, _ = fmt.Fprintf(os.Stderr, "%s%s\n", errorMsg, detailMsg)
 		} else if strings.Contains(err.Error(), "code = InvalidArgument desc = ") {
 			desc := strings.Split(err.Error(), "code = InvalidArgument desc = ")
 			errorMsg := errorStyle.Render(fmt.Sprintf("%s Invalid argument:", output.ErrorEmoji()))
-			detailMsg := errorMessageStyle.Render(desc[len(desc)-1])
+			detailMsg := renderErrorMsg(desc[len(desc)-1])
 			_, _ = fmt.Fprintf(os.Stderr, "%s %s\n", errorMsg, detailMsg)
 
 			if strings.Contains(err.Error(), "is invalid for chain") {
@@ -194,21 +204,21 @@ func handleError(description string, err error) {
 			}
 		} else if strings.Contains(err.Error(), "invalid signature:") {
 			errorMsg := errorStyle.Render(fmt.Sprintf("%s Invalid signature:", output.ErrorEmoji()))
-			detailMsg := errorMessageStyle.Render(strings.Split(err.Error(), "invalid signature:")[1])
+			detailMsg := renderErrorMsg(strings.Split(err.Error(), "invalid signature:")[1])
 			_, _ = fmt.Fprintf(os.Stderr, "%s %s\n", errorMsg, detailMsg)
 
 			suggestion := suggestionStyle.Render(fmt.Sprintf("%s Check the signer private key is provided or is in the correct format. If running emulator, make sure it's using the same configuration as this command.", output.TryEmoji()))
 			_, _ = fmt.Fprintf(os.Stderr, "%s\n", suggestion)
 		} else if strings.Contains(err.Error(), "signature could not be verified using public key with") {
 			errorMsg := errorStyle.Render(fmt.Sprintf("%s %s:", output.ErrorEmoji(), description))
-			detailMsg := errorMessageStyle.Render(err.Error())
+			detailMsg := renderErrorMsg(err.Error())
 			_, _ = fmt.Fprintf(os.Stderr, "%s %s\n", errorMsg, detailMsg)
 
 			suggestion := suggestionStyle.Render(fmt.Sprintf("%s If you are running emulator locally make sure that the emulator was started with the same config as used in this command. \nTry restarting the emulator.", output.TryEmoji()))
 			_, _ = fmt.Fprintf(os.Stderr, "%s\n", suggestion)
 		} else {
 			errorMsg := errorStyle.Render(fmt.Sprintf("%s %s:", output.ErrorEmoji(), description))
-			detailMsg := errorMessageStyle.Render(err.Error())
+			detailMsg := renderErrorMsg(err.Error())
 			_, _ = fmt.Fprintf(os.Stderr, "%s %s\n", errorMsg, detailMsg)
 		}
 	}
