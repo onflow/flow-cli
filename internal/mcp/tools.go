@@ -19,10 +19,11 @@
 package mcp
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 
 	mcplib "github.com/mark3labs/mcp-go/mcp"
@@ -283,8 +284,8 @@ func (m *mcpContext) getContractSource(ctx context.Context, req mcplib.CallToolR
 	for name, code := range account.Contracts {
 		contracts = append(contracts, contractInfo{Name: name, Size: len(code)})
 	}
-	sort.Slice(contracts, func(i, j int) bool {
-		return contracts[i].Name < contracts[j].Name
+	slices.SortFunc(contracts, func(a, b contractInfo) int {
+		return cmp.Compare(a.Name, b.Name)
 	})
 
 	result := struct {
@@ -338,7 +339,7 @@ func (m *mcpContext) getContractCode(ctx context.Context, req mcplib.CallToolReq
 	for name := range account.Contracts {
 		names = append(names, name)
 	}
-	sort.Strings(names)
+	slices.Sort(names)
 
 	for i, name := range names {
 		if i > 0 {
