@@ -31,6 +31,7 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/config"
 	"github.com/onflow/flow-cli/internal/dependencymanager"
+	"github.com/onflow/flow-cli/internal/diffcontract"
 	"github.com/onflow/flow-cli/internal/emulator"
 	"github.com/onflow/flow-cli/internal/events"
 	evm "github.com/onflow/flow-cli/internal/evm"
@@ -67,6 +68,7 @@ func main() {
 	tools.DevWallet.AddToParent(cmd)
 	tools.Flowser.AddToParent(cmd)
 	test.TestCommand.AddToParent(cmd)
+	diffcontract.DiffContractCommand.AddToParent(cmd)
 
 	// super commands
 	super.InitCommand.AddToParent(cmd)
