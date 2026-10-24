@@ -39,3 +39,8 @@ func Test_ResolveTargetDirectory_CurrentDirCases(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, filepath.Clean(wd), filepath.Clean(dot))
 }
+
+func Test_GetTargetDirectory_StatError(t *testing.T) {
+	_, err := getTargetDirectory("invalid\x00path")
+	assert.Error(t, err)
+}

@@ -118,7 +118,10 @@ func getTargetDirectory(directory string) (string, error) {
 
 	target := filepath.Join(pwd, directory)
 	info, err := os.Stat(target)
-	if !os.IsNotExist(err) {
+	if err != nil && !os.IsNotExist(err) {
+		return "", err
+	}
+	if err == nil {
 		if !info.IsDir() {
 			return "", fmt.Errorf("%s is a file", target)
 		}
