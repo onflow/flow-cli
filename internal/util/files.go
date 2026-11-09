@@ -47,13 +47,13 @@ func AbsolutePath(basePath, relativePath string) string {
 	return filepath.Join(filepath.Dir(basePath), relativePath)
 }
 
-// IsPathLocation returns true if the location is a file path (contains .cdc)
+// IsPathLocation returns true if the location names a Cadence source file.
 func IsPathLocation(location common.Location) bool {
 	stringLocation, ok := location.(common.StringLocation)
 	if !ok {
 		return false
 	}
-	return strings.Contains(stringLocation.String(), ".cdc")
+	return filepath.Ext(stringLocation.String()) == ".cdc"
 }
 
 // NormalizePathLocation normalizes a relative path import against a base location
