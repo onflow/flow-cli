@@ -22,10 +22,27 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/onflow/cadence/common"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestIsPathLocation(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		want bool
+	}{
+		{"contracts/Example.cdc", true},
+		{"contracts/Example.cdc.backup", false},
+		{"contracts.cdc/Example", false},
+		{"Example", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, IsPathLocation(common.StringLocation(tc.name)))
+		})
+	}
+}
 
 func TestIsAddressValidForNetwork(t *testing.T) {
 	testnetAddr := flow.HexToAddress("8efde57e98c557fa")  // Valid testnet address
